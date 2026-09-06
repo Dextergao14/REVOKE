@@ -47,6 +47,9 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
         "goal": dom.goal,
         "contexts": sorted(k for k, v in sc.signature.items()
                            if v == () and k not in (dom.goal, "task_feasible")),
+        # the full sort signature, so a grader rebuilds R_t without having to
+        # know which predicates a tier uses
+        "signature": {k: list(v) for k, v in sc.signature.items()},
         "universe": sc.universe,
         "base_rules": [{"rid": r.rid, "head": str(r.head),
                         "body": [str(b) for b in r.body], "prio": r.prio}
@@ -92,7 +95,8 @@ def blind(item: Dict) -> Dict:
     # constraints the conversation is supposed to be the sole source of.
     out = {k: v for k, v in item.items()
            if k not in ("timeline", "events", "motifs", "base_rules", "allow",
-                        "sort", "goal", "contexts", "universe", "seed", "meta")}
+                        "sort", "goal", "contexts", "universe", "seed", "meta",
+                        "signature")}
     # turn kinds (update / noise / filler) would let a scaffold filter the
     # transcript by construction; only the probe marker is legitimately visible
     out["sessions"] = [{"index": s["index"], "turns": [
@@ -114,10 +118,13 @@ _GRP_RE = None
 
 def rulebase_at(item: Dict, session: int, allow: str, facts=()) -> RuleBase:
     """Rebuild R_t from a full (non-blind) item, for independent re-grading."""
-    sig = {allow: (item["sort"],), item["goal"]: (),
-           "grp": (item["sort"], "group"), "task_feasible": ()}
-    for c in item["contexts"]:
-        sig[c] = ()
+    if "signature" in item:
+        sig = {k: tuple(v) for k, v in item["signature"].items()}
+    else:                                          # easy-tier items predate it
+        sig = {allow: (item["sort"],), item["goal"]: (),
+               "grp": (item["sort"], "group"), "task_feasible": ()}
+        for c in item["contexts"]:
+            sig[c] = ()
     rb = RuleBase(signature=sig, universe={k: list(v)
                                            for k, v in item["universe"].items()})
     for r in item["base_rules"]:
