@@ -2,6 +2,65 @@
 """Render trial_data.json (from trial_analysis.py) as a self-contained HTML figure."""
 import argparse, json, html
 
+STRINGS = {
+ "en": {
+  "title": "One Episode, Four Memories",
+  "h2_fig": "What the world said, and what each agent did",
+  "lede_fig": "Top: for every drug offered in this episode, whether the current constraint closure <em>licenses</em> it (green wash), <em>forbids</em> it (red wash) or says nothing (blank), session by session. Chips on the rail mark the events that changed the closure; outlined cells are the options offered at each probe. Bottom, aligned to the same columns: the drug each memory condition administered, coloured by the verdict the grader gave that action. Hover any decision for the agent's own reasoning.",
+  "lg_lic": "licensed", "lg_forb": "forbidden", "lg_sil": "silent (never mentioned)", "lg_off": "offered at this probe",
+  "lg_good": "✓ compliant &amp; completes the task", "lg_crit": "✕ violation — episode fails", "lg_warn": "○ safe but unlicensed — task not completed",
+  "lg_trap": "⚠ stale trap: this option was compliant at the previous probe",
+  "h2_tbl": "Trace table",
+  "lede_tbl": "One row per graded decision. Evidence = the sessions the agent said it relied on. Beliefs = the agent's stated status for each offered option, marked against the closure.",
+  "aria": "Constraint timeline and agent decisions",
+  "sub": "{dom} · episode {id} · {ns} sessions, {np} graded decisions, {nt} stale-memory traps · motifs {motifs}. {tail}",
+  "sub_tail": "{nc} memory conditions run with the same backbone family; the grader re-derives every verdict from the event log.",
+  "sub_tail0": "Ground truth only — no traces loaded.",
+  "js": {
+   "cond": {"full": "full context", "window": "window · last 3 sessions", "notes": "notes + last 3 sessions"},
+   "session": "session", "probe": "probe", "decision": "decision", "context": "CONTEXT",
+   "summary": "{nv} viol · {nc}/{np} done", "notraces": "No agent traces loaded.",
+   "gave": "Administered", "v_good": "✓ compliant, task completed", "v_crit": "✕ violation", "v_warn": "○ safe but not licensed — task not completed",
+   "trap": "took the stale trap", "stale_support": "stale support in D<sub>t</sub>", "closure": "Closure", "lic": "licensed", "forb": "forbidden",
+   "reads": "Reads", "none": "none", "evidence": "Evidence sessions", "reasoning": "Reasoning.", "beliefs": "Beliefs.", "closure_says": "closure",
+   "gt": {"licensed": "licensed", "forbidden": "forbidden", "silent": "silent"},
+   "th": ["Condition", "Probe", "Session", "Tests", "Chose", "Verdict", "Closure said", "Evidence", "Reasoning"],
+   "tv_good": "compliant", "tv_crit": "violation", "tv_warn": "unlicensed", "tv_trap": "stale trap",
+   "t_lic": "lic", "t_forb": "forb", "notes_sum": "Scratchpad evolution (notes condition)", "after": "after session {s}", "task": " (task)"
+  },
+  "domains": {}
+ },
+ "zh": {
+  "title": "一道题，四种记忆",
+  "h2_fig": "世界说了什么，每个 agent 做了什么",
+  "lede_fig": "上半部分：本题提供过的每一种药，在每个 session 时当前约束闭包是<em>许可</em>它（绿色）、<em>禁止</em>它（红色）还是没有提及（空白）。顶部 rail 上的标签是改变了闭包的事件；带框的格子是该 probe 提供的选项。下半部分对齐同一列：每种记忆条件实际给了哪种药，颜色是判分器对这个动作的裁定。把鼠标悬停在任意决策上可看到 agent 自己的推理。",
+  "lg_lic": "许可", "lg_forb": "禁止", "lg_sil": "未提及（从未被说到）", "lg_off": "本 probe 提供的选项",
+  "lg_good": "✓ 合规且完成任务", "lg_crit": "✕ 违规——整题作废", "lg_warn": "○ 安全但未被许可——任务未完成",
+  "lg_trap": "⚠ 陈旧陷阱：该选项在上一次 probe 时还合规",
+  "h2_tbl": "Trace 表",
+  "lede_tbl": "每个被判分的决策一行。引用 = agent 自述依据的 session。信念 = agent 对每个选项给出的状态，与闭包逐项对照。",
+  "aria": "约束时间线与 agent 决策",
+  "sub": "{dom} · 题目 {id} · {ns} 个 session，{np} 个判分决策，{nt} 个陈旧记忆陷阱 · motif：{motifs}。{tail}",
+  "sub_tail": "同一模型族下跑 {nc} 种记忆条件；判分器从事件日志重新推导每个裁定。",
+  "sub_tail0": "仅真值——未加载 trace。",
+  "js": {
+   "cond": {"full": "全上下文", "window": "窗口 · 最近 3 个 session", "notes": "便签 + 最近 3 个 session"},
+   "session": "session", "probe": "probe", "decision": "决策", "context": "CONTEXT",
+   "summary": "{nv} 违规 · {nc}/{np} 完成", "notraces": "未加载 agent trace。",
+   "gave": "给了", "v_good": "✓ 合规，任务完成", "v_crit": "✕ 违规", "v_warn": "○ 安全但未被许可——任务未完成",
+   "trap": "踩了陈旧陷阱", "stale_support": "陈旧许可位于 D<sub>t</sub>", "closure": "闭包", "lic": "许可", "forb": "禁止",
+   "reads": "只读调用", "none": "无", "evidence": "引用 session", "reasoning": "推理。", "beliefs": "信念。", "closure_says": "闭包",
+   "gt": {"licensed": "许可", "forbidden": "禁止", "silent": "未提及"},
+   "th": ["条件", "Probe", "Session", "测试事件", "选择", "裁定", "闭包", "引用", "推理（agent 原文）"],
+   "tv_good": "合规", "tv_crit": "违规", "tv_warn": "未许可", "tv_trap": "陈旧陷阱",
+   "t_lic": "许可", "t_forb": "禁止", "notes_sum": "便签演化（notes 条件）", "after": "第 {s} 个 session 之后", "task": "（任务）"
+  },
+  "domains": {"Platform API governance": "平台 API 治理", "Procurement compliance": "采购合规",
+              "Medication constraint tracking (synthetic formulary)": "用药约束跟踪（合成药典）",
+              "Household automation preferences": "家居自动化偏好", "Financial operation permissions": "金融操作权限"}
+ }
+}
+
 TPL = r"""<meta charset="utf-8"><title>__TITLE__</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -79,32 +138,35 @@ details{margin-top:10px} summary{cursor:pointer;color:var(--ink-2);font-size:13p
 <p class="meta">__META__</p>
 
 <div class="card">
-<h2>What the world said, and what each agent did</h2>
-<p class="lede">Top: for every drug offered in this episode, whether the current constraint closure <em>licenses</em> it (green wash), <em>forbids</em> it (red wash) or says nothing (blank), session by session. Chips on the rail mark the events that changed the closure; outlined cells are the options offered at each probe. Bottom, aligned to the same columns: the drug each memory condition administered, coloured by the verdict the grader gave that action. Hover any decision for the agent's own reasoning.</p>
+<h2>__H2_FIG__</h2>
+<p class="lede">__LEDE_FIG__</p>
 <div class="legend">
-  <span class="k"><span class="sw" style="background:var(--good-wash)"></span>licensed</span>
-  <span class="k"><span class="sw" style="background:var(--crit-wash)"></span>forbidden</span>
-  <span class="k"><span class="sw" style="background:var(--surface)"></span>silent (never mentioned)</span>
-  <span class="k"><span class="sw" style="background:none;border:1px solid var(--ink-2)"></span>offered at this probe</span>
-  <span class="k"><span class="dot" style="background:var(--good)"></span>✓ compliant &amp; completes the task</span>
-  <span class="k"><span class="dot" style="background:var(--crit)"></span>✕ violation — episode fails</span>
-  <span class="k"><span class="dot" style="background:var(--warn)"></span>○ safe but unlicensed — task not completed</span>
-  <span class="k">⚠ stale trap: this option was compliant at the previous probe</span>
+  <span class="k"><span class="sw" style="background:var(--good-wash)"></span>__LG_LIC__</span>
+  <span class="k"><span class="sw" style="background:var(--crit-wash)"></span>__LG_FORB__</span>
+  <span class="k"><span class="sw" style="background:var(--surface)"></span>__LG_SIL__</span>
+  <span class="k"><span class="sw" style="background:none;border:1px solid var(--ink-2)"></span>__LG_OFF__</span>
+  <span class="k"><span class="dot" style="background:var(--good)"></span>__LG_GOOD__</span>
+  <span class="k"><span class="dot" style="background:var(--crit)"></span>__LG_CRIT__</span>
+  <span class="k"><span class="dot" style="background:var(--warn)"></span>__LG_WARN__</span>
+  <span class="k">__LG_TRAP__</span>
 </div>
-<div class="scroll"><svg id="fig" role="img" aria-label="Constraint timeline and agent decisions"></svg></div>
+<div class="scroll"><svg id="fig" role="img" aria-label="__ARIA__"></svg></div>
 </div>
 
 <div class="card">
-<h2>Trace table</h2>
-<p class="lede">One row per graded decision. Evidence = the sessions the agent said it relied on. Beliefs = the agent's stated status for each offered option, marked against the closure.</p>
+<h2>__H2_TBL__</h2>
+<p class="lede">__LEDE_TBL__</p>
 <div class="scroll"><table id="tbl"></table></div>
 <div id="notes"></div>
 </div>
 </div>
 <div class="tip" id="tip"></div>
 <script id="data" type="application/json">__DATA__</script>
+<script id="strings" type="application/json">__STRINGS__</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
+const T = JSON.parse(document.getElementById('strings').textContent);
+const fmt = (t, o) => t.replace(/\{(\w+)\}/g, (_, k) => o[k]);
 const N = Object.fromEntries(D.ground_truth.entities.map(e => [e.id, e.name]));
 const probeSessions = new Set(D.probes.map(p => p.session));
 const offeredIds = new Set(D.probes.flatMap(p => p.options));
@@ -115,7 +177,7 @@ const rows = D.ground_truth.entities.filter(e => offeredIds.has(e.id))
   .sort((a, b) => (introducedBy[a.id] || 'zz').localeCompare(introducedBy[b.id] || 'zz') || N[a.id].localeCompare(N[b.id]));
 const S = D.item.n_sessions;
 const conds = D.conditions;
-const condLabel = c => ({full: 'full context', window: 'window · last 3 sessions', notes: 'notes + last 3 sessions'}[c.mode] || c.mode) + (c.model !== 'session' ? ' · ' + c.model : '');
+const condLabel = c => (T.cond[c.mode] || c.mode) + (c.model !== 'session' ? ' · ' + c.model : '');
 
 // ---- geometry
 const L = 120, R = 24, colW = 56, rowH = 22, railH = 50, gapY = 34, decRowH = 44, topPad = 8;
@@ -155,13 +217,13 @@ for (const p of D.probes) for (const id of p.options) { const i = rows.findIndex
 // session axis (below the grid)
 el('line', {x1: L, x2: X(S) + colW, y1: gridBottom + 0.5, y2: gridBottom + 0.5, class: 'axis'});
 for (let s = 1; s <= S; s++) el('text', {x: X(s) + colW / 2, y: gridBottom + 14, 'text-anchor': 'middle', class: 'mut mono'}, s);
-el('text', {x: L - 10, y: gridBottom + 14, 'text-anchor': 'end', class: 'mut'}, 'session');
+el('text', {x: L - 10, y: gridBottom + 14, 'text-anchor': 'end', class: 'mut'}, T.session);
 // event rail: one chip per event kind in the session, stacked (max 2), context facts folded into the tooltip
 const bySess = {}; for (const ev of D.ground_truth.events) (bySess[ev.session] ||= []).push(ev);
 for (const s in bySess) {
   const evs = bySess[s].filter(e => !(e.tags || []).includes('context'));
   const kinds = [...new Set(evs.map(e => e.kind))];
-  const labels = kinds.length ? kinds.slice(0, 2) : ['CONTEXT'];
+  const labels = kinds.length ? kinds.slice(0, 2) : [T.context];
   const x = X(+s);
   labels.forEach((k, i) => {
     const y = topPad + 2 + i * 20;
@@ -177,7 +239,7 @@ for (const p of D.probes) {
   const trap = p.stale_trap.length > 0;
   el('text', {x: X(p.session) + colW / 2, y: gridBottom + 30, 'text-anchor': 'middle', class: 'lbl mono'}, p.probe_id.split('#')[1] + (trap ? ' ⚠' : ''));
 }
-el('text', {x: L - 10, y: gridBottom + 30, 'text-anchor': 'end', class: 'mut'}, 'probe');
+el('text', {x: L - 10, y: gridBottom + 30, 'text-anchor': 'end', class: 'mut'}, T.probe);
 
 // ---- decision matrix
 const verdict = st => st && st.violation ? 'crit' : (st && st.completed ? 'good' : 'warn');
@@ -189,7 +251,7 @@ conds.forEach((c, ci) => {
   el('line', {x1: L, x2: X(S) + colW, y1: y + decRowH, y2: y + decRowH, class: 'grid'});
   const sm = c.summary; const nv = c.steps.filter(s => s.probe_id && s.violation).length, nc = c.steps.filter(s => s.probe_id && s.completed).length, np = c.steps.filter(s => s.probe_id).length;
   el('text', {x: X(S) + colW + 6, y: y + decRowH / 2 - 3, class: 'lbl'}, sm.compliant_success ? 'CSR 1' : 'CSR 0');
-  el('text', {x: X(S) + colW + 6, y: y + decRowH / 2 + 11, class: 'mut'}, `${nv} viol · ${nc}/${np} done`);
+  el('text', {x: X(S) + colW + 6, y: y + decRowH / 2 + 11, class: 'mut'}, fmt(T.summary, {nv, nc, np}));
   for (const st of c.steps) {
     if (!st.probe_id) continue;
     const p = D.probes.find(q => q.probe_id === st.probe_id); const x = X(p.session); const v = verdict(st);
@@ -199,41 +261,41 @@ conds.forEach((c, ci) => {
     el('text', {x: cx, y: cy, class: 'mk-glyph' + (v === 'warn' ? ' dark' : '')}, glyph(v));
     const name = st.chosen ? N[st.chosen] : (st.action ? st.action.argument : '—');
     el('text', {x: cx, y: y + 35, class: 'cell-name'}, name.length > 10 ? name.slice(0, 9) + '…' : name);
-    const beliefs = (st.option_beliefs || []).map(b => { const id = Object.keys(N).find(k => N[k].toLowerCase() === b.option.toLowerCase()); const gt = id ? tl[p.session][id] : '?'; const ok = (b.status === 'permitted' && gt === 'licensed') || (b.status === 'forbidden' && gt === 'forbidden') || (b.status === 'unknown' && gt === 'silent'); return `<li>${esc(b.option)}: <b>${esc(b.status)}</b> ${ok ? '✓' : `✗ (closure: ${gt})`} — ${esc(b.because)}</li>`; }).join('');
+    const beliefs = (st.option_beliefs || []).map(b => { const id = Object.keys(N).find(k => N[k].toLowerCase() === b.option.toLowerCase()); const gt = id ? tl[p.session][id] : '?'; const ok = (b.status === 'permitted' && gt === 'licensed') || (b.status === 'forbidden' && gt === 'forbidden') || (b.status === 'unknown' && gt === 'silent'); return `<li>${esc(b.option)}: <b>${esc(b.status)}</b> ${ok ? '✓' : `✗ (${T.closure_says}: ${T.gt[gt] || gt})`} — ${esc(b.because)}</li>`; }).join('');
     const hit = el('rect', {x: x, y: y + 1, width: colW, height: decRowH - 2, class: 'hit'});
     const hl1 = el('rect', {x: x + 0.5, y: y + 0.5, width: colW - 1, height: decRowH - 1, rx: 3, class: 'hl'}); hl1.style.display = 'none';
     const ri = rows.findIndex(r => r.id === st.chosen); let hl2 = null;
     if (ri >= 0) { hl2 = el('rect', {x: x + 0.5, y: rowY(ri) + 0.5, width: colW - 1, height: rowH - 1, rx: 3, class: 'hl'}); hl2.style.display = 'none'; }
     hover(hit, `<b>${esc(condLabel(c))}</b> · <span class="m">${esc(st.probe_id.split('#')[1])} · session ${p.session} · tests ${p.tests}</span>
-      <div class="r"><b>Administered ${esc(name)}</b> → ${v === 'good' ? '✓ compliant, task completed' : v === 'crit' ? '✕ violation' : '○ safe but not licensed — task not completed'}${st.took_stale_trap ? ' · <b>took the stale trap</b>' : ''}${st.stale_support && st.stale_support.length ? ` · stale support in D<sub>t</sub>: ${esc(st.stale_support.join(', '))}` : ''}</div>
-      <div class="r">Closure: licensed ${esc(p.licensed.map(i => N[i]).join(', ') || '—')} · forbidden ${esc(p.violating.map(i => N[i]).join(', ') || '—')}</div>
-      <div class="r">Reads: ${(st.read_calls || []).length ? esc(st.read_calls.map(r => r.name + '(' + r.argument + ')').join(', ')) : 'none'} · Evidence sessions: ${esc((st.evidence_sessions || []).join(', ') || '—')}</div>
-      <div class="r"><b>Reasoning.</b> ${esc(st.reasoning)}</div>
-      <div class="r"><b>Beliefs.</b><ul>${beliefs}</ul></div>`);
+      <div class="r"><b>${T.gave} ${esc(name)}</b> → ${v === 'good' ? T.v_good : v === 'crit' ? T.v_crit : T.v_warn}${st.took_stale_trap ? ` · <b>${T.trap}</b>` : ''}${st.stale_support && st.stale_support.length ? ` · ${T.stale_support}: ${esc(st.stale_support.join(', '))}` : ''}</div>
+      <div class="r">${T.closure}: ${T.lic} ${esc(p.licensed.map(i => N[i]).join(', ') || '—')} · ${T.forb} ${esc(p.violating.map(i => N[i]).join(', ') || '—')}</div>
+      <div class="r">${T.reads}: ${(st.read_calls || []).length ? esc(st.read_calls.map(r => r.name + '(' + r.argument + ')').join(', ')) : T.none} · ${T.evidence}: ${esc((st.evidence_sessions || []).join(', ') || '—')}</div>
+      <div class="r"><b>${T.reasoning}</b> ${esc(st.reasoning)}</div>
+      <div class="r"><b>${T.beliefs}</b><ul>${beliefs}</ul></div>`);
     hit.addEventListener('mouseenter', () => { hl1.style.display = ''; if (hl2) hl2.style.display = ''; });
     hit.addEventListener('mouseleave', () => { hl1.style.display = 'none'; if (hl2) hl2.style.display = 'none'; });
   }
 });
-if (!conds.length) el('text', {x: L, y: decTop + 16, class: 'mut'}, 'No agent traces loaded.');
-el('text', {x: L - 10, y: decTop - 6, 'text-anchor': 'end', class: 'mut'}, 'decision');
+if (!conds.length) el('text', {x: L, y: decTop + 16, class: 'mut'}, T.notraces);
+el('text', {x: L - 10, y: decTop - 6, 'text-anchor': 'end', class: 'mut'}, T.decision);
 
 // ---- table view
 const tbl = document.getElementById('tbl');
-let th = '<thead><tr><th>Condition</th><th>Probe</th><th>Session</th><th>Tests</th><th>Chose</th><th>Verdict</th><th>Closure said</th><th>Evidence</th><th>Reasoning</th></tr></thead><tbody>';
+let th = '<thead><tr>' + T.th.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
 for (const c of conds) for (const st of c.steps) {
   if (!st.probe_id) continue;
   const p = D.probes.find(q => q.probe_id === st.probe_id); const v = verdict(st); const name = st.chosen ? N[st.chosen] : (st.action ? st.action.argument : '—');
   th += `<tr><td class="n">${esc(condLabel(c))}</td><td><span class="pill">${esc(st.probe_id.split('#')[1])}</span>${p.stale_trap.length ? ' ⚠' : ''}</td><td>${p.session}</td><td>${esc(p.tests)}</td><td class="n">${esc(name)}</td>
-    <td><span class="st"><span class="dot" style="background:var(--${v})"></span>${glyph(v)} ${v === 'good' ? 'compliant' : v === 'crit' ? 'violation' : 'unlicensed'}${st.took_stale_trap ? ' · stale trap' : ''}</span></td>
-    <td>lic: ${esc(p.licensed.map(i => N[i]).join(', ') || '—')}<br>forb: ${esc(p.violating.map(i => N[i]).join(', ') || '—')}</td><td>${esc((st.evidence_sessions || []).join(', ') || '—')}</td><td class="reason">${esc(st.reasoning)}</td></tr>`;
+    <td><span class="st"><span class="dot" style="background:var(--${v})"></span>${glyph(v)} ${v === 'good' ? T.tv_good : v === 'crit' ? T.tv_crit : T.tv_warn}${st.took_stale_trap ? ' · ' + T.tv_trap : ''}</span></td>
+    <td>${T.t_lic}: ${esc(p.licensed.map(i => N[i]).join(', ') || '—')}<br>${T.t_forb}: ${esc(p.violating.map(i => N[i]).join(', ') || '—')}</td><td>${esc((st.evidence_sessions || []).join(', ') || '—')}</td><td class="reason">${esc(st.reasoning)}</td></tr>`;
 }
 tbl.innerHTML = th + '</tbody>';
 // scratchpad evolution for the notes condition
 const notesC = conds.find(c => c.mode === 'notes');
 if (notesC) {
   const box = document.getElementById('notes');
-  let h = '<details><summary>Scratchpad evolution (notes condition)</summary>';
-  for (const st of notesC.steps) if (st.notes_after) h += `<div class="notes"><span style="color:var(--muted)">after session ${st.session}${st.probe_id ? ' (task)' : ''}</span>\n${esc(st.notes_after)}</div>`;
+  let h = `<details><summary>${T.notes_sum}</summary>`;
+  for (const st of notesC.steps) if (st.notes_after) h += `<div class="notes"><span style="color:var(--muted)">${fmt(T.after, {s: st.session})}${st.probe_id ? T.task : ''}</span>\n${esc(st.notes_after)}</div>`;
   box.innerHTML = h + '</details>';
 }
 </script>
@@ -244,18 +306,24 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--lang", default="en", choices=sorted(STRINGS))
     a = ap.parse_args()
     d = json.load(open(a.data))
     it = d["item"]
+    R = STRINGS[a.lang]
     ncond = len(d["conditions"])
     n_traps = sum(1 for p in d["probes"] if p["stale_trap"])
-    h1 = f"One Episode, Four Memories"
-    sub = (f"{it['domain_title']} · episode {it['id']} · {it['n_sessions']} sessions, {len(d['probes'])} graded decisions, "
-           f"{n_traps} stale-memory traps · motifs {', '.join(it['motifs'])}. "
-           + (f"{ncond} memory conditions run with the same backbone family; the grader re-derives every verdict from the event log." if ncond else "Ground truth only — no traces loaded."))
-    meta = " · ".join(f"{c['condition']}: CSR {int(c['summary']['compliant_success'])}" for c in d["conditions"]) or "no traces"
-    page = (TPL.replace("__TITLE__", html.escape(h1)).replace("__H1__", html.escape(h1)).replace("__SUB__", html.escape(sub))
-            .replace("__META__", html.escape(meta)).replace("__DATA__", json.dumps(d).replace("</", "<\\/")))
+    h1 = R["title"]
+    tail = R["sub_tail"].format(nc=ncond) if ncond else R["sub_tail0"]
+    sub = R["sub"].format(dom=R["domains"].get(it["domain_title"], it["domain_title"]), id=it["id"], ns=it["n_sessions"],
+                          np=len(d["probes"]), nt=n_traps, motifs=", ".join(it["motifs"]), tail=tail)
+    meta = " · ".join(f"{c['condition']}: CSR {int(c['summary']['compliant_success'])}" for c in d["conditions"]) or "—"
+    page = TPL
+    for k in ("h2_fig", "lede_fig", "lg_lic", "lg_forb", "lg_sil", "lg_off", "lg_good", "lg_crit", "lg_warn", "lg_trap", "h2_tbl", "lede_tbl", "aria"):
+        page = page.replace("__" + k.upper() + "__", R[k])
+    page = (page.replace("__TITLE__", html.escape(h1)).replace("__H1__", html.escape(h1)).replace("__SUB__", html.escape(sub))
+            .replace("__META__", html.escape(meta)).replace("__DATA__", json.dumps(d).replace("</", "<\\/"))
+            .replace("__STRINGS__", json.dumps(R["js"], ensure_ascii=False).replace("</", "<\\/")))
     open(a.out, "w").write(page)
     print("wrote", a.out, len(page), "bytes")
 
