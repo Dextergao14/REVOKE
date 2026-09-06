@@ -35,6 +35,7 @@ class Turn:
     text: str
     eid: str = ""
     probe_id: str = ""
+    speaker: str = ""
 
 
 @dataclass
@@ -73,6 +74,7 @@ class Scenario:
     probes: List[ProbeSpec]
     motifs: List[str]
     entity_names: Dict[str, str]
+    meta: Dict[str, object] = field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------

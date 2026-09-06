@@ -59,3 +59,6 @@ ENTITY_ZH = {
     "Refund-Manual": "手动退款", "Refund-Auto": "自动退款", "Collateral-Post": "缴纳担保品",
     "Collateral-Pull": "收回担保品",
 }
+
+from .hard_ext import EXTRA_ZH  # noqa: E402
+ENTITY_ZH.update(EXTRA_ZH)

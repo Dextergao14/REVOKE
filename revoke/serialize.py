@@ -22,6 +22,7 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
         if ts:
             sessions.append({"index": s, "turns": [
                 {"kind": t.kind, "text": t.text,
+                 **({"speaker": t.speaker} if t.speaker else {}),
                  **({"probe_id": t.probe_id} if t.probe_id else {})} for t in ts]})
 
     timeline = []
@@ -49,6 +50,8 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
         "domain_title": dom.title,
         "regime": sc.regime,
         "density": sc.density,
+        "tier": sc.meta.get("tier", "easy"),
+        "meta": dict(sc.meta),
         "seed": sc.seed,
         "motifs": sc.motifs,
         "n_sessions": sc.n_sessions,
@@ -63,11 +66,11 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
             "tests": p.tests, "motif": p.motif, "motif_name": p.motif_name,
             "options": p.options, "option_names": p.option_names,
             "compliant": p.compliant,
-            "compliant_names": [dom.entities[e] for e in p.compliant],
+            "compliant_names": [sc.entity_names[e] for e in p.compliant],
             "licensed": p.licensed,
-            "licensed_names": [dom.entities[e] for e in p.licensed],
+            "licensed_names": [sc.entity_names[e] for e in p.licensed],
             "violating": p.violating,
-            "violating_names": [dom.entities[e] for e in p.violating],
+            "violating_names": [sc.entity_names[e] for e in p.violating],
             "blamed": p.blamed, "stale_trap": p.stale_trap,
             "flip": p.flip, "deleted_rules": p.deleted_rules, "note": p.note,
         } for p in sc.probes],
@@ -84,7 +87,12 @@ def blind(item: Dict) -> Dict:
     # constraints the conversation is supposed to be the sole source of.
     out = {k: v for k, v in item.items()
            if k not in ("timeline", "events", "motifs", "base_rules", "allow",
-                        "sort", "goal", "contexts", "universe", "seed")}
+                        "sort", "goal", "contexts", "universe", "seed", "meta")}
+    # turn kinds (update / noise / filler) would let a scaffold filter the
+    # transcript by construction; only the probe marker is legitimately visible
+    out["sessions"] = [{"index": s["index"], "turns": [
+        {"text": t["text"], **({"probe_id": t["probe_id"]} if t.get("probe_id") else {})}
+        for t in s["turns"]]} for s in item["sessions"]]
     out["probes"] = [{"probe_id": p["probe_id"], "session": p["session"],
                       "options": p["options"],
                       "option_names": p["option_names"]}

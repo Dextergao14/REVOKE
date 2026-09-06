@@ -41,6 +41,8 @@ class Beat:
     label: str
     events: List[Event]
     probe: Optional[Probe] = None
+    # non-binding lines rendered with this beat (hard tier): (speaker, text)
+    noise: List[Tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass

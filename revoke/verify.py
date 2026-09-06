@@ -98,6 +98,14 @@ def verify(sc: Scenario, allow: str) -> Report:
     #     being graded on a resolution it had no way of reading.
     order = {e.eid: i for i, e in enumerate(sc.events)}
     tags = {e.eid: set(e.tags) for e in sc.events}
+
+    def rank(eid):
+        for t in tags.get(eid, ()):
+            if t.startswith("rank:"):
+                return int(t.split(":")[1])
+        return 1
+
+    hier = sc.meta.get("hierarchy_session", 10 ** 9)
     for p in sc.probes:
         rb = _rulebase_at(sc, p.session, allow)
         sol = solve(rb)
@@ -108,7 +116,10 @@ def verify(sc: Scenario, allow: str) -> Report:
             if not ra.origin or not rl.origin:
                 continue
             newer = order.get(ra.origin, -1) > order.get(rl.origin, -1)
-            if not (newer or "override" in tags.get(ra.origin, ())
+            # a declared speaker hierarchy is the fourth admissible device:
+            # a higher-ranked ruling beats a lower-ranked one regardless of order
+            outranks = rank(ra.origin) > rank(rl.origin) and hier <= p.session
+            if not (newer or outranks or "override" in tags.get(ra.origin, ())
                     or "advisory" in tags.get(rl.origin, ())):
                 fails.append(f"{p.probe_id}: {ra.rid} defeats {rl.rid} but "
                              f"nothing in the transcript says so")
