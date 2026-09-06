@@ -55,5 +55,6 @@
     "RETRACT": 628
   },
   "mean_sessions": 36.76,
-  "mean_turns": 49.35
+  "mean_turns": 49.35,
+  "tier": "easy"
 }

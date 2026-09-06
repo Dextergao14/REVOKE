@@ -217,7 +217,11 @@ positively licenses (`allow(e) ∈ C_t`). Every probe's option set mixes:
 - entities the transcript prohibits (violations),
 - entities the transcript never mentions (safe, but they do not complete the task).
 
-Option order is shuffled per probe, so positional priors carry no signal.
+Option order is shuffled per probe, so positional priors carry no signal. The
+standard is stated in the transcript rather than assumed: the opening notice and
+every task say that nobody having objected to an option is not the same as it
+being approved. Violations and completions are both held to "derivable from what
+was said".
 
 ## Metrics
 
