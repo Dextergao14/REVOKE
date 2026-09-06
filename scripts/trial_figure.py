@@ -53,8 +53,16 @@ STRINGS = {
    "gt": {"licensed": "许可", "forbidden": "禁止", "silent": "未提及"},
    "th": ["条件", "Probe", "Session", "测试事件", "选择", "裁定", "闭包", "引用", "推理（agent 原文）"],
    "tv_good": "合规", "tv_crit": "违规", "tv_warn": "未许可", "tv_trap": "陈旧陷阱",
-   "t_lic": "许可", "t_forb": "禁止", "notes_sum": "便签演化（notes 条件）", "after": "第 {s} 个 session 之后", "task": "（任务）"
+   "t_lic": "许可", "t_forb": "禁止", "notes_sum": "便签演化（notes 条件）", "after": "第 {s} 个 session 之后", "task": "（任务）",
+   "L": 178
   },
+  "names": {"Veltroxin": "维曲辛", "Amoradine": "阿莫拉定", "Belquinol": "贝喹诺", "Cerraphen": "塞拉芬",
+            "Dolvastat": "多伐司他", "Elmirixan": "艾米瑞生", "Fenoprazil": "非诺普拉齐", "Gyrandol": "吉兰多",
+            "Halovexin": "哈洛韦辛", "Iprazomide": "伊普拉唑胺", "Jendracil": "珍德拉西", "Kalmoterol": "卡莫特罗",
+            "Lestafine": "莱斯他芬", "Mordacil": "莫达西", "Nuvaxetine": "努伐西汀", "Orbisant": "奥比生",
+            "Pyrraline": "派拉林", "Quexadrol": "喹沙醇", "Rovastigen": "罗伐司替", "Sildaphen": "西地芬",
+            "Tremacor": "特雷马可", "Uvantrel": "优凡特雷", "Vorcelide": "沃塞利德", "Xanthipex": "占替派"},
+  "belief": {"permitted": "许可", "forbidden": "禁止", "unknown": "未知"},
   "domains": {"Platform API governance": "平台 API 治理", "Procurement compliance": "采购合规",
               "Medication constraint tracking (synthetic formulary)": "用药约束跟踪（合成药典）",
               "Household automation preferences": "家居自动化偏好", "Financial operation permissions": "金融操作权限"}
@@ -167,6 +175,11 @@ details{margin-top:10px} summary{cursor:pointer;color:var(--ink-2);font-size:13p
 const D = JSON.parse(document.getElementById('data').textContent);
 const T = JSON.parse(document.getElementById('strings').textContent);
 const fmt = (t, o) => t.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+const NZ = T.names || {};
+const disp = id => NZ[N[id]] || N[id];                       // display name (translated when available)
+const both = id => NZ[N[id]] ? `${NZ[N[id]]}（${N[id]}）` : N[id];  // translated + original, for prose
+const dispName = n => NZ[n] || n;
+const bel = st => (T.belief && T.belief[st]) || st;
 const N = Object.fromEntries(D.ground_truth.entities.map(e => [e.id, e.name]));
 const probeSessions = new Set(D.probes.map(p => p.session));
 const offeredIds = new Set(D.probes.flatMap(p => p.options));
@@ -180,7 +193,7 @@ const conds = D.conditions;
 const condLabel = c => (T.cond[c.mode] || c.mode) + (c.model !== 'session' ? ' · ' + c.model : '');
 
 // ---- geometry
-const L = 120, R = 24, colW = 56, rowH = 22, railH = 50, gapY = 34, decRowH = 44, topPad = 8;
+const L = T.L || 120, R = 24, colW = 56, rowH = 22, railH = 50, gapY = 34, decRowH = 44, topPad = 8;
 const groups = []; let lastM = null;
 rows.forEach((e, i) => { const m = introducedBy[e.id] || 'zz'; if (m !== lastM) { groups.push(i); lastM = m; } });
 const rowY = i => topPad + railH + i * rowH + groups.filter(g => g > 0 && g <= i).length * 6;
@@ -209,7 +222,7 @@ rows.forEach((e, i) => {
     const st = tl[s][e.id];
     if (st === 'licensed' || st === 'forbidden') el('rect', {x: X(s) + 1, y: rowY(i) + 2, width: colW - 2, height: rowH - 4, class: st === 'licensed' ? 'band-good' : 'band-crit'});
   }
-  el('text', {x: L - 10, y: rowY(i) + rowH / 2 + 4, 'text-anchor': 'end', class: 'lbl'}, N[e.id]);
+  el('text', {x: L - 10, y: rowY(i) + rowH / 2 + 4, 'text-anchor': 'end', class: 'lbl'}, NZ[N[e.id]] ? `${NZ[N[e.id]]} · ${N[e.id]}` : N[e.id]);
   el('line', {x1: L, x2: X(S) + colW, y1: rowY(i) + rowH, y2: rowY(i) + rowH, class: 'grid'});
 });
 // offered options
@@ -259,16 +272,17 @@ conds.forEach((c, ci) => {
     const g = el('g');
     el('circle', {cx, cy, r: 8, class: 'mk-' + v + ' mk-ring'});
     el('text', {x: cx, y: cy, class: 'mk-glyph' + (v === 'warn' ? ' dark' : '')}, glyph(v));
-    const name = st.chosen ? N[st.chosen] : (st.action ? st.action.argument : '—');
+    const name = st.chosen ? disp(st.chosen) : (st.action ? dispName(st.action.argument) : '—');
+    const prose = st.chosen ? both(st.chosen) : name;
     el('text', {x: cx, y: y + 35, class: 'cell-name'}, name.length > 10 ? name.slice(0, 9) + '…' : name);
-    const beliefs = (st.option_beliefs || []).map(b => { const id = Object.keys(N).find(k => N[k].toLowerCase() === b.option.toLowerCase()); const gt = id ? tl[p.session][id] : '?'; const ok = (b.status === 'permitted' && gt === 'licensed') || (b.status === 'forbidden' && gt === 'forbidden') || (b.status === 'unknown' && gt === 'silent'); return `<li>${esc(b.option)}: <b>${esc(b.status)}</b> ${ok ? '✓' : `✗ (${T.closure_says}: ${T.gt[gt] || gt})`} — ${esc(b.because)}</li>`; }).join('');
+    const beliefs = (st.option_beliefs || []).map(b => { const id = Object.keys(N).find(k => N[k].toLowerCase() === b.option.toLowerCase()); const gt = id ? tl[p.session][id] : '?'; const ok = (b.status === 'permitted' && gt === 'licensed') || (b.status === 'forbidden' && gt === 'forbidden') || (b.status === 'unknown' && gt === 'silent'); return `<li>${esc(id ? both(id) : b.option)}: <b>${esc(bel(b.status))}</b> ${ok ? '✓' : `✗ (${T.closure_says}: ${T.gt[gt] || gt})`} — ${esc(b.because)}</li>`; }).join('');
     const hit = el('rect', {x: x, y: y + 1, width: colW, height: decRowH - 2, class: 'hit'});
     const hl1 = el('rect', {x: x + 0.5, y: y + 0.5, width: colW - 1, height: decRowH - 1, rx: 3, class: 'hl'}); hl1.style.display = 'none';
     const ri = rows.findIndex(r => r.id === st.chosen); let hl2 = null;
     if (ri >= 0) { hl2 = el('rect', {x: x + 0.5, y: rowY(ri) + 0.5, width: colW - 1, height: rowH - 1, rx: 3, class: 'hl'}); hl2.style.display = 'none'; }
     hover(hit, `<b>${esc(condLabel(c))}</b> · <span class="m">${esc(st.probe_id.split('#')[1])} · session ${p.session} · tests ${p.tests}</span>
-      <div class="r"><b>${T.gave} ${esc(name)}</b> → ${v === 'good' ? T.v_good : v === 'crit' ? T.v_crit : T.v_warn}${st.took_stale_trap ? ` · <b>${T.trap}</b>` : ''}${st.stale_support && st.stale_support.length ? ` · ${T.stale_support}: ${esc(st.stale_support.join(', '))}` : ''}</div>
-      <div class="r">${T.closure}: ${T.lic} ${esc(p.licensed.map(i => N[i]).join(', ') || '—')} · ${T.forb} ${esc(p.violating.map(i => N[i]).join(', ') || '—')}</div>
+      <div class="r"><b>${T.gave} ${esc(prose)}</b> → ${v === 'good' ? T.v_good : v === 'crit' ? T.v_crit : T.v_warn}${st.took_stale_trap ? ` · <b>${T.trap}</b>` : ''}${st.stale_support && st.stale_support.length ? ` · ${T.stale_support}: ${esc(st.stale_support.join(', '))}` : ''}</div>
+      <div class="r">${T.closure}: ${T.lic} ${esc(p.licensed.map(disp).join(', ') || '—')} · ${T.forb} ${esc(p.violating.map(disp).join(', ') || '—')}</div>
       <div class="r">${T.reads}: ${(st.read_calls || []).length ? esc(st.read_calls.map(r => r.name + '(' + r.argument + ')').join(', ')) : T.none} · ${T.evidence}: ${esc((st.evidence_sessions || []).join(', ') || '—')}</div>
       <div class="r"><b>${T.reasoning}</b> ${esc(st.reasoning)}</div>
       <div class="r"><b>${T.beliefs}</b><ul>${beliefs}</ul></div>`);
@@ -284,10 +298,10 @@ const tbl = document.getElementById('tbl');
 let th = '<thead><tr>' + T.th.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
 for (const c of conds) for (const st of c.steps) {
   if (!st.probe_id) continue;
-  const p = D.probes.find(q => q.probe_id === st.probe_id); const v = verdict(st); const name = st.chosen ? N[st.chosen] : (st.action ? st.action.argument : '—');
+  const p = D.probes.find(q => q.probe_id === st.probe_id); const v = verdict(st); const name = st.chosen ? both(st.chosen) : (st.action ? dispName(st.action.argument) : '—');
   th += `<tr><td class="n">${esc(condLabel(c))}</td><td><span class="pill">${esc(st.probe_id.split('#')[1])}</span>${p.stale_trap.length ? ' ⚠' : ''}</td><td>${p.session}</td><td>${esc(p.tests)}</td><td class="n">${esc(name)}</td>
     <td><span class="st"><span class="dot" style="background:var(--${v})"></span>${glyph(v)} ${v === 'good' ? T.tv_good : v === 'crit' ? T.tv_crit : T.tv_warn}${st.took_stale_trap ? ' · ' + T.tv_trap : ''}</span></td>
-    <td>${T.t_lic}: ${esc(p.licensed.map(i => N[i]).join(', ') || '—')}<br>${T.t_forb}: ${esc(p.violating.map(i => N[i]).join(', ') || '—')}</td><td>${esc((st.evidence_sessions || []).join(', ') || '—')}</td><td class="reason">${esc(st.reasoning)}</td></tr>`;
+    <td>${T.t_lic}: ${esc(p.licensed.map(disp).join(', ') || '—')}<br>${T.t_forb}: ${esc(p.violating.map(disp).join(', ') || '—')}</td><td>${esc((st.evidence_sessions || []).join(', ') || '—')}</td><td class="reason">${esc(st.reasoning)}</td></tr>`;
 }
 tbl.innerHTML = th + '</tbody>';
 // scratchpad evolution for the notes condition
@@ -323,7 +337,8 @@ def main():
         page = page.replace("__" + k.upper() + "__", R[k])
     page = (page.replace("__TITLE__", html.escape(h1)).replace("__H1__", html.escape(h1)).replace("__SUB__", html.escape(sub))
             .replace("__META__", html.escape(meta)).replace("__DATA__", json.dumps(d).replace("</", "<\\/"))
-            .replace("__STRINGS__", json.dumps(R["js"], ensure_ascii=False).replace("</", "<\\/")))
+            .replace("__STRINGS__", json.dumps({**R["js"], "names": R.get("names", {}), "belief": R.get("belief", {})},
+                                                ensure_ascii=False).replace("</", "<\\/")))
     open(a.out, "w").write(page)
     print("wrote", a.out, len(page), "bytes")
 
