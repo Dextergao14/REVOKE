@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from revoke.domains.seeds import ALL
 from revoke.generator import build_scenario
+from revoke.hard import build_hard_scenario
 from revoke.serialize import blind, scenario_to_item
 from revoke.verify import verify
 
@@ -39,7 +40,10 @@ def main() -> None:
     ap.add_argument("--out", default="data")
     ap.add_argument("--seed", type=int, default=20260905)
     ap.add_argument("--core", type=int, default=200)
+    ap.add_argument("--tier", default="easy", choices=["easy", "hard"],
+                    help="hard: 60-140 sessions, speaker hierarchy, near-miss noise, long arcs")
     args = ap.parse_args()
+    prefix = "revoke_full" if args.tier == "easy" else "revoke_hard"
     os.makedirs(args.out, exist_ok=True)
 
     rng = random.Random(args.seed)
@@ -52,7 +56,10 @@ def main() -> None:
         dom, regime, density = cells[len(items) % len(cells)]
         seed += 1
         sid = f"REVOKE_{dom.key}_{len(items):04d}"
-        sc = build_scenario(dom, sid, seed, regime, density)
+        if args.tier == "hard":
+            sc = build_hard_scenario(dom, sid, seed)
+        else:
+            sc = build_scenario(dom, sid, seed, regime, density)
         rep = verify(sc, dom.allow)
         if not rep.ok:
             rejected[rep.failures[0].split(":")[-1].strip()[:48]] += 1
@@ -61,7 +68,7 @@ def main() -> None:
 
     rng.shuffle(items)
     for i, it in enumerate(items):
-        it["id"] = f"REVOKE_{it['domain']}_{i:04d}"
+        it["id"] = f"REVOKE_{'hard_' if args.tier == 'hard' else ''}{it['domain']}_{i:04d}"
         for j, p in enumerate(it["probes"]):
             old = p["probe_id"]
             p["probe_id"] = f"{it['id']}#p{j}"
@@ -78,8 +85,9 @@ def main() -> None:
             for r in rows:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
-    dump(os.path.join(args.out, "revoke_full.jsonl"), items)
-    dump(os.path.join(args.out, "revoke_blind.jsonl"), [blind(i) for i in items])
+    stem = "revoke_full" if args.tier == "easy" else "revoke_hard_full"
+    dump(os.path.join(args.out, stem + ".jsonl"), items)
+    dump(os.path.join(args.out, stem.replace("full", "blind") + ".jsonl"), [blind(i) for i in items])
 
     # stratified core subset: even over domain x regime x density
     buckets = collections.defaultdict(list)
@@ -97,7 +105,7 @@ def main() -> None:
         if not added:
             break
         k += 1
-    dump(os.path.join(args.out, "revoke_core.jsonl"), [blind(i) for i in core])
+    dump(os.path.join(args.out, stem.replace("full", "core") + ".jsonl"), [blind(i) for i in core])
 
     stats = {
         "n_items": len(items),
@@ -120,7 +128,8 @@ def main() -> None:
         "mean_turns": round(sum(len(t["turns"]) for i in items
                                 for t in i["sessions"]) / len(items), 2),
     }
-    with open(os.path.join(args.out, "revoke_stats.json"), "w") as f:
+    stats["tier"] = args.tier
+    with open(os.path.join(args.out, stem.replace("full", "stats") + ".json"), "w") as f:
         json.dump(stats, f, indent=2)
     print(json.dumps(stats, indent=2))
 

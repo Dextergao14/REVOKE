@@ -56,6 +56,8 @@ class ProbeSpec:
     flip: bool                                # compliant set changed since last probe
     deleted_rules: List[str]                  # D_t rule ids at this session
     note: str = ""
+    params: Dict[str, str] = field(default_factory=dict)   # the task's own parameters (hard tier)
+    facts: List[str] = field(default_factory=list)         # probe-scoped context facts derived from them
 
 
 @dataclass

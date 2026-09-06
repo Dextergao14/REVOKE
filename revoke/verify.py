@@ -58,7 +58,10 @@ def verify(sc: Scenario, allow: str) -> Report:
     #     surviving path whenever any positive permission survives -- this is
     #     the over-deletion trap that naive incremental maintenance falls into.
     for p in sc.probes:
-        sol = solve(_rulebase_at(sc, p.session, allow))
+        rb_ = _rulebase_at(sc, p.session, allow)
+        for i_, f in enumerate(getattr(p, "facts", [])):
+            rb_.add(Rule(f"pf{i_}", lit(f), (), 1))
+        sol = solve(rb_)
         positive = {l for l in sol.closure if l.pred == allow and not l.neg}
         feasible = lit("task_feasible") in sol.closure
         if bool(positive) != feasible:

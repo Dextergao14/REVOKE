@@ -27,7 +27,10 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
 
     timeline = []
     for p in sc.probes:
-        sol = solve(_rulebase_at(sc, p.session, dom.allow))
+        rb_ = _rulebase_at(sc, p.session, dom.allow)
+        for i_, f in enumerate(p.facts):
+            rb_.add(Rule(f"pf{i_}", _lit(f), (), 1))
+        sol = solve(rb_)
         timeline.append({
             "probe_id": p.probe_id, "session": p.session,
             "closure": sorted(str(l) for l in sol.closure),
@@ -42,7 +45,8 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
         "sort": dom.sort,
         "allow": dom.allow,
         "goal": dom.goal,
-        "contexts": sorted(dom.contexts),
+        "contexts": sorted(k for k, v in sc.signature.items()
+                           if v == () and k not in (dom.goal, "task_feasible")),
         "universe": sc.universe,
         "base_rules": [{"rid": r.rid, "head": str(r.head),
                         "body": [str(b) for b in r.body], "prio": r.prio}
@@ -73,6 +77,7 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
             "violating_names": [sc.entity_names[e] for e in p.violating],
             "blamed": p.blamed, "stale_trap": p.stale_trap,
             "flip": p.flip, "deleted_rules": p.deleted_rules, "note": p.note,
+            "params": dict(p.params), "facts": list(p.facts),
         } for p in sc.probes],
         "events": [e.to_json() for e in sc.events],
         "timeline": timeline,
@@ -94,8 +99,8 @@ def blind(item: Dict) -> Dict:
         {"text": t["text"], **({"probe_id": t["probe_id"]} if t.get("probe_id") else {})}
         for t in s["turns"]]} for s in item["sessions"]]
     out["probes"] = [{"probe_id": p["probe_id"], "session": p["session"],
-                      "options": p["options"],
-                      "option_names": p["option_names"]}
+                      "options": p["options"], "option_names": p["option_names"],
+                      **({"params": p["params"]} if p.get("params") else {})}
                      for p in item["probes"]]
     return out
 
@@ -107,7 +112,7 @@ def blind(item: Dict) -> Dict:
 _GRP_RE = None
 
 
-def rulebase_at(item: Dict, session: int, allow: str) -> RuleBase:
+def rulebase_at(item: Dict, session: int, allow: str, facts=()) -> RuleBase:
     """Rebuild R_t from a full (non-blind) item, for independent re-grading."""
     sig = {allow: (item["sort"],), item["goal"]: (),
            "grp": (item["sort"], "group"), "task_feasible": ()}
@@ -123,4 +128,6 @@ def rulebase_at(item: Dict, session: int, allow: str) -> RuleBase:
         e = event_from_json(d)
         if e.session <= session:
             e.apply(rb)
+    for i, f in enumerate(facts):                 # probe-scoped facts (hard tier)
+        rb.add(Rule(f"pf{i}", _lit(f), (), 1))
     return rb

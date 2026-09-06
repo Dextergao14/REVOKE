@@ -75,7 +75,7 @@ def resolve_entity(item, tc):
 def grade_item(item, trace_row):
     allow, act = item["allow"], item["act_tool"]
     steps = load_steps(trace_row) if trace_row else {}
-    solutions = {p["probe_id"]: solve(rulebase_at(item, p["session"], allow))
+    solutions = {p["probe_id"]: solve(rulebase_at(item, p["session"], allow, p.get("facts", ())))
                  for p in item["probes"]}
 
     results = []

@@ -51,6 +51,7 @@ class MotifPlan:
     beats: List[Beat]
     base_rules: List[Rule] = field(default_factory=list)
     entities: Tuple[str, ...] = ()
+    numeric: bool = False
 
 
 # --------------------------------------------------------------------------

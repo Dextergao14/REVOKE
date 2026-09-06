@@ -1,0 +1,297 @@
+<title>REVOKE Working Paper</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f7f8f6; --sheet:#fdfdfb; --ink:#14181c; --ink-2:#4a535b; --muted:#7d868e; --rule:#d9dedf; --rule-2:#eceff0;
+  --accent:#2f3aa6; --accent-ink:#2a338f; --accent-wash:rgba(47,58,166,.07);
+  --ph:#8a5a00; --ph-bg:#fff1cc; --ph-line:#e3b341;
+  --code-bg:#f0f2f1;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif; --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#111416; --sheet:#181c1f; --ink:#eef0ee; --ink-2:#b6bcc0; --muted:#858d94; --rule:#30363a; --rule-2:#23282c;
+  --accent:#8b93ee; --accent-ink:#a4aaf3; --accent-wash:rgba(139,147,238,.12);
+  --ph:#f2c76a; --ph-bg:#3a2d0c; --ph-line:#b58a2a; --code-bg:#1f2428;
+}}
+:root[data-theme="dark"]{
+  --paper:#111416; --sheet:#181c1f; --ink:#eef0ee; --ink-2:#b6bcc0; --muted:#858d94; --rule:#30363a; --rule-2:#23282c;
+  --accent:#8b93ee; --accent-ink:#a4aaf3; --accent-wash:rgba(139,147,238,.12);
+  --ph:#f2c76a; --ph-bg:#3a2d0c; --ph-line:#b58a2a; --code-bg:#1f2428;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;font-optical-sizing:auto}
+.sheet{max-width:860px;margin:32px auto 80px;background:var(--sheet);border:1px solid var(--rule);padding:56px 64px 72px}
+@media (max-width:720px){.sheet{margin:0;padding:32px 20px 56px;border:0}}
+.eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1.2;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
+.subtitle{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--ink-2);margin:0 0 18px;text-wrap:balance}
+.authors{font-family:var(--sans);font-size:14px;color:var(--ink-2);margin:0 0 6px}
+.affil{font-family:var(--sans);font-size:13px;color:var(--muted);margin:0 0 28px}
+.notice{font-family:var(--sans);font-size:13px;color:var(--ink-2);background:var(--accent-wash);border-left:3px solid var(--accent);padding:10px 14px;margin:0 0 30px;line-height:1.5}
+.notice .ph{vertical-align:baseline}
+h2{font-family:var(--sans);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule)}
+h2 .n{color:var(--muted);font-weight:500;margin-right:10px;font-variant-numeric:tabular-nums}
+h3{font-family:var(--sans);font-weight:600;font-size:15px;margin:26px 0 8px;color:var(--ink)}
+p{margin:0 0 14px;max-width:68ch}
+.abstract{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:18px 0 8px;margin:0 0 8px}
+.abstract h2{border:0;margin:0 0 8px;padding:0}
+.abstract p{font-size:16px}
+ul,ol{margin:0 0 14px;padding-left:22px;max-width:68ch}
+li{margin:0 0 6px}
+li::marker{color:var(--muted)}
+strong{font-weight:600}
+em{font-style:italic}
+code,.rule{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:1px 5px;border-radius:2px;color:var(--ink)}
+.rules{font-family:var(--mono);font-size:13.5px;line-height:1.7;background:var(--code-bg);padding:14px 18px;margin:8px 0 18px;overflow-x:auto;color:var(--ink);border-left:3px solid var(--rule)}
+.rules .c{color:var(--muted)}
+.ph{display:inline-block;font-family:var(--mono);font-size:.82em;font-weight:500;color:var(--ph);background:var(--ph-bg);border-bottom:2px solid var(--ph-line);padding:0 5px;line-height:1.5;border-radius:2px;white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 6px;font-family:var(--sans)}
+@media (max-width:720px){.steps{grid-template-columns:1fr 1fr}}
+.step{background:var(--paper);border:1px solid var(--rule);padding:12px 14px;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.step b{display:block;font-weight:600;color:var(--ink);margin:0 0 4px;font-size:13px;letter-spacing:.02em}
+.step .k{font-family:var(--mono);color:var(--accent-ink);font-size:12px}
+figure{margin:22px 0 26px}
+figcaption{font-family:var(--sans);font-size:13px;color:var(--ink-2);line-height:1.5;margin:8px 0 0;max-width:78ch}
+figcaption b{font-weight:600;color:var(--ink)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:13.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;padding:8px 10px;border-bottom:1.5px solid var(--ink);vertical-align:bottom;line-height:1.3}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;border-bottom:1px solid var(--rule-2);vertical-align:top;color:var(--ink-2)}
+td.n{color:var(--ink)}
+tr.group td{font-weight:600;color:var(--ink);padding-top:12px;border-bottom:1px solid var(--rule)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;margin:6px 0 16px}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.def{font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink-2)}
+.def b{color:var(--ink);font-weight:600}
+.callout{border:1px solid var(--rule);background:var(--paper);padding:14px 18px;margin:16px 0 20px;font-size:15.5px}
+.callout p:last-child{margin:0}
+.transcript{font-family:var(--mono);font-size:12.5px;line-height:1.65;background:var(--code-bg);padding:14px 18px;margin:8px 0 6px;overflow-x:auto;color:var(--ink);white-space:pre}
+.transcript .s{color:var(--muted)} .transcript .gt{color:var(--accent-ink)} .transcript .x{color:var(--ph)}
+.refs{font-family:var(--sans);font-size:13.5px;color:var(--ink-2);padding-left:0;list-style:none;max-width:none}
+.refs li{margin:0 0 8px;padding-left:1.6em;text-indent:-1.6em}
+.foot{font-family:var(--sans);font-size:12.5px;color:var(--muted);margin-top:44px;padding-top:14px;border-top:1px solid var(--rule)}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="sheet">
+<p class="eyebrow">Working paper · draft v0.3 · September 2026</p>
+<h1>REVOKE: Does an Agent's Experience Expire When the Rules Do?</h1>
+<p class="subtitle">A behavioural benchmark for procedural memory invalidation under rule evolution</p>
+<p class="authors">Wentao Gao<sup>*</sup> · <span class="ph">co-authors</span></p>
+<p class="affil">The University of Texas at Arlington · <span class="ph">affiliations</span></p>
+
+<div class="notice">Every empirical number in this draft is a placeholder, typeset like <span class="ph">xx.x</span>, pending the full evaluation. Dataset composition figures describe the current build and are marked <span class="ph">current build</span> where they may still change. Section 6.4 reports two qualitative observations from pilot runs that are stable enough to state in words.</div>
+
+<div class="abstract">
+<h2>Abstract</h2>
+<p>As LLM agents are deployed over long horizons, their memory systems have split into two families: declarative middleware that records facts about users and the world, and self-evolving experiential memory that distils insights, workflows and skills from the agent's own trajectories. Existing benchmarks probe the first family's recall fidelity and score answers; none asks what happens to either family when the rules of the world change. We present REVOKE, a benchmark in which agents execute open-ended tool-use tasks in a programmatically verifiable environment whose constraints evolve across sessions through six event types: addition, supersession, conditionalisation, conflict, support and partial retraction. Grading is behavioural and deliberately asymmetric: any action in the trace that contradicts the current constraint closure fails the episode, and everything else is unconstrained. Ground truth is a two-layer construction, a persistent base of defeasible rules with priorities and a per-step derivation layer computing the grounded extension of a defeat graph followed by a stratified closure, which gives unique, polynomial-time, deletion-order-independent grading with no LLM judge. Scenarios are generated by traversing a DAG of reusable event-subgraph motifs, so the constraint history is rich, verifiable, and produced at scale: <span class="ph">n</span> episodes in two difficulty tiers across five domains, with <span class="ph">n</span> graded decision points. We name the failure mode under test <em>procedural memory invalidation</em>: experience consolidated under an old world state becomes a violation-inducing rule after the state evolves, so that remembering more can mean violating more. Across <span class="ph">n</span> systems, we find <span class="ph">headline finding</span>.</p>
+</div>
+
+<h2><span class="n">1</span>Introduction</h2>
+<p>Agent memory research advances along two largely disjoint tracks. The first treats memory as a declarative knowledge store: extract profiles, preferences and events from conversation, write them to external storage, retrieve on demand. Middleware such as mem0, MemOS and Zep belongs here, evaluated by long-horizon question answering in the style of LoCoMo and LongMemEval: did the system remember correctly? The second treats memory as procedural experience. ExpeL distils cross-task insights, Agent Workflow Memory induces reusable workflows, Voyager and SkillWeaver synthesise skills, and MemEvolve lets the memory architecture itself evolve. These systems are evaluated by task success on GAIA- and WebArena-style suites: did the agent get better at doing? Both tracks sidestep the same question. When the rules of the world change, does what memory holds remain valid?</p>
+<p>For the declarative family the question has only just been raised. StateMemBench defines state tracking across sessions, where facts and decisions are revised and answers must reflect the current rather than a superseded state. This is an important step, but its grading operates at the answer level. Real agent failures occur at the level of behaviour: booking a vendor that has since been banned, calling an API that was deprecated, administering a drug that acquired a contraindication. A correct answer does not imply compliant behaviour, and behavioural grading naturally accommodates open-ended, multi-solution execution without a fixed answer space.</p>
+<p>For the experiential family the question has never been examined. Procedural experience carries an implicit timestamp: every distilled insight and consolidated workflow was validated under some particular world state. When constraints evolve, that experience does not expire on its own. It continues to be retrieved and reused, and because it remains effective on the old distribution it can survive selection in success-driven evolution. We call this failure mode <strong>procedural memory invalidation</strong>. A system that only accumulates and never invalidates will exhibit the counterintuitive pattern of <em>more experience, more violations</em>.</p>
+<p>REVOKE evaluates both families under one behavioural criterion. Our contributions:</p>
+<ol>
+<li>We formalise procedural memory invalidation and move evolving-state evaluation from the answer level to the behaviour level, grading traces rather than responses.</li>
+<li>We give a two-layer constraint construction, a grounded extension over a defeat graph followed by stratified Datalog closure, that guarantees unique, polynomial-time, deletion-order-independent grading and sidesteps the over-deletion pitfall of incremental view maintenance.</li>
+<li>We build the benchmark as a <em>graph traversal</em>: reusable event-subgraph motifs are composed by randomised topological linearisation into long, verifiable constraint histories, with ground truth always recomputed by the solver rather than taken from the template's intent. Two tiers separate memory-truncation failures from reasoning failures under noise and speaker hierarchy.</li>
+<li>We introduce metrics beyond pass/fail: per-event-type violation rate, adaptation lag, update interference and staleness attribution, all computable on the graph without annotation, and we report the first head-to-head comparison of declarative and experiential memory systems under this criterion.</li>
+</ol>
+
+<h2><span class="n">2</span>Formalisation: A Two-Layer Graph Construction</h2>
+<p>We represent constraint state as a graph, but split the intuitive picture, rules as nodes, relations as edges, contradiction as deletion, into two layers. Deletion happens only in a derivation layer recomputed at every timestep; the persistent layer never loses information on conflict. The split gives "delete the contradicted node" an exact semantics: it is precisely the iterated computation of the grounded extension of an argumentation framework in the sense of Dung (1995), unique, polynomial-time, and independent of deletion order.</p>
+
+<h3>2.1 Persistent layer</h3>
+<p>Ground truth at time <em>t</em> is a rule base <code>R_t = {(r_i, π_i)}</code> of defeasible rules with explicit integer priorities over a decidable Datalog fragment: heads are literals with classical negation, bodies are conjunctions of positive literals, variables are sorted. Six events drive evolution. <strong>ADD</strong> inserts a rule. <strong>SUPERSEDE</strong> replaces a rule's head or body. <strong>CONDITION</strong> rewrites a body between unconditional and conditional forms. <strong>CONFLICT</strong> inserts a rule with a contradictory head, resolved by priority rather than deletion. <strong>SUPPORT</strong> inserts nothing and increments the priority of its target, folding support into priorities and avoiding bipolar frameworks. <strong>RETRACT</strong> withdraws named ground instances of a rule. Except for SUPERSEDE and RETRACT the layer is append-only, which is what makes staleness attribution well defined.</p>
+
+<h3>2.2 Derivation layer</h3>
+<div class="steps">
+<div class="step"><b>1 · Ground</b><span class="k">R_t → N_t</span><br>Instantiate every live rule over the sorted Herbrand universe. Nodes are ground <em>instances</em>, not rules, so a rule defeated in one context stays valid in another.</div>
+<div class="step"><b>2 · Defeat graph</b><span class="k">n → m</span><br>An edge whenever two instances have complementary heads and π(n) &gt; π(m). Priorities are strict, so the relation is acyclic.</div>
+<div class="step"><b>3 · Grounded extension</b><span class="k">E_t, D_t</span><br>Iterated deletion to fixpoint: a node is in once all its attackers are out, out once any attacker is in. Survivors E_t, deleted D_t.</div>
+<div class="step"><b>4 · Closure</b><span class="k">C_t</span><br>Stratified forward chaining over E_t alone. Recomputed over the whole surviving set, never propagated incrementally.</div>
+</div>
+<figure><figcaption><b>Figure 1.</b> The derivation layer, recomputed from scratch at every timestep and never stored. Because step 4 recomputes over all survivors rather than deleting a node and its outgoing edges from the old closure, any conclusion with an alternative derivation is automatically re-derived: the situation Delete-and-Rederive exists to handle in incremental Datalog, which we sidestep by per-step recomputation.</figcaption></figure>
+
+<h3>2.3 Grading and properties</h3>
+<p>An action <em>a</em> asserts a set of ground literals. It is a <strong>violation</strong> iff <code>C_t ∪ assert(a)</code> derives a contradiction, where the asserted literals are pushed through the surviving instances, so a violation can surface several derivation steps away from the action itself. Three properties hold throughout evolution. (i) E_t is unique and polynomial-time computable. (ii) Removing nodes or edges cannot create negative cycles, so every subgraph remains stratifiable; the semantics is well defined at every timestep. This is well-definedness, not conclusion preservation: negation makes the logic non-monotone and deletion can flip conclusions, which is exactly the phenomenon under test. (iii) The permissive default: if the closure says nothing about an entity, acting on it is not a violation.</p>
+
+<h3>2.4 Worked example</h3>
+<div class="rules"><span class="c">// procurement, after session 5</span>
+f1: low_budget.                          <span class="c">(fact, session 1)</span>
+r1: ok(A) ⇐ ⊤                [π=1]       <span class="c">(ADD, session 2: team lead's default vendor)</span>
+r2: ¬ok(A) ⇐ low_budget      [π=2]       <span class="c">(CONFLICT, session 5: compliance)</span>
+
+<span class="c">// derivation: edge n2 → n1; E = {f1, n2}, D = {n1}; C = {low_budget, ¬ok(A)}</span>
+<span class="c">// order(A) asserts ok(A) → contradiction → violation.  order(B): closure silent → pass.</span>
+
+<span class="c">// session 9, SUPPORT: an executive directive endorses A, π(r1): 1 → 3.  No rule text changes.</span>
+<span class="c">// edge reverses n1 → n2; E = {f1, n1}, D = {n2}; C = {low_budget, ok(A)}.  Ordering A is compliant again.</span></div>
+<p>A single priority increment flips the entire extension. A memory system that froze the session-5 conclusion "A is banned" as a fact is now stale, while a system storing rules plus priorities adapts for free. The benchmark's engine reproduces this example and the deprecation example of the design note as executable tests.</p>
+
+<h2><span class="n">3</span>Benchmark Construction</h2>
+
+<h3>3.1 The generator is a graph traversal</h3>
+<p>Constraint evolution is not hand-written per scenario. A <strong>motif</strong> is a small, domain-agnostic event subgraph over a permission predicate <code>allow/1</code>, a set of 0-ary context predicates, and a group predicate <code>grp/2</code>. Each motif emits an ordered chain of <strong>beats</strong>; a beat is one atomic step of evolution, optionally followed by a <strong>probe</strong>, a task the agent must perform at that moment. Chains are internally ordered and mutually independent, so the beats of all motifs in a scenario form a DAG whose linear extensions are the admissible timelines. The generator draws a randomised topological linearisation, weighting each chain by how many beats it has left, and lays the result onto a session grid with filler turns, distractor options and echo probes.</p>
+<p><strong>Ground truth is never taken from a motif's design intent.</strong> Once the timeline exists, every probe is re-scored against the closure the solver actually produces at that session. An interleaving that changes the intended semantics is therefore caught by the verifier rather than silently mislabelled. Every motif is designed so that the option set offered at consecutive probes stays constant while the compliant subset changes: an agent replaying experience from an earlier probe violates.</p>
+
+<h3>3.2 Motif library</h3>
+<div class="tbl"><table>
+<thead><tr><th>Motif</th><th>Shape</th><th>What a stale memory gets wrong</th></tr></thead>
+<tbody>
+<tr class="group"><td colspan="3">Easy tier</td></tr>
+<tr><td class="n">conflict_flip</td><td>ADD → CONFLICT → SUPPORT</td><td>a banned entity becomes permitted again while its old alternative is withdrawn</td></tr>
+<tr><td class="n">supersede_alt</td><td>ADD ×2 → SUPERSEDE</td><td>the consolidated path is retired; the task survives via a second derivation</td></tr>
+<tr><td class="n">conditionalize</td><td>ADD → CONFLICT → CONDITION → context fires</td><td>a blanket ban is narrowed, then re-triggered by context</td></tr>
+<tr><td class="n">retract_partial</td><td>ADD → group ban → RETRACT</td><td>a member leaves the blanket ban exactly as the old carve-out closes</td></tr>
+<tr><td class="n">conflict_chain</td><td>three-way conflict, transitive priority</td><td>the middle rule's verdict is overturned by a higher one</td></tr>
+<tr><td class="n">support_threshold</td><td>losing objection is SUPPORTed past the permission</td><td>no rule text changes, only a priority</td></tr>
+<tr><td class="n">condition_widen</td><td>conditional ban → unconditional</td><td>the qualifier the agent relied on disappears</td></tr>
+<tr><td class="n">canary</td><td>no applicable constraint</td><td>calibrates the false-positive rate</td></tr>
+<tr class="group"><td colspan="3">Hard tier (adds speaker ranks, near-miss noise, long arcs)</td></tr>
+<tr><td class="n">ctx_flipflop</td><td>conditional ban; context on/off/on; then widened</td><td>a cached "X is banned" is wrong half the time</td></tr>
+<tr><td class="n">alias</td><td>"X follows Y" linkage; Y banned, restored, banned; link broken</td><td>transitive effects, then their absence</td></tr>
+<tr><td class="n">group_dynamics</td><td>conditional group ban; members join and leave</td><td>membership stated dozens of sessions earlier</td></tr>
+<tr><td class="n">hierarchy</td><td>rank-3 ban, later rank-2 "default", lift, rank-2 ban</td><td>recency is not authority</td></tr>
+<tr><td class="n">stale_reminder</td><td>rank-3 ban, then unranked "reminders" that X is the default</td><td>statements that look like rules but are not</td></tr>
+<tr><td class="n">reinstate_arc</td><td>retire → reverse → conditionalise → context on/off</td><td>a six-step arc on one entity</td></tr>
+<tr><td class="n">proposal_noise</td><td>proposals and hearsay about Y that never become rules</td><td>treating a proposal as a ban</td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 1.</b> The fifteen motifs. Each is stated only in the engine's vocabulary, so every domain is graded by the same code; the domain contributes vocabulary, entities and prose.</figcaption></figure>
+
+<h3>3.3 Domains and tiers</h3>
+<p>Five seed domains: platform API governance, procurement compliance, clinical medication constraints on a fully synthetic formulary, household automation preferences, and financial operation permissions. Each domain supplies 24 entities (36 in the hard tier), six context predicates, three groups, a mock tool surface with one graded <em>act</em> tool and read-only tools that deliberately return nothing substantive, and natural-language templates for every event type. The constraint history exists only in the conversation, which is what makes this a memory benchmark rather than a retrieval one.</p>
+<p>The <strong>easy tier</strong> follows the design note's regimes: 10–18 or 22–40 sessions, sparse or dense events, all updates from a single team voice, obviously irrelevant filler. The <strong>hard tier</strong> adds five pressures, each of which keeps every verdict derivable from the transcript: (a) 60–140 sessions with several motifs in flight at once; (b) a declared <em>speaker hierarchy</em> in which a higher-ranked ruling beats a lower-ranked one regardless of order, so recency stops being a valid heuristic; (c) <em>near-miss noise</em>: proposals, hearsay, questions, cross-team anecdotes and stale "reminders" from speakers the hierarchy declares to have no authority, aimed at the current state (reminders that a banned entity is "the default", rumours that a licensed one is about to be blocked); (d) probes asked by unranked speakers who nudge towards a currently forbidden option; (e) terse phrasing and referential updates ("our ruling from session 16 is withdrawn") that require resolving a reference across the transcript.</p>
+
+<h3>3.4 Two grading gates</h3>
+<div class="callout">
+<p>Violations are graded permissively, as the design note specifies. That alone is exploitable twice over: <em>never act</em>, or <em>always act on something nobody ever mentioned</em>. Both are violation-free and both are useless. An episode therefore scores 1 only if it is violation-free <strong>and</strong> every probe was <em>completed</em>, where completion requires acting on an option the closure positively licenses (<code>allow(e) ∈ C_t</code>).</p>
+<p>Every probe offers 3–6 options mixing entities the transcript positively permits, entities it prohibits, and entities it never mentions (safe, but they do not complete the task), in shuffled order. The scripted <em>refuse</em> policy makes the point: it is violation-free and scores zero.</p>
+</div>
+
+<h3>3.5 Solver-side acceptance</h3>
+<p>A scenario is emitted only if it passes seven checks, and failures are rejected rather than repaired: (1) the closure is convergent and consistent at every session; (2) no probe is must-violate, and every probe has at least one licensed option; (3) the over-deletion guard: a feasibility predicate with one derivation per permitted entity is present exactly when some permission survives; (4) at least one stale-memory trap, a probe where an option that was compliant last time is now a violation; (5) every probe is rendered into the transcript; (6) self-containedness: every violating option was named in an earlier turn, so its status is derivable; (7) recoverability: whenever a surviving instance defeats a deleted one, the transcript licenses that outcome by recency, by an explicit override, by the loser being marked advisory, or by the declared speaker hierarchy. Acceptance rates are <span class="ph">xx</span>% (easy) and <span class="ph">xx</span>% (hard) <span class="ph">current build</span>.</p>
+
+<h3>3.6 Dataset</h3>
+<div class="tbl"><table>
+<thead><tr><th></th><th class="r">Episodes</th><th class="r">Sessions / ep.</th><th class="r">Turns / ep.</th><th class="r">Graded decisions</th><th class="r">Stale traps</th><th class="r">Noise turns / ep.</th></tr></thead>
+<tbody>
+<tr><td class="n">Easy tier</td><td class="r"><span class="ph">1000</span></td><td class="r"><span class="ph">36.7</span></td><td class="r"><span class="ph">49</span></td><td class="r"><span class="ph">17,702</span></td><td class="r"><span class="ph">6,672</span></td><td class="r">–</td></tr>
+<tr><td class="n">Hard tier</td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">~130</span></td><td class="r"><span class="ph">~400</span></td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">~215</span></td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 2.</b> Dataset composition <span class="ph">current build</span>. Easy-tier decisions are balanced over five domains × two regimes × two densities; per event type the graded decisions split CONFLICT <span class="ph">n</span>, ADD <span class="ph">n</span>, CONDITION <span class="ph">n</span>, SUPPORT <span class="ph">n</span>, SUPERSEDE <span class="ph">n</span>, RETRACT <span class="ph">n</span>, CANARY <span class="ph">n</span>.</figcaption></figure>
+
+<h2><span class="n">4</span>Evaluation Protocol</h2>
+<p>An episode is replayed session by session. Update, noise and filler turns are delivered as messages; at a probe the agent must call the act tool with one of the offered options. Read tools are free and ungraded. The grader rebuilds ground truth from the item's event log with the same engine that generated it and never trusts cached labels. Only the blind view of an item is ever exposed to an agent: transcript text, tool surface and option sets, with turn kinds stripped so a scaffold cannot filter updates from noise by construction.</p>
+<p><strong>Memory conditions.</strong> <em>full</em> keeps the whole transcript in context (long-context upper bound); <em>window-K</em> shows only the last K sessions; <em>notes-K</em> adds a scratchpad the model maintains itself through a <code>remember</code> tool, the cheapest stand-in for declarative middleware; <em>middleware</em> conditions route the transcript through mem0, MemOS, Zep and OmniMemory; <em>experiential</em> conditions let ExpeL, AWM, Dynamic Cheatsheet and Voyager-style skill libraries consolidate across episodes of the same domain, unified through EvolveLab.</p>
+
+<h3>4.1 Metrics</h3>
+<div class="two">
+<div class="def"><b>CSR</b> Compliant success rate: episodes that are violation-free and completed every probe. The headline.</div>
+<div class="def"><b>VFR</b> Violation-free rate: episodes with no violating action. Reported alongside CSR; alone it rewards inaction.</div>
+<div class="def"><b>Violation rate by event type</b> Probe-level, decomposed over the six events plus NOISE and CANARY probes.</div>
+<div class="def"><b>Stale-trap rate</b> Share of trap probes where the agent replayed the now-invalid choice.</div>
+<div class="def"><b>Adaptation lag</b> Probes after a state change until the agent stops violating; censored cases reported separately.</div>
+<div class="def"><b>Update interference</b> Violation-rate difference on unchanged probes with versus without an unrelated update in between, over stable stretches only.</div>
+<div class="def"><b>Staleness attribution</b> Share of violations whose supporting permission instance lies in the deleted set D_t.</div>
+<div class="def"><b>Canary false-violation and over-refusal</b> On probes with no applicable constraint.</div>
+</div>
+<p>All metrics are computed by the solver on the graph. No LLM judge appears anywhere in the pipeline.</p>
+
+<h2><span class="n">5</span>Scripted Reference Policies</h2>
+<p>Six policies with no model calls establish the floor and ceiling and show that the benchmark separates behaviours the way it claims to. <em>oracle</em> always picks a licensed option. <em>stale</em> solves each choice set correctly the first time and replays the consolidated choice thereafter: procedural memory invalidation in its purest form. <em>recency</em> picks the option named in the most recent update. <em>first</em> picks the option mentioned first. <em>random</em> is uniform over the offered options. <em>refuse</em> never acts.</p>
+<div class="tbl"><table>
+<thead><tr><th>Policy</th><th class="r">CSR</th><th class="r">VFR</th><th class="r">Violation</th><th class="r">Stale trap</th><th class="r">Lag</th><th class="r">Attribution</th></tr></thead>
+<tbody>
+<tr><td class="n">oracle</td><td class="r">1.000</td><td class="r">1.000</td><td class="r">0.000</td><td class="r">0.000</td><td class="r">0.00</td><td class="r">–</td></tr>
+<tr><td class="n">stale</td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xxx</span></td></tr>
+<tr><td class="n">recency</td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xxx</span></td></tr>
+<tr><td class="n">first</td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xxx</span></td></tr>
+<tr><td class="n">random</td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xxx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xxx</span></td></tr>
+<tr><td class="n">refuse</td><td class="r">0.000</td><td class="r">1.000</td><td class="r">0.000</td><td class="r">0.000</td><td class="r">0.00</td><td class="r">–</td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 3.</b> Scripted reference policies on the easy tier. The oracle and refuse rows are analytic: refuse is violation-free by construction and scores zero on CSR, which is why the completion gate exists. Under <em>stale</em>, violations on ADD baselines are zero by construction and rise on every evolution event.</figcaption></figure>
+
+<h2><span class="n">6</span>Experiments</h2>
+
+<h3>6.1 Systems</h3>
+<p>Three baseline groups: long-context (full history in context), retrieval (RAG over past sessions), and memory systems, both declarative middleware (mem0, MemOS, Zep, OmniMemory) and self-evolving experiential systems (the twelve unified in EvolveLab, including ExpeL, AWM, Dynamic Cheatsheet and Voyager-style skill libraries). Backbones: <span class="ph">model list</span>. Each system runs <span class="ph">k</span> seeds; we report means and <span class="ph">interval</span>.</p>
+
+<h3>6.2 Main results</h3>
+<div class="tbl"><table>
+<thead><tr><th>System</th><th class="r">CSR easy</th><th class="r">CSR hard</th><th class="r">VFR hard</th><th class="r">Violation hard</th><th class="r">Stale trap</th><th class="r">Lag</th><th class="r">Interference</th><th class="r">Attribution</th></tr></thead>
+<tbody>
+<tr class="group"><td colspan="9">Long-context</td></tr>
+<tr><td class="n"><span class="ph">backbone</span> · full</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n"><span class="ph">backbone</span> · window-3</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr class="group"><td colspan="9">Retrieval</td></tr>
+<tr><td class="n">RAG · <span class="ph">retriever</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr class="group"><td colspan="9">Declarative middleware</td></tr>
+<tr><td class="n">mem0</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">MemOS</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">Zep</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr class="group"><td colspan="9">Self-evolving experiential</td></tr>
+<tr><td class="n">ExpeL</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">AWM</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">Dynamic Cheatsheet</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">Voyager-style skills</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 4.</b> Main results. CSR on both tiers; the remaining columns on the hard tier. Interference is a signed difference and is read together with the sizes of both arms.</figcaption></figure>
+
+<h3>6.3 Analyses</h3>
+<p><strong>Per-event decomposition.</strong> <span class="ph">Which event types drive violations for each family; expected ordering SUPPORT and RETRACT hardest for conclusion-caching systems, SUPERSEDE easiest.</span></p>
+<p><strong>More experience, more violations.</strong> For experiential systems we plot violation rate against the number of consolidated episodes in the same domain. <span class="ph">Slope and its sign per system.</span></p>
+<p><strong>Adaptation lag and interference.</strong> <span class="ph">Lag distributions per family; interference for middleware versus experiential systems.</span></p>
+<p><strong>Staleness attribution.</strong> For systems with inspectable stores we localise each violation to the memory entry that licensed it and test whether that entry's instance lies in D_t. <span class="ph">Attribution rate per system; share of stale entries that were written as conclusions rather than as rules.</span></p>
+
+<h3>6.4 Two observations from pilot runs</h3>
+<p>Two findings from small pilots are stable enough to state qualitatively and shape the protocol.</p>
+<p><em>Difficulty on the easy tier comes from memory truncation, not from logic.</em> On a 19-session episode with three traps, a frontier backbone with the full transcript in context passed every probe, and so did the same backbone with a self-maintained scratchpad, whose notes literally recorded which ruling outranked which. The same backbone restricted to the last three sessions made no violation either, but completed only <span class="ph">k</span> of 8 probes: unable to see the earlier approvals, it fell back to the one option nobody had ever mentioned. The completion gate is what makes that failure visible.</p>
+<p><em>The elicitation harness is part of the measurement.</em> When the test harness forced the agent to return, for every offered option, a status and the sessions that justify it, frontier backbones were error-free on the hard tier's first probes with and without their own scratchpad. That schema is a chain-of-thought scaffold most deployed agents never receive. The protocol therefore fixes a plain harness for all systems: the agent is asked only to act and to say in a sentence what it did.</p>
+
+<h2><span class="n">7</span>Related Work</h2>
+<p><strong>Long-horizon memory benchmarks.</strong> LoCoMo and LongMemEval measure recall over long conversations with answer-level scoring; StateMemBench adds revised state across sessions, still QA-shaped. REVOKE keeps the multi-session setting and moves the criterion to behaviour.</p>
+<p><strong>Memory systems.</strong> Declarative middleware (mem0, MemOS, Zep, OmniMemory) and self-evolving experiential memory (ExpeL, Agent Workflow Memory, Voyager, SkillWeaver, Dynamic Cheatsheet, MemEvolve), unified for comparison in EvolveLab. To our knowledge no prior work quantifies invalidation of consolidated experience.</p>
+<p><strong>Defeasible reasoning and argumentation.</strong> The grounded extension is Dung's (1995); our two-layer construction instantiates it over ground rule instances with strict priorities and composes it with stratified Datalog. Delete-and-Rederive and related view-maintenance algorithms motivate the recomputation choice.</p>
+<p><strong>Agent safety and constraint following.</strong> Rule-following and tool-use safety suites grade compliance against static rule sets; REVOKE grades against a rule set that evolves under the agent, which is where memory enters.</p>
+
+<h2><span class="n">8</span>Limitations</h2>
+<ul>
+<li>Constraint prose is template-generated. It is varied, self-contained and, in the hard tier, deliberately noisy, but it is not natural conversation; an LLM-assisted instantiation pass over the same event graph would raise surface realism without touching the ground truth.</li>
+<li>Probes offer an explicit option set, buying exact discriminativeness at the cost of some open-endedness.</li>
+<li>Echo probes repeat a task at consecutive sessions to make adaptation lag observable, which is slightly unnatural as dialogue.</li>
+<li>SUPERSEDE and RETRACT are under-represented relative to CONFLICT and CONDITION in the easy tier because their motifs have fewer beats.</li>
+<li>Update interference is negative for policies that replay their own history, whose failures are self-inflicted rather than induced by foreign updates; the metric is read with its two arms.</li>
+<li>Probe-level facts (a task's own properties such as an amount or a traffic origin) are not yet modelled; contexts are global toggles. Turn-level ordering inside a session is not modelled either: updates render before probes in the same session.</li>
+</ul>
+
+<h2><span class="n">9</span>Conclusion</h2>
+<p>REVOKE asks a question neither memory family has been tested on: when the rules change, does what memory holds remain valid, and does the agent's behaviour show it? By grading traces against a constraint closure that is recomputed at every step, and by generating long, verifiable constraint histories as traversals of an event-subgraph DAG, the benchmark isolates memory consistency from policy optimality and puts a number on procedural memory invalidation. <span class="ph">Closing sentence on the headline result.</span></p>
+
+<h2>Appendix A · A hard-tier excerpt</h2>
+<div class="transcript"><span class="s">[Session 1]</span>
+Compliance: House rules for sourcing decisions: rulings from Compliance and the CFO Office are policy and outrank the Procurement Lead; the Procurement Lead outranks team consensus. A higher authority's ruling holds even if someone lower says otherwise later, until that authority changes it. Everything else -- AP, ops, new buyers, corridor chat, 'reminders' -- is discussion, not policy.
+<span class="s">[Session 27]</span>
+Compliance: Ruling: Collateral-Post may not be executed.
+Ali (analyst): Reminder from my notes: Repo-Open is the standard path here.
+Jordan (new joiner): Collateral-Post settled clean again today.
+Ops (back office): Push this instruction through to settlement. Probably Repo-Open again, same as last time. The only options open to you right now are: Collateral-Pull, Repo-Reverse, Repo-Open, Collateral-Post. Pick exactly one ...
+<span class="gt">   >> licensed: Collateral-Pull, Repo-Reverse   violating: Repo-Open, Collateral-Post   stale trap: Collateral-Post</span></div>
+<figure><figcaption><b>Excerpt.</b> Finance domain, hard tier. Two unranked speakers echo a banned operation as "the standard path" and the requester nudges towards it; the ban on Collateral-Post arrived in the same session. Ground truth (blue) is never shown to the agent.</figcaption></figure>
+
+<h2>Appendix B · Verifier checklist and release</h2>
+<p>Every released episode passes the seven checks of §3.5 on its full timeline. Ten percent of episodes receive independent dual annotation of event semantics with agreement measured <span class="ph">κ</span>. Canary probes calibrate the false-positive rate. Generation scripts, the engine, the grader, scripted policies and both tiers are released at <a href="https://github.com/Dextergao14/REVOKE">github.com/Dextergao14/REVOKE</a>.</p>
+
+<ul class="refs" style="margin-top:34px">
+<li>Dung, P. M. (1995). On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games. <em>Artificial Intelligence</em>.</li>
+<li>Gupta, A., Mumick, I. S., Subrahmanian, V. S. (1993). Maintaining views incrementally. <em>SIGMOD</em>. (Delete-and-Rederive.)</li>
+<li>Maharana, A. et al. (2024). Evaluating very long-term conversational memory of LLM agents (LoCoMo). <em>ACL</em>.</li>
+<li>Wu, D. et al. (2024). LongMemEval: Benchmarking chat assistants on long-term interactive memory.</li>
+<li>StateMemBench <span class="ph">citation</span>. Zhao, A. et al. (2024). ExpeL: LLM agents are experiential learners. <em>AAAI</em>. Wang, Z. Z. et al. (2024). Agent Workflow Memory. Wang, G. et al. (2023). Voyager. mem0, MemOS, Zep, OmniMemory, SkillWeaver, Dynamic Cheatsheet, MemEvolve, EvolveLab <span class="ph">citations</span>.</li>
+</ul>
+
+<p class="foot">Draft generated from the working repository on 6 September 2026. Amber chips mark values to be filled from the full evaluation; everything else describes the released construction.</p>
+</div>

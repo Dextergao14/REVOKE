@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from .logic import Lit, Rule, RuleBase, lit
 
-KINDS = ("ADD", "SUPERSEDE", "CONDITION", "CONFLICT", "SUPPORT", "RETRACT")
+KINDS = ("ADD", "SUPERSEDE", "CONDITION", "CONFLICT", "SUPPORT", "RETRACT", "NOTE")
 
 
 @dataclass
@@ -62,6 +62,8 @@ class Event:
             old = rb.rules[self.rid]
             keep = frozenset(old.retracted) | frozenset(self.instances)
             rb.rules[self.rid] = replace(old, retracted=keep, origin=self.eid)
+        elif k == "NOTE":
+            pass                                   # numeric state / role change: no rule
         else:
             raise ValueError(f"unknown event kind {k!r}")
 

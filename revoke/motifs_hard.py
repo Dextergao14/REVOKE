@@ -123,13 +123,15 @@ class _HCtx(_Ctx):
         return 10000 * rank + self.band + k
 
     def noise(self, kind: str, e: str) -> Tuple[str, str]:
-        return (self.who(0), self.rng.choice(self.h["noise"][kind]).format(e=self.name(e)))
+        return ("@rank0", self.rng.choice(self.h["noise"][kind]).format(e=self.name(e)))
 
 
 def _hev(c: _HCtx, kind: str, tag: str, text: str, rank: int = 1, **kw) -> Event:
+    # the speaker *name* is resolved by the generator once sessions are known
+    # (people change roles); the event only records the rank it needs
     tags = tuple(kw.pop("tags", ())) + (f"rank:{rank}",)
     return Event(eid=c.eid(tag), kind=kind, text=text, motif=c.ns,
-                 speaker=c.who(rank), tags=tags, **kw)
+                 speaker=f"@rank{rank}", tags=tags, **kw)
 
 
 def _ctx_on(c: _HCtx, k: str, rank: int = 1) -> Event:
@@ -344,6 +346,37 @@ def h_proposal_noise(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
     return MotifPlan("proposal_noise", [b0, b1, b2, b3], [], (y, alt))
 
 
+# --------------------------------------------------------------------------
+# H8  numeric threshold: the task's own parameter decides, and the threshold moves
+# --------------------------------------------------------------------------
+
+def h_threshold(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+    from .domains.hard_ext import NUMERIC, fmt_value
+    d, x, alt = c.dom, ents[0], ents[1]
+    cfg = NUMERIC[d.key]
+    k = cfg["ctx"]
+    v0, v1 = cfg["values"][0], cfg["values"][1]
+    def setl(v, tag):
+        return _hev(c, "NOTE", tag, c.rng.choice(cfg["set"]).format(limit=cfg["limit"].capitalize() if False else cfg["limit"], v=fmt_value(d.key, v), u=""), 3,
+                    tags=("numeric", f"limit:{v}"))
+    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt"), setl(v0, "limit0")],
+              Probe("", (x, alt), "ADD", c.ns, "baseline, threshold declared"))
+    b1 = Beat("rule", [
+        _hev(c, "CONFLICT", "thr_ban", c.rng.choice(cfg["ban"]).format(e=c.name(x), limit=cfg["limit"]), 2,
+             rid=c.rid("rthr"), head=_deny(d, x), body=(lit(k),), prio=c.pr(3, 2), tags=("numeric",)),
+    ], Probe("", (x, alt), "CONDITION", c.ns, "threshold rule live; verdict depends on the task's parameter", ))
+    b2 = Beat("probe_side", [], Probe("", (x, alt), "CONDITION", c.ns, "same rule, parameter on the other side"))
+    b3 = Beat("move", [setl(v1, "limit1")],
+              Probe("", (x, alt), "CONDITION", c.ns, "threshold moved: the same parameter now falls on the other side"))
+    b4 = Beat("probe_again", [
+        _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)), 2,
+             rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(5, 2)),
+    ], Probe("", (x, alt), "CONDITION", c.ns, "alt banned outright; x depends on the parameter"))
+    plan = MotifPlan("threshold", [b0, b1, b2, b3, b4], [], (x, alt))
+    plan.numeric = True
+    return plan
+
+
 HARD_MOTIFS = {
     # name -> (builder, entities, contexts, groups)
     "ctx_flipflop": (h_ctx_flipflop, 3, 1, 0),
@@ -353,4 +386,5 @@ HARD_MOTIFS = {
     "stale_reminder": (h_stale_reminder, 2, 0, 0),
     "reinstate_arc": (h_reinstate_arc, 3, 1, 0),
     "proposal_noise": (h_proposal_noise, 2, 0, 0),
+    "threshold": (h_threshold, 2, 0, 0),
 }
