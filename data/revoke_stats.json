@@ -1,0 +1,59 @@
+{
+  "n_items": 1000,
+  "n_core": 200,
+  "rejected": {},
+  "acceptance_rate": 1.0,
+  "by_domain": {
+    "clinical": 200,
+    "finance": 200,
+    "procurement": 200,
+    "devops": 200,
+    "smarthome": 200
+  },
+  "by_regime": {
+    "short": 500,
+    "long": 500
+  },
+  "by_density": {
+    "dense": 500,
+    "sparse": 500
+  },
+  "n_probes": 17786,
+  "n_trap_probes": 6706,
+  "probes_by_event": {
+    "ADD": 4467,
+    "CONFLICT": 5291,
+    "SUPPORT": 1792,
+    "CONDITION": 3651,
+    "CANARY": 734,
+    "SUPERSEDE": 913,
+    "RETRACT": 938
+  },
+  "trap_by_event": {
+    "CONFLICT": 3016,
+    "SUPPORT": 1221,
+    "CONDITION": 1219,
+    "SUPERSEDE": 622,
+    "RETRACT": 628
+  },
+  "motif_usage": {
+    "conflict_flip": 623,
+    "conditionalize": 615,
+    "condition_widen": 604,
+    "conflict_chain": 575,
+    "canary": 488,
+    "support_threshold": 598,
+    "retract_partial": 628,
+    "supersede_alt": 622
+  },
+  "events_by_kind": {
+    "ADD": 12619,
+    "CONFLICT": 6659,
+    "SUPPORT": 1221,
+    "CONDITION": 1219,
+    "SUPERSEDE": 622,
+    "RETRACT": 628
+  },
+  "mean_sessions": 36.76,
+  "mean_turns": 49.35
+}
