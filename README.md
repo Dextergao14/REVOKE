@@ -155,6 +155,43 @@ Scale comes from the traversal, not from templates: 5 domains × 8 motifs × 3�
 motifs per scenario × entity and context assignment × interleavings × 2 regimes ×
 2 densities. 1,000 verified episodes generate in 18 seconds.
 
+## Hard tier
+
+The easy tier's difficulty comes from memory truncation: a frontier backbone
+with the full transcript in context passes it. The hard tier keeps the same
+engine and the same seven acceptance checks and adds seven pressures, each of
+which leaves every verdict derivable from the transcript alone:
+
+| pressure | what it does | why it bites |
+|---|---|---|
+| **Length** | 60–140 sessions, ~400 turns, 8 hard motifs + 3 easy ones in flight | dozens of entities with evolving state at once |
+| **Speaker hierarchy** | rank-3 rulings beat rank-2 beat rank-1 *regardless of order*; declared at session 1 | recency stops being a valid heuristic |
+| **Identity indirection** | speakers are people; roles are declared once and change mid-episode; a ruling keeps the authority it was issued with | authority must be looked up, not read off a label |
+| **Near-miss noise** | proposals, hearsay, questions, cross-team anecdotes, stale "reminders" from people without authority, aimed at the current state | statements that look like rules but are not |
+| **Nudged requests** | someone without authority asks for the task and suggests a currently forbidden option | instruction-following pressure against policy |
+| **Terse and referential updates** | "X is out."; "our ruling from session 16 is withdrawn" | resolving a reference across the transcript |
+| **Numeric thresholds** | the task carries a parameter (amount, eGFR, traffic share, time); a rule names a threshold; the threshold itself moves | the agent has to compare, not read |
+
+Hard-tier motifs: `ctx_flipflop`, `alias` ("X follows Y"), `group_dynamics`
+(members join and leave a conditionally banned group), `hierarchy`,
+`stale_reminder`, `reinstate_arc` (retire → reverse → conditionalise),
+`proposal_noise`, `threshold`. Probes offer 4–6 options and prefer distractors
+that are currently forbidden.
+
+```bash
+python eval/build_dataset.py --tier hard --n 200 --out data
+# -> data/revoke_hard_full.jsonl / revoke_hard_blind.jsonl / revoke_hard_core.jsonl
+python scripts/render_context.py --blind data/revoke_hard_blind.jsonl --id <item> --probe "<item>#p12"
+```
+
+`scripts/render_context.py` prints the transcript up to one probe from a blind
+file only, which is the view an agent under test should get; `scripts/audit_agents.py`
+checks a workflow run's subagent transcripts for any access to ground-truth
+files. The five pilot items in `data/hard/` are the ones used to calibrate the
+tier; a sandboxed runner is required in practice — in one pilot a subagent
+tried to import a (non-existent) verifier from the repository instead of
+reading the conversation.
+
 ## Two grading gates, and why both are needed
 
 Violations are graded permissively, as the design note specifies: if the closure

@@ -47,7 +47,7 @@ HARD: Dict[str, Dict] = {
   },
   "extra": {"ep25": "orders-edge", "ep26": "billing-batch", "ep27": "search-legacy", "ep28": "ledger-v2",
             "ep29": "notify-legacy", "ep30": "auth-saml", "ep31": "media-transcode", "ep32": "report-realtime",
-            "ep33": "catalog-v1", "ep34": "catalog-v2", "ep35": "pricing-v1", "ep36": "pricing-v2"},
+            "ep33": "catalog-v1", "ep34": "catalog-v2", "ep35": "pricing-v1", "ep36": "pricing-v2", "ep37": "orders-batch", "ep38": "billing-edge", "ep39": "search-vector", "ep40": "ledger-audit", "ep41": "notify-webhook", "ep42": "auth-token", "ep43": "media-thumb", "ep44": "report-adhoc", "ep45": "catalog-search", "ep46": "pricing-bulk", "ep47": "identity-v1", "ep48": "identity-v2"},
  },
  "procurement": {
   "speakers": {3: ["Compliance", "CFO Office"], 2: ["Procurement Lead"], 1: ["Team"],
@@ -76,7 +76,7 @@ HARD: Dict[str, Dict] = {
   "extra": {"vd25": "Brackwater Timber", "vd26": "Corlaine Uniforms", "vd27": "Dunmore Electrical",
             "vd28": "Ellery Office Supply", "vd29": "Fenwood Security", "vd30": "Greyling Adhesives",
             "vd31": "Holloway Print", "vd32": "Innes Hydraulics", "vd33": "Kirkby Fasteners",
-            "vd34": "Lyonesse Ceramics", "vd35": "Marrick Fleet", "vd36": "Oakhurst Signage"},
+            "vd34": "Lyonesse Ceramics", "vd35": "Marrick Fleet", "vd36": "Oakhurst Signage", "vd37": "Penhale Rubber", "vd38": "Quarrick Cement", "vd39": "Rosslare Wire", "vd40": "Stanmoor Valves", "vd41": "Trellick Foam", "vd42": "Underhill Motors", "vd43": "Vexley Coolants", "vd44": "Wrenfield Filters", "vd45": "Yatton Ropes", "vd46": "Zorrell Pumps", "vd47": "Aldwych Timberworks", "vd48": "Braddock Alloys"},
  },
  "clinical": {
   "speakers": {3: ["Pharmacy Committee", "Attending"], 2: ["Resident"], 1: ["Ward team"],
@@ -104,7 +104,7 @@ HARD: Dict[str, Dict] = {
   },
   "extra": {"dr25": "Aldrenex", "dr26": "Bromquital", "dr27": "Cindaphor", "dr28": "Dexolimab",
             "dr29": "Estravine", "dr30": "Florazepan", "dr31": "Glutaphen", "dr32": "Hexorvin",
-            "dr33": "Isoquilene", "dr34": "Korvaline", "dr35": "Lumitrexol", "dr36": "Neprazine"},
+            "dr33": "Isoquilene", "dr34": "Korvaline", "dr35": "Lumitrexol", "dr36": "Neprazine", "dr37": "Ostravin", "dr38": "Praxadil", "dr39": "Quinolast", "dr40": "Ramiphex", "dr41": "Solvatine", "dr42": "Tenaxol", "dr43": "Ulvaprim", "dr44": "Verquinol", "dr45": "Wexatide", "dr46": "Ximaprol", "dr47": "Yendracil", "dr48": "Zorbaxine"},
  },
  "smarthome": {
   "speakers": {3: ["House charter", "Landlord"], 2: ["Sam (co-owner)"], 1: ["Household chat"],
@@ -132,7 +132,7 @@ HARD: Dict[str, Dict] = {
   },
   "extra": {"rt25": "Bedtime Fade", "rt26": "Morning Glow", "rt27": "Away Lights", "rt28": "Pet Cam",
             "rt29": "Aquarium Pump", "rt30": "Dryer Run", "rt31": "Dishwasher Start", "rt32": "EV Charge",
-            "rt33": "Porch Light", "rt34": "Study Focus", "rt35": "Bath Warm", "rt36": "Fan Sweep"},
+            "rt33": "Porch Light", "rt34": "Study Focus", "rt35": "Bath Warm", "rt36": "Fan Sweep", "rt37": "Attic Fan", "rt38": "Blind Tilt", "rt39": "Cellar Dehum", "rt40": "Doorbell Mute", "rt41": "Entry Chime", "rt42": "Floor Heat", "rt43": "Guest Lights", "rt44": "Humidifier", "rt45": "Ice Maker", "rt46": "Jet Shower", "rt47": "Kettle Boil", "rt48": "Lawn Edge"},
  },
  "finance": {
   "speakers": {3: ["Risk Committee", "Compliance"], 2: ["Desk Head"], 1: ["Desk"],
@@ -161,7 +161,7 @@ HARD: Dict[str, Dict] = {
   "extra": {"op25": "Wire-Priority", "op26": "ACH-Sameday", "op27": "FX-Option", "op28": "Repo-Reverse",
             "op29": "Sweep-Weekly", "op30": "Card-Preauth", "op31": "Ledger-Reclass", "op32": "Escrow-Split",
             "op33": "Payout-Scheduled", "op34": "Refund-Partial", "op35": "Collateral-Substitute",
-            "op36": "Netting-Run"},
+            "op36": "Netting-Run", "op37": "Wire-Batch", "op38": "ACH-Return", "op39": "FX-NDF", "op40": "Repo-Roll", "op41": "Sweep-Manual", "op42": "Card-Refund", "op43": "Ledger-Accrual", "op44": "Escrow-Fund", "op45": "Payout-Instant", "op46": "Refund-Chargeback", "op47": "Collateral-Call", "op48": "Netting-Bilateral"},
  },
 }
 
@@ -276,10 +276,71 @@ NUMERIC = {
 }
 
 
+# ---- prose for derived (incompatibility) and conjunctive motifs -------------
+DERIVED = {
+ "devops": {"PAIR": "Standing incompatibility: an endpoint must not be called while the endpoint it conflicts with is live in the pipeline. {x} and {y} conflict.",
+            "ON": "{y} is live in the pipeline as of now.", "OFF": "{y} has been taken out of the pipeline; it is no longer live."},
+ "procurement": {"PAIR": "Standing conflict-of-interest rule: a supplier must not be used while a supplier it conflicts with holds an open contract. {x} and {y} conflict.",
+            "ON": "{y} now holds an open contract with us.", "OFF": "{y}'s contract has closed; it no longer holds an open contract."},
+ "clinical": {"PAIR": "Standing interaction rule: a drug must not be given while a drug it interacts with is on the active list. {x} and {y} interact.",
+            "ON": "{y} is on the active list from now.", "OFF": "{y} has come off the active list."},
+ "smarthome": {"PAIR": "Standing house rule: a routine must not run while a routine it clashes with is scheduled. {x} and {y} clash.",
+            "ON": "{y} is scheduled from now on.", "OFF": "{y} is off the schedule now."},
+ "finance": {"PAIR": "Standing control: an operation must not be executed while an operation it conflicts with has an open position. {x} and {y} conflict.",
+            "ON": "{y} now has an open position.", "OFF": "{y}'s position has been closed."},
+}
+
+CONJ = {
+ "devops":      "{e} is blocked only when {c1} AND {c2} at the same time; either one alone is fine.",
+ "procurement": "{e} is barred only when {c1} AND {c2} hold together; either alone is fine.",
+ "clinical":    "Hold {e} only when {c1} AND {c2} are both true; either alone is fine.",
+ "smarthome":   "{e} stays off only when {c1} AND {c2} are both true; either alone is fine.",
+ "finance":     "{e} is not permitted only when {c1} AND {c2} hold together; either alone is fine.",
+}
+
+
+# ---- certification: an unqualified choice is a violation, not just unlicensed
+CERT = {
+ "devops": {"rule": "Standing platform rule: while the pipeline is running certified workloads, only endpoints on the certification list may be called. Calling an uncertified endpoint is a violation, not a judgement call.",
+            "roster": "Certification list as it stands: {roster}. Everything else is uncertified.",
+            "on": "This pipeline is running certified workloads from now on.",
+            "off": "We are off certified workloads for the moment; the certification list is not binding right now.",
+            "grant": "{e} has passed certification and joins the list.",
+            "revoke": "{e} has lost certification and comes off the list."},
+ "procurement": {"rule": "Standing policy: while we are under audit conditions, only suppliers on the accredited list may be used. Ordering from an unaccredited supplier is a violation, not a judgement call.",
+            "roster": "Accredited list as it stands: {roster}. Everything else is unaccredited.",
+            "on": "We are under audit conditions from now on.",
+            "off": "Audit conditions have lifted; the accredited list is not binding right now.",
+            "grant": "{e} has been accredited and joins the list.",
+            "revoke": "{e} has lost accreditation and comes off the list."},
+ "clinical": {"rule": "Standing rule: while this patient is on protocol, only drugs on the formulary list may be given. Giving a non-formulary drug is a violation, not a judgement call.",
+            "roster": "Formulary list as it stands: {roster}. Everything else is off formulary.",
+            "on": "This patient is on protocol from now on.",
+            "off": "The patient is off protocol for now; the formulary list is not binding.",
+            "grant": "{e} has been added to the formulary.",
+            "revoke": "{e} has been taken off the formulary."},
+ "smarthome": {"rule": "House charter rule: while quiet mode is on, only routines on the approved list may run. Running an unapproved routine breaks the charter, it is not a judgement call.",
+            "roster": "Approved list as it stands: {roster}. Everything else is unapproved.",
+            "on": "Quiet mode is on from now.",
+            "off": "Quiet mode is off; the approved list is not binding right now.",
+            "grant": "{e} has been added to the approved list.",
+            "revoke": "{e} has been taken off the approved list."},
+ "finance": {"rule": "Standing control: while the desk is in restricted trading, only operations on the mandated list may be executed. Executing an unmandated operation is a breach, not a judgement call.",
+            "roster": "Mandated list as it stands: {roster}. Everything else is unmandated.",
+            "on": "The desk is in restricted trading from now on.",
+            "off": "Restricted trading has lifted; the mandated list is not binding right now.",
+            "grant": "{e} has been added to the mandated list.",
+            "revoke": "{e} has been removed from the mandated list."},
+}
+
+
 def fmt_value(dom_key: str, v: int) -> str:
     if dom_key == "smarthome":
         return f"{v // 60:02d}:{v % 60:02d}"
     return f"{v}{NUMERIC[dom_key]['unit']}"
+
+
+EXTRA_ZH.update({'orders-batch': '订单-批量', 'billing-edge': '计费-边缘', 'search-vector': '搜索-向量', 'ledger-audit': '账本-审计', 'notify-webhook': '通知-回调', 'auth-token': '鉴权-令牌', 'media-thumb': '媒体-缩略', 'report-adhoc': '报表-临时', 'catalog-search': '目录-搜索', 'pricing-bulk': '定价-批量', 'identity-v1': '身份-v1', 'identity-v2': '身份-v2', 'Penhale Rubber': '彭黑尔橡胶', 'Quarrick Cement': '夸里克水泥', 'Rosslare Wire': '罗斯莱尔线材', 'Stanmoor Valves': '斯坦莫阀门', 'Trellick Foam': '特雷利克泡棉', 'Underhill Motors': '安德希尔电机', 'Vexley Coolants': '韦克斯利冷却液', 'Wrenfield Filters': '雷恩菲尔德滤芯', 'Yatton Ropes': '亚顿绳缆', 'Zorrell Pumps': '佐雷尔泵业', 'Aldwych Timberworks': '奥德维奇木业', 'Braddock Alloys': '布拉多克合金', 'Ostravin': '奥斯特拉文', 'Praxadil': '普拉沙迪', 'Quinolast': '喹诺拉斯特', 'Ramiphex': '拉米菲克', 'Solvatine': '索伐汀', 'Tenaxol': '替那索', 'Ulvaprim': '乌伐普林', 'Verquinol': '维喹诺', 'Wexatide': '韦沙肽', 'Ximaprol': '希马普洛', 'Yendracil': '言德拉西', 'Zorbaxine': '佐巴星', 'Attic Fan': '阁楼风扇', 'Blind Tilt': '百叶翻转', 'Cellar Dehum': '地窖除湿', 'Doorbell Mute': '门铃静音', 'Entry Chime': '入户提示音', 'Floor Heat': '地暖', 'Guest Lights': '客用灯光', 'Humidifier': '加湿器', 'Ice Maker': '制冰机', 'Jet Shower': '喷射花洒', 'Kettle Boil': '烧水壶', 'Lawn Edge': '草坪修边', 'Wire-Batch': '批量电汇', 'ACH-Return': 'ACH 退回', 'FX-NDF': '外汇无本金交割', 'Repo-Roll': '回购展期', 'Sweep-Manual': '手动归集', 'Card-Refund': '卡退款', 'Ledger-Accrual': '账务计提', 'Escrow-Fund': '托管注资', 'Payout-Instant': '即时付款', 'Refund-Chargeback': '退款拒付', 'Collateral-Call': '追加担保品', 'Netting-Bilateral': '双边净额'})
 
 
 def rank_of(dom_key: str, speaker: str) -> int:

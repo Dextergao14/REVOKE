@@ -377,6 +377,71 @@ def h_threshold(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
     return plan
 
 
+# --------------------------------------------------------------------------
+# H9  derived prohibition: the ban on x follows from a fact about y
+# --------------------------------------------------------------------------
+
+def h_derived(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+    from .domains.hard_ext import DERIVED
+    d, x, y, alt = c.dom, ents[0], ents[1], ents[2]
+    D = DERIVED[d.key]
+    facts = [Rule(c.rid("pxy"), Lit("pair", (x, y)), (), 1, session=0),
+             Rule(c.rid("pyx"), Lit("pair", (y, x)), (), 1, session=0)]
+    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, y, "allow_y"), _allow_ev(c, alt, "allow_alt")],
+              Probe("", (x, y, alt), "ADD", c.ns, "baseline"))
+    b1 = Beat("pairrule", [
+        _hev(c, "ADD", "pairrule", D["PAIR"].format(x=c.name(x), y=c.name(y)), 3,
+             rid=c.rid("rpair"), head=Lit(d.allow, ("?A",), neg=True),
+             body=(Lit("pair", ("?A", "?B")), Lit("active", ("?B",))), prio=c.pr(5, 3),
+             tags=("derived",)),
+    ], Probe("", (x, y, alt), "ADD", c.ns, "rule stated but nothing is active yet"))
+    b2 = Beat("activate", [
+        _hev(c, "ADD", "active_y", D["ON"].format(y=c.name(y)), 2,
+             rid=c.rid("acty"), head=Lit("active", (y,)), prio=c.pr(1, 2), tags=("derived",)),
+    ], Probe("", (x, y, alt), "CONFLICT", c.ns, "x is now banned two steps away: pair(x,y) and active(y)"))
+    b3 = Beat("deactivate", [
+        _hev(c, "SUPERSEDE", "inactive_y", D["OFF"].format(y=c.name(y)), 2,
+             rid=c.rid("acty"), head=Lit("active", (y,), neg=True), body=(), prio=c.pr(1, 2), tags=("derived",)),
+        _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)), 2,
+             rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(7, 2)),
+    ], Probe("", (x, y, alt), "SUPERSEDE", c.ns, "the derived ban lapses as the alternative is banned"))
+    b4 = Beat("reactivate", [
+        _hev(c, "SUPERSEDE", "active_y2", D["ON"].format(y=c.name(y)), 2,
+             rid=c.rid("acty"), head=Lit("active", (y,)), body=(), prio=c.pr(1, 2), tags=("derived",)),
+    ], Probe("", (x, y, alt), "CONFLICT", c.ns, "derived ban is back; only y itself is licensed"))
+    return MotifPlan("derived", [b0, b1, b2, b3, b4], facts, (x, y, alt))
+
+
+# --------------------------------------------------------------------------
+# H10  conjunctive condition: banned only when both conditions hold
+# --------------------------------------------------------------------------
+
+def h_conjunctive(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+    from .domains.hard_ext import CONJ
+    d, x, alt, z = c.dom, ents[0], ents[1], ents[2]
+    k1, k2 = ctxs[0], ctxs[1]
+    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt"),
+                       _ctx_on(c, k1)],
+              Probe("", (x, alt), "ADD", c.ns, "baseline, first condition already true"))
+    b1 = Beat("conjrule", [
+        _hev(c, "CONFLICT", "conj", CONJ[d.key].format(e=c.name(x), c1=c.clause(k1), c2=c.clause(k2)), 3,
+             rid=c.rid("rconj"), head=_deny(d, x), body=(lit(k1), lit(k2)), prio=c.pr(3, 3),
+             tags=("conjunctive",)),
+    ], Probe("", (x, alt), "CONDITION", c.ns, "only one condition holds, so x is still fine"))
+    b2 = Beat("second", [_ctx_on(c, k2), _allow_ev(c, z, "allow_z")],
+              Probe("", (x, alt, z), "CONDITION", c.ns, "both conditions now hold: x banned"))
+    b3 = Beat("drop_first", [
+        _ctx_off(c, k1),
+        _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)), 2,
+             rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(5, 2)),
+    ], Probe("", (x, alt, z), "CONDITION", c.ns, "one condition lapses: x is fine again, alt is not"))
+    b4 = Beat("back", [_ctx_on(c, k1),
+                       _hev(c, "CONFLICT", "ban_z", c.say("ADD_BAN", e=c.name(z)), 2,
+                            rid=c.rid("rbz"), head=_deny(d, z), prio=c.pr(5, 2))],
+              Probe("", (x, alt, z), "CONDITION", c.ns, "both hold again; nothing in the motif is licensed but the trap is"))
+    return MotifPlan("conjunctive", [b0, b1, b2, b3, b4], [], (x, alt, z))
+
+
 HARD_MOTIFS = {
     # name -> (builder, entities, contexts, groups)
     "ctx_flipflop": (h_ctx_flipflop, 3, 1, 0),
@@ -387,4 +452,6 @@ HARD_MOTIFS = {
     "reinstate_arc": (h_reinstate_arc, 3, 1, 0),
     "proposal_noise": (h_proposal_noise, 2, 0, 0),
     "threshold": (h_threshold, 2, 0, 0),
+    "derived": (h_derived, 3, 0, 0),
+    "conjunctive": (h_conjunctive, 3, 2, 0),
 }

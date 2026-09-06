@@ -41,7 +41,13 @@ class Domain:
 
     def signature(self) -> Dict[str, Tuple[str, ...]]:
         sig = {self.allow: (self.sort,), self.goal: (),
-               "grp": (self.sort, "group")}
+               "grp": (self.sort, "group"),
+               # hard tier: pairwise incompatibility and an "in effect" state,
+               # so a prohibition can be derived rather than stated
+               "pair": (self.sort, self.sort), "active": (self.sort,),
+               # hard tier: certification, so an unqualified choice is a
+               # violation rather than merely an incomplete task
+               "uncert": (self.sort,), "needs_cert": ()}
         for c in self.contexts:
             sig[c] = ()
         return sig

@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .domains.base import Domain
 from .domains.hard_ext import (HARD, NOISE_KINDS, SUGGEST, REF_LIFT, REF_REVERSE, PEOPLE,
-                               HIERARCHY_PEOPLE, ROLE_CHANGE, ROLE_DROP, NUMERIC, fmt_value)
+                               HIERARCHY_PEOPLE, ROLE_CHANGE, ROLE_DROP, NUMERIC, CERT, fmt_value)
 from .events import Event
 from .generator import ProbeSpec, Scenario, Turn, traverse
 from .logic import Lit, Rule, RuleBase, check_assertion, lit, solve
@@ -33,6 +33,12 @@ EASY_IN_HARD = ["conflict_flip", "conflict_chain", "support_threshold",
                 "retract_partial", "condition_widen", "conditionalize", "supersede_alt"]
 GAP = (2, 4)
 N_DISTRACTORS = (2, 3)
+# Slack control.  With several licensed options on offer, "identify the banned
+# ones and pick anything else" completes without the agent ever being precise
+# about a single entity.  Distractors are therefore drawn only from entities
+# that are currently forbidden or never mentioned -- never from currently
+# licensed ones -- so the licensed subset stays small and every option in the
+# set has to be judged.
 NOISE_P = 0.8
 FILLER_P = 0.4
 SUGGEST_P = 0.6
@@ -48,18 +54,24 @@ def _needs(name):
     return max(ne, 3), nc, (1 if name == "retract_partial" else 0)
 
 
-def _choose(rng: random.Random, n_easy: int) -> List[str]:
+def _choose(rng: random.Random, n_easy: int, n_ctx: int, n_grp: int, n_ent: int) -> List[str]:
+    """Every hard motif once, then as many easy ones as the budgets allow."""
     picks = list(HARD_MOTIFS)
+    used_c = sum(_needs(p)[1] for p in picks)
+    used_g = sum(_needs(p)[2] for p in picks)
+    used_e = sum(_needs(p)[0] for p in picks)
     pool = list(EASY_IN_HARD)
     rng.shuffle(pool)
     for m in pool:
         if len(picks) >= len(HARD_MOTIFS) + n_easy:
             break
-        if sum(_needs(p)[1] for p in picks) + _needs(m)[1] > 6:
-            continue
-        if sum(_needs(p)[2] for p in picks) + _needs(m)[2] > 3:
+        ne, nc, ng = _needs(m)
+        if used_c + nc > n_ctx or used_g + ng > n_grp or used_e + ne > n_ent - 6:
             continue
         picks.append(m)
+        used_c += nc
+        used_g += ng
+        used_e += ne
     rng.shuffle(picks)
     return picks
 
@@ -110,7 +122,7 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
     H = HARD[dom.key]
     NUM = NUMERIC[dom.key]
     names: Dict[str, str] = {**dom.entities, **H["extra"]}
-    motif_names = _choose(rng, n_easy)
+    motif_names = _choose(rng, n_easy, len(dom.contexts), len(dom.groups), len(names))
     roles = Roles(dom.key, rng)
 
     # ---- slots ---------------------------------------------------------
@@ -165,6 +177,34 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
     last = max([e.session for e in events] + [t[0] for t in pending] + [1])
     n_sessions = last + rng.randint(0, 2)
 
+    # ---- certification regime -------------------------------------------
+    # A rank-3 rule turns "not on the list" into a violation while the regime is
+    # on.  This is what stops "pick something nobody ever mentioned" and
+    # "identify the banned ones and take anything else" from working: during a
+    # certified window every option has to be judged, not just the loud ones.
+    cert_events: List[Event] = []
+    cert_rule_session = rng.randint(3, 8)
+    cert_events.append(Event(eid="cert_rule", kind="ADD", session=cert_rule_session,
+                             text=CERT[dom.key]["rule"], speaker="@rank3",
+                             rid="r_cert", head=Lit(dom.allow, ("?X",), neg=True),
+                             body=(lit("needs_cert"), Lit("uncert", ("?X",))),
+                             prio=90000, tags=("cert", "rank:3", "override")))
+    # windows: on/off a few times over the timeline
+    windows: List[Tuple[int, int]] = []
+    t0 = cert_rule_session + rng.randint(4, 10)
+    while t0 < n_sessions - 6:
+        length = rng.randint(12, 30)
+        windows.append((t0, min(t0 + length, n_sessions - 2)))
+        t0 += length + rng.randint(10, 24)
+    for i, (a, b) in enumerate(windows):
+        cert_events.append(Event(eid=f"cert_on{i}", kind="ADD", session=a, text=CERT[dom.key]["on"],
+                                 speaker="@rank3", rid="k_needs_cert", head=lit("needs_cert"),
+                                 prio=90001, tags=("cert", "context", "rank:3")))
+        cert_events.append(Event(eid=f"cert_off{i}", kind="SUPERSEDE", session=b, text=CERT[dom.key]["off"],
+                                 speaker="@rank3", rid="k_needs_cert", head=lit("~needs_cert"),
+                                 prio=90001, tags=("cert", "context", "rank:3")))
+    events += cert_events
+
     # ---- roles: schedule changes, then resolve every speaker placeholder ----
     roles.schedule(n_sessions)
     for s, who, nr in roles.changes:
@@ -210,7 +250,57 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
             used |= {a for a in l.args if a in names}
     spare_pool = [e for e in names if e not in used]
     rng.shuffle(spare_pool)
-    used = sorted(used | set(spare_pool[:6]))
+    # anchors: a handful of entities no motif touches, announced as approved
+    # early and certified for the whole episode.  They keep every option set
+    # feasible without reintroducing slack: which one is on offer varies per
+    # option set, so the agent still has to work out what is licensed rather
+    # than fall back on one memorised safe choice.
+    anchors = spare_pool[:8]
+    used = sorted(used | set(anchors) | set(spare_pool[8:12]))
+    # certification roster: a minority of the entities in play, announced once
+    # and amended a few times
+    pool_used = [e for e in sorted(used) if e not in anchors]
+    rng.shuffle(pool_used)
+    n_cert = max(3, len(pool_used) // 4)
+    certified = set(pool_used[:n_cert]) | set(anchors)
+    roster_session = cert_rule_session
+    cert_changes: List[Tuple[int, str, bool]] = []
+    for _ in range(rng.randint(2, 4)):
+        s_ = rng.randint(roster_session + 6, max(roster_session + 7, n_sessions - 4))
+        droppable = sorted(certified - set(anchors))
+        if rng.random() < 0.5 and len(droppable) > 2:
+            cert_changes.append((s_, rng.choice(droppable), False))
+        else:
+            outside = [e for e in used if e not in certified]
+            if outside:
+                cert_changes.append((s_, rng.choice(outside), True))
+    cert_changes.sort()
+
+    def cert_at(session: int) -> set:
+        c = set(certified)
+        for s_, e, grant in cert_changes:
+            if s_ <= session:
+                c.add(e) if grant else c.discard(e)
+        return c
+
+    for i, a in enumerate(anchors):
+        events.append(Event(eid=f"anchor{i}", kind="ADD", session=2 + (i % 3),
+                            text=rng.choice(dom.nl["ADD"]).format(e=names[a]),
+                            speaker="@rank2", rid=f"r_anchor_{a}",
+                            head=Lit(dom.allow, (a,)), prio=80000 + i, tags=("anchor", "rank:2")))
+    events.append(Event(eid="cert_roster", kind="NOTE", session=roster_session,
+                        text=CERT[dom.key]["roster"].format(
+                            roster=", ".join(sorted(names[e] for e in certified))),
+                        speaker="@rank3", tags=("cert", "rank:3")))
+    for i, (s_, e, grant) in enumerate(cert_changes):
+        events.append(Event(eid=f"cert_ch{i}", kind="NOTE", session=s_,
+                            text=CERT[dom.key]["grant" if grant else "revoke"].format(e=names[e]),
+                            speaker="@rank3", tags=("cert", "rank:3")))
+    events.sort(key=lambda e: e.session)
+    for ev in events:
+        if ev.speaker.startswith("@rank"):
+            ev.speaker = roles.who(int(ev.speaker[5:]), ev.session)
+
     signature = dom.signature()
     signature["task_feasible"] = ()
     signature[NUM["ctx"]] = ()
@@ -263,61 +353,107 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
     unmentioned = [e for e in used if e not in mentioned_at]
 
     # ---- score probes ----------------------------------------------------
+    # Three passes.  (1) resolve each probe's numeric parameter and solve the
+    # closure it faces.  (2) build one option set per motif option-set key --
+    # fixed across the probes that share it, so a trap still bites -- choosing
+    # an anchor that stays licensed at every one of those probes and filling
+    # the remaining slots with entities that are forbidden or unlicensed there.
+    # (3) score.  The anchor is what keeps a tight set feasible without letting
+    # "avoid the obvious ones and pick anything else" succeed.
     act = dom.act_tool()
     param = list(act.params)[0]
-    option_sets: Dict[Tuple[str, ...], Tuple[str, ...]] = {}
+    limits_sorted = sorted({int(t.split(":")[1]) for ev in events for t in ev.tags
+                            if t.startswith("limit:")})
+
+    pend = sorted(pending, key=lambda t: t[0])
     values_by_probe: Dict[int, int] = {}
-    probes: List[ProbeSpec] = []
-    prev_compliant: Dict[Tuple[str, ...], List[str]] = {}
-    limits_sorted = sorted({v for ev in events for t in ev.tags if t.startswith("limit:") for v in [int(t.split(":")[1])]})
-    for n, (psess, probe, mname, is_echo, blabel) in enumerate(sorted(pending, key=lambda t: t[0])):
+    ctx_by_probe: List[List[str]] = []
+    facts_full: List[List[str]] = []
+    sols: List = []
+    for psess, probe, mname, is_echo, blabel in pend:
         lim = limit_at(psess)
-        # the task's numeric parameter: threshold-motif probes are placed on a
-        # chosen side of the threshold; every other probe gets a random value
         if id(probe) in values_by_probe:
             v = values_by_probe[id(probe)]
-        elif threshold_plan is not None and mname == "threshold":
-            if blabel == "rule":
-                v = pick_value(lim, True)
-            elif blabel == "probe_side":
-                v = pick_value(lim, False)
-            elif blabel == "move":
-                prev_lim = next((l for l in limits_sorted if l != lim), None)
-                v = pick_value(lim, None, other=prev_lim) if prev_lim is not None else pick_value(lim, True)
-            else:
-                v = pick_value(lim, rng.random() < 0.5)
-            values_by_probe[id(probe)] = v
         else:
-            v = pick_value(lim, None)
+            if mname == "threshold":
+                if blabel == "rule":
+                    v = pick_value(lim, True)
+                elif blabel == "probe_side":
+                    v = pick_value(lim, False)
+                elif blabel == "move":
+                    prev_lim = next((l for l in limits_sorted if l != lim), None)
+                    v = pick_value(lim, None, other=prev_lim) if prev_lim is not None else pick_value(lim, True)
+                else:
+                    v = pick_value(lim, rng.random() < 0.5)
+            else:
+                v = pick_value(lim, None)
             values_by_probe[id(probe)] = v
         facts = [NUM["ctx"]] if ctx_holds(v, lim) else []
-
+        ctx_by_probe.append(facts)
         rb = fresh_base()
         for ev in events:
             if ev.session <= psess:
                 ev.apply(rb)
         for i_, f in enumerate(facts):
             rb.add(Rule(f"pf{i_}", lit(f), (), 1))
-        sol = solve(rb)
+        for i_, e in enumerate(sorted(set(used) - cert_at(psess))):
+            rb.add(Rule(f"uc{i_}", Lit("uncert", (e,)), (), 1))
+        sols.append(solve(rb))
+        facts_full.append(facts + [f"uncert({e})" for e in sorted(set(used) - cert_at(psess))])
 
-        key = tuple(sorted(probe.options))
-        if key in option_sets:
-            opts = list(option_sets[key])
-        else:
-            opts = list(probe.options)
-            seen = [e for e, s_ in mentioned_at.items() if s_ <= psess and e not in opts]
-            if probe.tests == "CANARY":
-                pool = [e for e in unmentioned if e not in opts]
-            else:
-                forb = [e for e in seen if check_assertion(sol, [Lit(dom.allow, (e,))]).violation]
-                rng.shuffle(forb)
-                rest = [e for e in seen if e not in forb] + [e for e in unmentioned if e not in opts]
-                rng.shuffle(rest)
-                pool = forb[:2] + rest
+    def status(sol, e: str) -> str:
+        if check_assertion(sol, [Lit(dom.allow, (e,))]).violation:
+            return "forbidden"
+        return "licensed" if Lit(dom.allow, (e,)) in sol.closure else "silent"
+
+    idx_by_key: Dict[Tuple[str, ...], List[int]] = {}
+    for i, (psess, probe, mname, is_echo, blabel) in enumerate(pend):
+        idx_by_key.setdefault(tuple(sorted(probe.options)), []).append(i)
+
+    option_sets: Dict[Tuple[str, ...], Tuple[str, ...]] = {}
+    used_anchors: set = set()
+    for key, idxs in idx_by_key.items():
+        probe = pend[idxs[0]][1]
+        opts = list(probe.options)
+        if probe.tests == "CANARY":
+            pool = [e for e in unmentioned if e not in opts]
+            rng.shuffle(pool)
             opts += pool[:rng.randint(*N_DISTRACTORS)]
-            opts = list(dict.fromkeys(opts))[:6]
-            rng.shuffle(opts)
-            option_sets[key] = tuple(opts)
+        else:
+            # anchor: licensed at every probe sharing this option set
+            free = [a for a in anchors if a not in used_anchors] or list(anchors)
+            rng.shuffle(free)
+            anchor = next((a for a in free
+                           if all(status(sols[i], a) == "licensed" for i in idxs)), None)
+            if anchor is None:
+                cand = [e for e, s_ in mentioned_at.items()
+                        if e not in opts and s_ <= min(pend[i][0] for i in idxs)]
+                rng.shuffle(cand)
+                anchor = next((e for e in cand
+                               if all(status(sols[i], e) == "licensed" for i in idxs)), None)
+            if anchor:
+                opts.append(anchor)
+                used_anchors.add(anchor)
+            # fill with entities that are never licensed at these probes
+            cand2 = [e for e, s_ in mentioned_at.items()
+                     if e not in opts and e not in anchors
+                     and s_ <= min(pend[i][0] for i in idxs)]
+            tight = [e for e in cand2
+                     if all(status(sols[i], e) != "licensed" for i in idxs)]
+            rng.shuffle(tight)
+            unm = [e for e in unmentioned if e not in opts]
+            rng.shuffle(unm)
+            opts += (tight + unm)[:rng.randint(*N_DISTRACTORS)]
+        opts = list(dict.fromkeys(opts))[:6]
+        rng.shuffle(opts)
+        option_sets[key] = tuple(opts)
+
+    probes: List[ProbeSpec] = []
+    prev_compliant: Dict[Tuple[str, ...], List[str]] = {}
+    for n, (psess, probe, mname, is_echo, blabel) in enumerate(pend):
+        sol = sols[n]
+        key = tuple(sorted(probe.options))
+        opts = list(option_sets[key])
         compliant, licensed, violating, blamed = [], [], [], {}
         for e in opts:
             vd = check_assertion(sol, [lit(t.format(**{param: e})) for t in act.asserts])
@@ -338,8 +474,8 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
             flip=prev is not None and set(prev) != set(compliant),
             deleted_rules=sorted({n_.rid for n_ in sol.deleted}),
             note=probe.note + (" [echo]" if is_echo else ""))
-        ps.params = {NUM["param"]: fmt_value(dom.key, v)}
-        ps.facts = facts
+        ps.params = {NUM["param"]: fmt_value(dom.key, values_by_probe[id(probe)])}
+        ps.facts = facts_full[n]
         probes.append(ps)
         prev_compliant[key] = compliant
 
