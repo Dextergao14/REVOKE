@@ -159,24 +159,35 @@ motifs per scenario × entity and context assignment × interleavings × 2 regim
 
 The easy tier's difficulty comes from memory truncation: a frontier backbone
 with the full transcript in context passes it. The hard tier keeps the same
-engine and the same seven acceptance checks and adds seven pressures, each of
-which leaves every verdict derivable from the transcript alone:
+engine and the same acceptance checks and adds pressures that leave every
+verdict derivable from the transcript alone.
 
 | pressure | what it does | why it bites |
 |---|---|---|
-| **Length** | 60–140 sessions, ~400 turns, 8 hard motifs + 3 easy ones in flight | dozens of entities with evolving state at once |
-| **Speaker hierarchy** | rank-3 rulings beat rank-2 beat rank-1 *regardless of order*; declared at session 1 | recency stops being a valid heuristic |
-| **Identity indirection** | speakers are people; roles are declared once and change mid-episode; a ruling keeps the authority it was issued with | authority must be looked up, not read off a label |
-| **Near-miss noise** | proposals, hearsay, questions, cross-team anecdotes, stale "reminders" from people without authority, aimed at the current state | statements that look like rules but are not |
-| **Nudged requests** | someone without authority asks for the task and suggests a currently forbidden option | instruction-following pressure against policy |
+| **Length** | 165–185 sessions, ~540 turns, 10 hard motifs + 3 easy ones in flight | dozens of entities with evolving state at once |
+| **Speaker hierarchy** | rank-3 rulings beat rank-2 beat rank-1 *regardless of order*, declared at session 1 | recency stops being a valid heuristic |
+| **Identity indirection** | speakers are people; roles change mid-episode; a ruling keeps the authority it was issued with | authority must be looked up, not read off a label |
+| **Certification regime** | a rank-3 rule makes an off-list choice a **violation** while the regime is on; the list is amended and the regime toggles | "pick something nobody mentioned" stops being free |
+| **Derived prohibitions** | `¬allow(x)` follows from `pair(x,y)` and `active(y)` | the ban is two inference steps from the action |
+| **Conjunctive conditions** | banned only when two conditions hold together, each toggling independently | one condition lapsing changes the verdict |
+| **Numeric thresholds** | the task carries a parameter (amount, eGFR, traffic share, time); a rule names a threshold; the threshold moves | the agent has to compare, not look up |
+| **Near-miss noise** | proposals, hearsay, cross-team anecdotes, stale "reminders" from people without authority, aimed at the current state | statements that look like rules but are not |
+| **Nudged requests** | the requester has no authority and suggests a currently forbidden option | instruction-following pressure against policy |
 | **Terse and referential updates** | "X is out."; "our ruling from session 16 is withdrawn" | resolving a reference across the transcript |
-| **Numeric thresholds** | the task carries a parameter (amount, eGFR, traffic share, time); a rule names a threshold; the threshold itself moves | the agent has to compare, not read |
 
-Hard-tier motifs: `ctx_flipflop`, `alias` ("X follows Y"), `group_dynamics`
-(members join and leave a conditionally banned group), `hierarchy`,
-`stale_reminder`, `reinstate_arc` (retire → reverse → conditionalise),
-`proposal_noise`, `threshold`. Probes offer 4–6 options and prefer distractors
-that are currently forbidden.
+Hard-tier motifs: `ctx_flipflop`, `alias` ("X follows Y"), `group_dynamics`,
+`hierarchy`, `stale_reminder`, `reinstate_arc`, `proposal_noise`, `threshold`,
+`derived`, `conjunctive`.
+
+**Option sets are deliberately tight.** In an early build a frontier backbone
+with full context made zero violations across 70 probes. The cause was slack,
+not reasoning: with a mean 2.26 licensed options out of 4.82, "identify the
+banned ones and pick anything else" completed 81.6% of the time, so no single
+entity ever had to be judged precisely. The hard tier now holds ~1.9 licensed
+options out of ~5.6, fills the rest with entities that are forbidden or
+unlicensed at that moment, and reserves a small pool of permanently-certified
+anchors — a different one per option set — so every probe stays feasible
+without a memorisable safe choice.
 
 ```bash
 python eval/build_dataset.py --tier hard --n 200 --out data
@@ -185,12 +196,11 @@ python scripts/render_context.py --blind data/revoke_hard_blind.jsonl --id <item
 ```
 
 `scripts/render_context.py` prints the transcript up to one probe from a blind
-file only, which is the view an agent under test should get; `scripts/audit_agents.py`
-checks a workflow run's subagent transcripts for any access to ground-truth
-files. The five pilot items in `data/hard/` are the ones used to calibrate the
-tier; a sandboxed runner is required in practice — in one pilot a subagent
-tried to import a (non-existent) verifier from the repository instead of
-reading the conversation.
+file only, which is the view an agent under test should get;
+`scripts/audit_agents.py` checks a workflow run's subagent transcripts for any
+access to ground-truth files. A sandboxed runner is required in practice — in
+one pilot a subagent tried to import a (non-existent) verifier from the
+repository instead of reading the conversation.
 
 ## Two grading gates, and why both are needed
 

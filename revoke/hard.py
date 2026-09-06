@@ -537,8 +537,8 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
                 spk = roles.who(rng.choice([1, 2]), s)
             pv = rng.choice(NUM["probe"]).format(v=p.params[NUM["param"]], u="")
             text = (f"{spk}: {task} {pv}{nudge} The only options open to you right now are: "
-                    f"{', '.join(p.option_names)}. Pick exactly one and carry it out with "
-                    f"`{act.name}`, then say which one you used.")
+                    f"{', '.join(p.option_names)}. Pick exactly one that we have approved for "
+                    f"this, carry it out with `{act.name}`, then say which one you used.")
             p.turn_index = len(turns)
             turns.append(Turn(s, "user", "probe", text, probe_id=p.probe_id, speaker=spk))
 

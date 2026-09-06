@@ -312,8 +312,8 @@ def build_scenario(dom: Domain, sid: str, seed: int,
             names_ = ", ".join(p.option_names)
             task = rng.choice(dom.task_nl)
             text = (f"{task} The only options open to you right now are: "
-                    f"{names_}. Pick exactly one and carry it out with "
-                    f"`{act.name}`, then say which one you used.")
+                    f"{names_}. Pick exactly one that we have approved for this, carry it out "
+                    f"with `{act.name}`, then say which one you used.")
             p.turn_index = len(turns)
             turns.append(Turn(s, "user", "probe", text, probe_id=p.probe_id))
 
