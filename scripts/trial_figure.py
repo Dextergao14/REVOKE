@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Render trial_data.json (from trial_analysis.py) as a self-contained HTML figure."""
-import argparse, json, html
+import argparse, json, html, os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from revoke.domains.zh import ENTITY_ZH, DOMAIN_ZH
 
 STRINGS = {
  "en": {
@@ -56,16 +58,9 @@ STRINGS = {
    "t_lic": "许可", "t_forb": "禁止", "notes_sum": "便签演化（notes 条件）", "after": "第 {s} 个 session 之后", "task": "（任务）",
    "L": 178
   },
-  "names": {"Veltroxin": "维曲辛", "Amoradine": "阿莫拉定", "Belquinol": "贝喹诺", "Cerraphen": "塞拉芬",
-            "Dolvastat": "多伐司他", "Elmirixan": "艾米瑞生", "Fenoprazil": "非诺普拉齐", "Gyrandol": "吉兰多",
-            "Halovexin": "哈洛韦辛", "Iprazomide": "伊普拉唑胺", "Jendracil": "珍德拉西", "Kalmoterol": "卡莫特罗",
-            "Lestafine": "莱斯他芬", "Mordacil": "莫达西", "Nuvaxetine": "努伐西汀", "Orbisant": "奥比生",
-            "Pyrraline": "派拉林", "Quexadrol": "喹沙醇", "Rovastigen": "罗伐司替", "Sildaphen": "西地芬",
-            "Tremacor": "特雷马可", "Uvantrel": "优凡特雷", "Vorcelide": "沃塞利德", "Xanthipex": "占替派"},
+  "names": ENTITY_ZH,
   "belief": {"permitted": "许可", "forbidden": "禁止", "unknown": "未知"},
-  "domains": {"Platform API governance": "平台 API 治理", "Procurement compliance": "采购合规",
-              "Medication constraint tracking (synthetic formulary)": "用药约束跟踪（合成药典）",
-              "Household automation preferences": "家居自动化偏好", "Financial operation permissions": "金融操作权限"}
+  "domains": DOMAIN_ZH
  }
 }
 
