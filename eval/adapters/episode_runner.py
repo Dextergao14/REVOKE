@@ -52,7 +52,7 @@ Keep, in compact form: every rule currently in force and who issued it, what ove
 Drop chatter, rumours, proposals that never became rules, and pleasantries -- but note explicitly when something that sounds like a rule is not one. Be terse and specific. Never invent a rule that was not stated."""
 
 
-def post(body, key, timeout=300):
+def post(body, key, timeout=90):
     req = urllib.request.Request(
         API, data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
@@ -62,17 +62,23 @@ def post(body, key, timeout=300):
         return json.loads(r.read())
 
 
-def call(body, key, tries=4):
+def call(body, key, tries=3, deadline=240.0):
+    """Bounded retry.  A probe that cannot be answered within the deadline is
+    recorded as an error rather than allowed to stall the episode: a long run is
+    180+ sequential calls, so one hung request otherwise costs hours."""
     err = ""
+    t0 = time.time()
     for a in range(tries):
+        if time.time() - t0 > deadline:
+            return None, err or "deadline exceeded"
         try:
             return post(body, key), ""
         except urllib.error.HTTPError as e:
             err = f"HTTP {e.code}: {e.read()[:150].decode(errors='replace')}"
-            time.sleep((8 if e.code == 402 else 2 ** a) + random.random() * 3)
+            time.sleep(min(6 if e.code == 402 else 2 ** a, 10) + random.random() * 2)
         except Exception as e:                                   # noqa: BLE001
             err = f"{type(e).__name__}: {str(e)[:120]}"
-            time.sleep(2 ** a + random.random())
+            time.sleep(min(2 ** a, 8) + random.random())
     return None, err
 
 
@@ -100,7 +106,7 @@ def act_from(resp, item):
 
 
 def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
-                keep_frac=0.55):
+                keep_frac=0.55, sink_path: str = ""):
     """One continuous pass over the episode. Returns a trace row."""
     tools = [{"type": "function", "function": {
         "name": t["name"], "description": t["doc"],
@@ -112,6 +118,16 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
     summary = ""
     steps, compactions = [], []
     usage = {"in": 0, "out": 0, "cost": 0.0}
+    sink = open(sink_path, "a") if sink_path else None
+
+    def emit(step):
+        steps.append(step)
+        if sink:
+            sink.write(json.dumps({"id": item["id"], "model": model, "mode": mode,
+                                   "budget": budget, "keep_frac": keep_frac,
+                                   "steps": [step]}) + "\n")
+            sink.flush()
+
     probe_ids = [p["probe_id"] for p in item["probes"]]
     if limit:
         probe_ids = probe_ids[:limit]
@@ -212,7 +228,7 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
                 body.pop("reasoning", None)
                 resp, err = call(body, key, tries=2)
             if resp is None:
-                steps.append({"probe_id": pid, "tool_calls": [], "error": err})
+                emit({"probe_id": pid, "tool_calls": [], "error": err})
             else:
                 u = resp.get("usage") or {}
                 usage["in"] += u.get("prompt_tokens", 0)
@@ -220,23 +236,27 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
                 usage["cost"] += u.get("cost", 0) or 0
                 val, text = act_from(resp, item)
                 if val:
-                    steps.append({"probe_id": pid,
-                                  "tool_calls": [{"name": item["act_tool"],
-                                                  "arguments": {item["act_param"]: val}}],
-                                  "text": text[:300],
-                                  "ctx_tokens": int(ctx_chars() / TOK),
-                                  "summary_chars": len(summary)})
+                    emit({"probe_id": pid,
+                          "tool_calls": [{"name": item["act_tool"],
+                                          "arguments": {item["act_param"]: val}}],
+                          "text": text[:300],
+                          "ctx_tokens": int(ctx_chars() / TOK),
+                          "summary_chars": len(summary)})
                     blocks.append(f"you: {(text or val)[:120]}")
                 else:
-                    steps.append({"probe_id": pid, "tool_calls": [],
-                                  "error": "no action in response"})
+                    emit({"probe_id": pid, "tool_calls": [],
+                          "error": "no action in response"})
             if pid == stop_after:
+                if sink:
+                    sink.close()
                 return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
                         "keep_frac": keep_frac, "steps": steps,
                         "compactions": compactions, "usage": usage,
                         "final_summary": summary}
         if lines:
             pending.append("\n".join(lines))
+    if sink:
+        sink.close()
     return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
             "keep_frac": keep_frac, "steps": steps, "compactions": compactions,
             "usage": usage, "final_summary": summary}
@@ -277,8 +297,13 @@ def main():
           f"x {len(a.modes.split(','))} modes, budget {a.budget} tokens", flush=True)
     t0 = time.time()
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
+        def sink_for(it, m, md):
+            return os.path.join(a.out, f"{m.replace('/', '__').replace(':', '_')}"
+                                       f"__{md}__b{a.budget}__k{int(a.keep_frac * 100)}"
+                                       f"__{it['id']}.jsonl.part")
         futs = {ex.submit(run_episode, it, m, md, a.budget, a.key, a.max_tokens,
-                          a.limit, a.keep_frac): (it, m, md) for it, m, md in jobs}
+                          a.limit, a.keep_frac, sink_for(it, m, md)): (it, m, md)
+                for it, m, md in jobs}
         for n, f in enumerate(as_completed(futs), 1):
             it, m, md = futs[f]
             try:
