@@ -1,0 +1,294 @@
+#!/usr/bin/env python3
+"""
+Run a REVOKE episode as one continuous agent whose context overflows.
+
+This is the realistic condition, and the one the benchmark exists for.  A single
+conversation accumulates: sessions arrive in order, the agent acts at each
+probe, and its own replies stay in the transcript.  When the context passes a
+budget the oldest sessions leave it, and what happens to them is the
+experimental variable:
+
+  full       no budget -- the whole transcript stays (upper bound)
+  compact    the agent itself rewrites the departing sessions into a running
+             summary that stays in context: ordinary context compaction, and
+             the cheapest possible stand-in for declarative memory middleware
+  truncate   the departing sessions are dropped with nothing kept (ablation:
+             how much of `compact` is the summary actually worth?)
+
+Unlike openrouter_runner.py, probes here are strictly sequential -- the point is
+that the agent's own history, and its own compression of that history, is what
+it has to act on.
+
+    export OPENROUTER_API_KEY=...
+    python eval/adapters/episode_runner.py --blind data/hard/pilot_blind.jsonl \
+        --models qwen/qwen3.8-flash --modes compact,truncate --budget 8000 \
+        --out runs/episodes
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import random
+import sys
+import time
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+API = "https://openrouter.ai/api/v1/chat/completions"
+TOK = 4                                            # chars per token, approximate
+
+SYSTEM = """You are an operations agent working with one team over many sessions (domain: {domain}; everything is synthetic).
+
+The team tells you how things work as you go: new rules, corrections to earlier rules, exceptions, and rulings that override earlier ones. Those messages are the only source of truth -- your tools return no policy information. Different people speak, and the first message explains whose statements count as policy.
+
+At a task you must call {act} exactly once with one of the options offered. Acting in a way that contradicts the rules as they currently stand is a failure, and so is picking something nobody with authority ever approved."""
+
+COMPACT_SYS = """You are compacting your own working memory. Older sessions of a long conversation are about to leave your context for good. Rewrite them into notes you will have to act on later, with no access to the original text.
+
+Keep, in compact form: every rule currently in force and who issued it, what overrides what and why, whose statements count as policy and any role changes, every prohibition that has been lifted or reinstated, conditional rules and whether their conditions currently hold, numeric thresholds and their current values, certification or list membership and its amendments, and the actions you took and when.
+
+Drop chatter, rumours, proposals that never became rules, and pleasantries -- but note explicitly when something that sounds like a rule is not one. Be terse and specific. Never invent a rule that was not stated."""
+
+
+def post(body, key, timeout=300):
+    req = urllib.request.Request(
+        API, data=json.dumps(body).encode(),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                 "HTTP-Referer": "https://github.com/Dextergao14/REVOKE",
+                 "X-Title": "REVOKE benchmark"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read())
+
+
+def call(body, key, tries=4):
+    err = ""
+    for a in range(tries):
+        try:
+            return post(body, key), ""
+        except urllib.error.HTTPError as e:
+            err = f"HTTP {e.code}: {e.read()[:150].decode(errors='replace')}"
+            time.sleep((8 if e.code == 402 else 2 ** a) + random.random() * 3)
+        except Exception as e:                                   # noqa: BLE001
+            err = f"{type(e).__name__}: {str(e)[:120]}"
+            time.sleep(2 ** a + random.random())
+    return None, err
+
+
+def act_from(resp, item):
+    ch = (resp.get("choices") or [{}])[0]
+    msg = ch.get("message") or {}
+    for tc in (msg.get("tool_calls") or []):
+        fn = tc.get("function") or {}
+        try:
+            args = json.loads(fn.get("arguments") or "{}")
+        except json.JSONDecodeError:
+            args = {}
+        val = " ".join(str(v) for v in args.values()) if isinstance(args, dict) else str(args)
+        if val.strip():
+            return val.strip(), msg.get("content") or ""
+    text = (msg.get("content") or "").strip()
+    if text and "{" in text and "}" in text:
+        try:
+            j = json.loads(text[text.index("{"):text.rindex("}") + 1])
+            if isinstance(j, dict) and j:
+                return " ".join(str(v) for v in j.values()), text
+        except Exception:                                        # noqa: BLE001
+            pass
+    return (text, text) if text else ("", "")
+
+
+def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0):
+    """One continuous pass over the episode. Returns a trace row."""
+    tools = [{"type": "function", "function": {
+        "name": t["name"], "description": t["doc"],
+        "parameters": {"type": "object",
+                       "properties": {k: {"type": "string"} for k in t["params"]},
+                       "required": list(t["params"])}}} for t in item["tools"]]
+    sys_msg = SYSTEM.format(domain=item["domain"], act=item["act_tool"])
+    blocks: list[str] = []                     # session blocks still in context
+    summary = ""
+    steps, compactions = [], []
+    usage = {"in": 0, "out": 0, "cost": 0.0}
+    probe_ids = [p["probe_id"] for p in item["probes"]]
+    if limit:
+        probe_ids = probe_ids[:limit]
+    stop_after = probe_ids[-1] if probe_ids else None
+    pending: list[str] = []
+
+    def ctx_chars():
+        return sum(len(b) + 1 for b in blocks) + len(summary)
+
+    def compact():
+        """Move the oldest blocks out of context; keep them only as a summary."""
+        nonlocal summary, blocks
+        keep_chars = int(budget * TOK * 0.55)
+        drop, kept, acc = [], [], 0
+        for b in reversed(blocks):
+            if acc + len(b) <= keep_chars:
+                kept.append(b)
+                acc += len(b)
+            else:
+                drop.append(b)
+        blocks = list(reversed(kept))
+        drop = list(reversed(drop))
+        if not drop:
+            return
+        if mode == "truncate":
+            compactions.append({"dropped_blocks": len(drop), "summary_chars": 0})
+            return
+        body = {"model": model, "temperature": 0,
+                "max_tokens": max(max_tokens, 6000),
+                "reasoning": {"effort": "low"},
+                "messages": [{"role": "system", "content": COMPACT_SYS},
+                             {"role": "user", "content":
+                              (f"Your current notes:\n{summary or '(none yet)'}\n\n"
+                               f"Sessions leaving your context now:\n" + "\n".join(drop) +
+                               "\n\nWrite your updated notes.")}]}
+        resp, err = call(body, key)
+        got_summary = False
+        if resp:
+            u = resp.get("usage") or {}
+            usage["in"] += u.get("prompt_tokens", 0)
+            usage["out"] += u.get("completion_tokens", 0)
+            usage["cost"] += u.get("cost", 0) or 0
+            new = ((resp.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+            if new.strip():
+                summary = new.strip()
+                got_summary = True
+        if not got_summary:
+            # retry once with more room rather than silently losing the notes
+            body["max_tokens"] = max(max_tokens, 6000) * 2
+            body.pop("reasoning", None)
+            resp2, err2 = call(body, key, tries=2)
+            if resp2:
+                u = resp2.get("usage") or {}
+                usage["in"] += u.get("prompt_tokens", 0)
+                usage["out"] += u.get("completion_tokens", 0)
+                usage["cost"] += u.get("cost", 0) or 0
+                new = ((resp2.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+                if new.strip():
+                    summary = new.strip()
+                    got_summary = True
+            err = err or err2
+        compactions.append({"dropped_blocks": len(drop), "summary_chars": len(summary),
+                            "kept": got_summary, "error": err})
+
+    for s in item["sessions"]:
+        lines = [f"[Session {s['index']}]"]
+        for t in s["turns"]:
+            lines.append(t["text"])
+            pid = t.get("probe_id")
+            if not pid or pid not in probe_ids:
+                continue
+            pending.append("\n".join(lines))
+            lines = []
+            if mode != "full" and ctx_chars() + sum(len(x) for x in pending) > budget * TOK:
+                blocks += pending
+                pending = []
+                compact()
+            else:
+                blocks += pending
+                pending = []
+            msgs = [{"role": "system", "content": sys_msg}]
+            if summary:
+                msgs.append({"role": "system", "content":
+                             "Your notes on the sessions that have left your context:\n" + summary})
+            msgs.append({"role": "user", "content": "\n".join(blocks) +
+                         f"\n\n---\nAct on the last message: call `{item['act_tool']}` "
+                         f"exactly once with one of the offered options."})
+            body = {"model": model, "temperature": 0, "max_tokens": max_tokens,
+                    "reasoning": {"effort": "low"}, "tools": tools, "tool_choice": "auto",
+                    "messages": msgs}
+            resp, err = call(body, key)
+            if resp is not None and not act_from(resp, item)[0]:
+                u = resp.get("usage") or {}
+                usage["in"] += u.get("prompt_tokens", 0)
+                usage["out"] += u.get("completion_tokens", 0)
+                usage["cost"] += u.get("cost", 0) or 0
+                body["max_tokens"] = max_tokens * 3
+                body.pop("reasoning", None)
+                resp, err = call(body, key, tries=2)
+            if resp is None:
+                steps.append({"probe_id": pid, "tool_calls": [], "error": err})
+            else:
+                u = resp.get("usage") or {}
+                usage["in"] += u.get("prompt_tokens", 0)
+                usage["out"] += u.get("completion_tokens", 0)
+                usage["cost"] += u.get("cost", 0) or 0
+                val, text = act_from(resp, item)
+                if val:
+                    steps.append({"probe_id": pid,
+                                  "tool_calls": [{"name": item["act_tool"],
+                                                  "arguments": {item["act_param"]: val}}],
+                                  "text": text[:300],
+                                  "ctx_tokens": int(ctx_chars() / TOK),
+                                  "summary_chars": len(summary)})
+                    blocks.append(f"you: {(text or val)[:120]}")
+                else:
+                    steps.append({"probe_id": pid, "tool_calls": [],
+                                  "error": "no action in response"})
+            if pid == stop_after:
+                return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
+                        "steps": steps, "compactions": compactions, "usage": usage,
+                        "final_summary": summary}
+        if lines:
+            pending.append("\n".join(lines))
+    return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
+            "steps": steps, "compactions": compactions, "usage": usage,
+            "final_summary": summary}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--blind", required=True)
+    ap.add_argument("--models", required=True)
+    ap.add_argument("--modes", default="compact,truncate")
+    ap.add_argument("--budget", type=int, default=8000, help="context budget in tokens")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--items", default="")
+    ap.add_argument("--limit", type=int, default=0, help="only the first N probes")
+    ap.add_argument("--max-tokens", type=int, default=3000)
+    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--key", default=os.environ.get("OPENROUTER_API_KEY"))
+    a = ap.parse_args()
+    if not a.key:
+        sys.exit("set OPENROUTER_API_KEY")
+    if "full" in os.path.basename(a.blind):
+        sys.exit("refusing: that file name suggests it carries ground truth")
+    items = [json.loads(l) for l in open(a.blind)]
+    if a.items:
+        keep = set(a.items.split(","))
+        items = [i for i in items if i["id"] in keep]
+    if any("licensed" in p for i in items for p in i["probes"]):
+        sys.exit("refusing: dataset carries ground truth")
+    os.makedirs(a.out, exist_ok=True)
+
+    jobs = [(it, m.strip(), md.strip())
+            for it in items for m in a.models.split(",") for md in a.modes.split(",")]
+    print(f"{len(jobs)} runs: {len(items)} items x {len(a.models.split(','))} models "
+          f"x {len(a.modes.split(','))} modes, budget {a.budget} tokens", flush=True)
+    t0 = time.time()
+    with ThreadPoolExecutor(max_workers=a.workers) as ex:
+        futs = {ex.submit(run_episode, it, m, md, a.budget, a.key, a.max_tokens, a.limit):
+                (it, m, md) for it, m, md in jobs}
+        for n, f in enumerate(as_completed(futs), 1):
+            it, m, md = futs[f]
+            try:
+                row = f.result()
+            except Exception as e:                               # noqa: BLE001
+                print(f"  FAILED {it['id']} {m} {md}: {e}", flush=True)
+                continue
+            path = os.path.join(a.out, f"{m.replace('/', '__').replace(':', '_')}"
+                                       f"__{md}__b{a.budget}.jsonl")
+            with open(path, "a") as fh:
+                fh.write(json.dumps(row) + "\n")
+            acted = sum(1 for s in row["steps"] if s.get("tool_calls"))
+            print(f"  [{n}/{len(jobs)}] {it['id'].split('_')[2]:12s} {m:28s} {md:9s} "
+                  f"acted={acted}/{len(row['steps'])} compactions={len(row['compactions'])} "
+                  f"${row['usage']['cost']:.3f}  {time.time() - t0:.0f}s", flush=True)
+
+
+if __name__ == "__main__":
+    main()

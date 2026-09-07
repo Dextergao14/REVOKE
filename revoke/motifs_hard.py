@@ -153,122 +153,149 @@ def _allow_ev(c: _HCtx, e: str, tag: str, k: int = 1, rank: int = 1, key: str = 
 # H1  context flip-flop
 # --------------------------------------------------------------------------
 
-def h_ctx_flipflop(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_ctx_flipflop(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
+    """A conditional ban whose condition toggles `cycles` times, then goes blanket.
+
+    Each extra cycle costs a summariser one more thing to get right: not the
+    rule, which never changes, but which side of it the world is on now.
+    """
     d, x, alt, z = c.dom, ents[0], ents[1], ents[2]
     k = ctxs[0]
-    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
-              Probe("", (x, alt), "ADD", c.ns, "baseline"))
-    b1 = Beat("condban", [
+    beats = [Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
+                  Probe("", (x, alt), "ADD", c.ns, "baseline"))]
+    beats.append(Beat("condban", [
         _hev(c, "CONFLICT", "ban_x", c.say("CONFLICT", e=c.name(x), c=c.clause(k)),
              rid=c.rid("rbx"), head=_deny(d, x), body=(lit(k),), prio=c.pr(3)),
         _ctx_on(c, k),
-    ], Probe("", (x, alt), "CONDITION", c.ns, "condition true: x banned"))
-    b2 = Beat("clear", [
+    ], Probe("", (x, alt), "CONDITION", c.ns, "condition true: x banned")))
+    beats.append(Beat("clear", [
         _ctx_off(c, k),
         _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)),
              rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(3)),
-    ], Probe("", (x, alt), "CONDITION", c.ns, "condition false: x is the only licensed option"))
-    b3 = Beat("retrigger", [_ctx_on(c, k), _allow_ev(c, z, "allow_z")],
-              Probe("", (x, alt, z), "CONDITION", c.ns, "condition true again: x banned, z carries the task"))
-    b4 = Beat("clear2", [_ctx_off(c, k)],
-              Probe("", (x, alt, z), "CONDITION", c.ns, "x and z licensed, alt banned"))
-    b5 = Beat("widen", [
+    ], Probe("", (x, alt), "CONDITION", c.ns, "condition false: x is the only licensed option")))
+    beats.append(Beat("bring_z", [_allow_ev(c, z, "allow_z")],
+                      Probe("", (x, alt, z), "ADD", c.ns, "z joins the choice set")))
+    for i in range(cycles):
+        beats.append(Beat(f"on{i}", [_ctx_on(c, k)],
+                          Probe("", (x, alt, z), "CONDITION", c.ns,
+                                f"condition true again (cycle {i + 1}): x banned, z carries the task")))
+        beats.append(Beat(f"off{i}", [_ctx_off(c, k)],
+                          Probe("", (x, alt, z), "CONDITION", c.ns,
+                                f"condition false again (cycle {i + 1}): x and z licensed")))
+    beats.append(Beat("widen", [
         _hev(c, "CONDITION", "widen", c.say("CONDITION_WIDEN", e=c.name(x)),
              rid=c.rid("rbx"), body=(), prio=c.pr(3)),
-    ], Probe("", (x, alt, z), "CONDITION", c.ns, "ban made unconditional: x banned for good"))
-    return MotifPlan("ctx_flipflop", [b0, b1, b2, b3, b4, b5], [], (x, alt, z))
+    ], Probe("", (x, alt, z), "CONDITION", c.ns, "ban made unconditional: x banned for good")))
+    return MotifPlan("ctx_flipflop", beats, [], (x, alt, z))
 
 
 # --------------------------------------------------------------------------
 # H2  alias: x inherits y's status
 # --------------------------------------------------------------------------
 
-def h_alias(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_alias(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
+    """x inherits y's status; y is banned and reinstated `cycles` times."""
     d, x, y, alt = c.dom, ents[0], ents[1], ents[2]
-    b0 = Beat("open", [_allow_ev(c, y, "allow_y"), _allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
-              Probe("", (x, y, alt), "ADD", c.ns, "baseline"))
-    b1 = Beat("link", [
+    beats = [Beat("open", [_allow_ev(c, y, "allow_y"), _allow_ev(c, x, "allow_x"),
+                           _allow_ev(c, alt, "allow_alt")],
+                  Probe("", (x, y, alt), "ADD", c.ns, "baseline"))]
+    beats.append(Beat("link", [
         _hev(c, "ADD", "alias_pos", c.hsay("ALIAS", x=c.name(x), y=c.name(y)), 2,
-             rid=c.rid("ra_pos"), head=_allow(d, x), body=(_allow(d, y),), prio=c.pr(5, 2), tags=("override",)),
+             rid=c.rid("ra_pos"), head=_allow(d, x), body=(_allow(d, y),), prio=c.pr(5, 2),
+             tags=("override",)),
         _hev(c, "ADD", "alias_neg", "", 2,
-             rid=c.rid("ra_neg"), head=_deny(d, x), body=(_deny(d, y),), prio=c.pr(5, 2), tags=("override", "silent")),
-    ], Probe("", (x, y, alt), "ADD", c.ns, "linkage declared, nothing changes yet"))
-    b2 = Beat("ban_y", [
-        _hev(c, "CONFLICT", "ban_y", c.say("ADD_BAN", e=c.name(y)),
-             rid=c.rid("rby"), head=_deny(d, y), prio=c.pr(3)),
-    ], Probe("", (x, y, alt), "CONFLICT", c.ns, "y banned, x banned transitively"))
-    b3 = Beat("restore_y", [
-        _hev(c, "SUPPORT", "support_y", c.say("SUPPORT", e=c.name(y)), 2,
-             rid=c.rid(f"r_{y}"), delta=6, tags=("override",)),
-    ], Probe("", (x, y, alt), "SUPPORT", c.ns, "y reinstated, x follows"))
-    b4 = Beat("unlink", [
+             rid=c.rid("ra_neg"), head=_deny(d, x), body=(_deny(d, y),), prio=c.pr(5, 2),
+             tags=("override", "silent")),
+    ], Probe("", (x, y, alt), "ADD", c.ns, "linkage declared, nothing changes yet")))
+    for i in range(cycles):
+        beats.append(Beat(f"ban_y{i}", [
+            _hev(c, "CONFLICT", f"ban_y{i}", c.say("ADD_BAN", e=c.name(y)),
+                 rid=c.rid(f"rby{i}"), head=_deny(d, y), prio=c.pr(3 + 2 * i)),
+        ], Probe("", (x, y, alt), "CONFLICT", c.ns,
+                 f"y banned (cycle {i + 1}), x banned transitively")))
+        beats.append(Beat(f"restore_y{i}", [
+            _hev(c, "SUPPORT", f"support_y{i}", c.say("SUPPORT", e=c.name(y)), 2,
+                 rid=c.rid(f"r_{y}"), delta=6),
+        ], Probe("", (x, y, alt), "SUPPORT", c.ns,
+                 f"y reinstated (cycle {i + 1}), x follows")))
+    beats.append(Beat("unlink", [
         _hev(c, "RETRACT", "alias_break", c.hsay("ALIAS_BREAK", x=c.name(x), y=c.name(y)), 2,
              rid=c.rid("ra_neg"), instances=((x,),)),
-        _hev(c, "CONFLICT", "ban_y2", c.say("SUPERSEDE", e=c.name(y)), 2,
-             rid=c.rid("rby2"), head=_deny(d, y), prio=c.pr(9, 2)),
-    ], Probe("", (x, y, alt), "RETRACT", c.ns, "y banned again but x no longer inherits it"))
-    return MotifPlan("alias", [b0, b1, b2, b3, b4], [], (x, y, alt))
+        _hev(c, "CONFLICT", "ban_y_final", c.say("SUPERSEDE", e=c.name(y)), 2,
+             rid=c.rid("rby_f"), head=_deny(d, y), prio=c.pr(9, 2)),
+    ], Probe("", (x, y, alt), "RETRACT", c.ns,
+             "y banned again but x no longer inherits it")))
+    return MotifPlan("alias", beats, [], (x, y, alt))
 
 
 # --------------------------------------------------------------------------
 # H3  dynamic group membership under a conditional blanket ban
 # --------------------------------------------------------------------------
 
-def h_group_dynamics(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_group_dynamics(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
+    """A conditional blanket ban on a group whose condition and membership move."""
     d, a, b, cc, alt = c.dom, ents[0], ents[1], ents[2], ents[3]
     k = ctxs[0]
     facts = [Rule(c.rid(f"g_{e}"), Lit("grp", (e, grp)), (), 1, session=0) for e in (a, b)]
     roster = f"{c.name(a)}, {c.name(b)}"
-    b0 = Beat("open", [_allow_ev(c, e, f"allow_{e}") for e in (a, b, cc, alt)],
-              Probe("", (a, cc, alt), "ADD", c.ns, "baseline"))
-    b1 = Beat("groupban", [
-        _hev(c, "CONFLICT", "grpban", c.hsay("GROUP_BAN_COND", g=c.group(grp), c=c.clause(k), roster=roster), 2,
+    beats = [Beat("open", [_allow_ev(c, e, f"allow_{e}") for e in (a, b, cc, alt)],
+                  Probe("", (a, cc, alt), "ADD", c.ns, "baseline"))]
+    beats.append(Beat("groupban", [
+        _hev(c, "CONFLICT", "grpban",
+             c.hsay("GROUP_BAN_COND", g=c.group(grp), c=c.clause(k), roster=roster), 2,
              rid=c.rid("rg"), head=Lit(d.allow, ("?X",), neg=True),
              body=(Lit("grp", ("?X", grp)), lit(k)), prio=c.pr(3, 2)),
         _ctx_on(c, k),
-    ], Probe("", (a, cc, alt), "CONFLICT", c.ns, "members banned while the condition holds"))
-    b2 = Beat("join", [
+    ], Probe("", (a, cc, alt), "CONFLICT", c.ns, "members banned while the condition holds")))
+    beats.append(Beat("join", [
         _hev(c, "ADD", "join_c", c.hsay("JOIN", e=c.name(cc), g=c.group(grp)), 2,
              rid=c.rid(f"g_{cc}"), head=Lit("grp", (cc, grp)), prio=1),
-    ], Probe("", (a, cc, alt), "ADD", c.ns, "c joins the group and inherits the ban"))
-    b3 = Beat("clear", [_ctx_off(c, k)],
-              Probe("", (a, cc, alt), "CONDITION", c.ns, "condition off: everyone licensed again"))
-    b4 = Beat("leave", [
-        _ctx_on(c, k),
+    ], Probe("", (a, cc, alt), "ADD", c.ns, "c joins the group and inherits the ban")))
+    for i in range(cycles):
+        beats.append(Beat(f"clear{i}", [_ctx_off(c, k)],
+                          Probe("", (a, cc, alt), "CONDITION", c.ns,
+                                f"condition off (cycle {i + 1}): everyone licensed again")))
+        beats.append(Beat(f"back{i}", [_ctx_on(c, k)],
+                          Probe("", (a, cc, alt), "CONDITION", c.ns,
+                                f"condition on (cycle {i + 1}): members banned again")))
+    beats.append(Beat("leave", [
         _hev(c, "RETRACT", "leave_a", c.hsay("LEAVE", e=c.name(a), g=c.group(grp)), 2,
              rid=c.rid(f"g_{a}"), instances=((a, grp),)),
-    ], Probe("", (a, cc, alt), "RETRACT", c.ns, "a leaves the group as the condition returns"))
-    return MotifPlan("group_dynamics", [b0, b1, b2, b3, b4], facts, (a, b, cc, alt))
+    ], Probe("", (a, cc, alt), "RETRACT", c.ns,
+             "a leaves the group while the condition still holds")))
+    return MotifPlan("group_dynamics", beats, facts, (a, b, cc, alt))
 
 
 # --------------------------------------------------------------------------
 # H4  speaker hierarchy beats recency
 # --------------------------------------------------------------------------
 
-def h_hierarchy(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_hierarchy(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
+    """A top-authority ban, contradicted by a lower one, lifted and reissued."""
     d, x, alt, z = c.dom, ents[0], ents[1], ents[2]
-    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
-              Probe("", (x, alt), "ADD", c.ns, "baseline"))
-    b1 = Beat("secban", [
-        _hev(c, "CONFLICT", "sec_ban", c.hsay("SEC_BAN", e=c.name(x)), 3,
-             rid=c.rid("rsec"), head=_deny(d, x), prio=c.pr(3, 3)),
-    ], Probe("", (x, alt), "CONFLICT", c.ns, "top authority bans x"))
-    b2 = Beat("lead_default", [
-        _hev(c, "ADD", "lead_default", c.hsay("LEAD_DEFAULT", e=c.name(x)), 2,
-             rid=c.rid("rlead"), head=_allow(d, x), prio=c.pr(5, 2)),
-    ], Probe("", (x, alt), "CONFLICT", c.ns, "lower authority says the opposite later: still banned"))
-    b3 = Beat("lift", [
-        _hev(c, "RETRACT", "lift", c.hsay("LIFT", e=c.name(x)), 3,
-             rid=c.rid("rsec"), instances=((x,),), tags=("refable:LIFT",)),
-        _hev(c, "CONFLICT", "lead_ban_alt", c.say("ADD_BAN", e=c.name(alt)), 2,
-             rid=c.rid("rlalt"), head=_deny(d, alt), prio=c.pr(7, 2)),
-    ], Probe("", (x, alt), "RETRACT", c.ns, "ban lifted: the lead's default now governs x"))
-    b4 = Beat("lead_ban", [
+    beats = [Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
+                  Probe("", (x, alt), "ADD", c.ns, "baseline"))]
+    for i in range(cycles):
+        beats.append(Beat(f"secban{i}", [
+            _hev(c, "CONFLICT", f"sec_ban{i}", c.hsay("SEC_BAN", e=c.name(x)), 3,
+                 rid=c.rid("rsec"), head=_deny(d, x), prio=c.pr(3, 3)),
+        ], Probe("", (x, alt), "CONFLICT", c.ns, f"top authority bans x (cycle {i + 1})")))
+        beats.append(Beat(f"lead_default{i}", [
+            _hev(c, "ADD", f"lead_default{i}", c.hsay("LEAD_DEFAULT", e=c.name(x)), 2,
+                 rid=c.rid(f"rlead{i}"), head=_allow(d, x), prio=c.pr(5, 2)),
+        ], Probe("", (x, alt), "CONFLICT", c.ns,
+                 "a lower authority says the opposite afterwards: still banned")))
+        beats.append(Beat(f"lift{i}", [
+            _hev(c, "RETRACT", f"lift{i}", c.hsay("LIFT", e=c.name(x)), 3,
+                 rid=c.rid("rsec"), instances=((x,),), tags=("refable:LIFT",)),
+        ], Probe("", (x, alt), "RETRACT", c.ns,
+                 f"ban lifted (cycle {i + 1}): the lower authority's default now governs x")))
+    beats.append(Beat("lead_ban", [
         _hev(c, "CONFLICT", "lead_ban_x", c.say("SUPERSEDE", e=c.name(x)), 2,
              rid=c.rid("rlx"), head=_deny(d, x), prio=c.pr(9, 2)),
         _allow_ev(c, z, "allow_z"),
-    ], Probe("", (x, alt, z), "CONFLICT", c.ns, "the lead now bans x itself"))
-    return MotifPlan("hierarchy", [b0, b1, b2, b3, b4], [], (x, alt, z))
+    ], Probe("", (x, alt, z), "CONFLICT", c.ns, "the lower authority now bans x itself")))
+    return MotifPlan("hierarchy", beats, [], (x, alt, z))
 
 
 # --------------------------------------------------------------------------
@@ -298,32 +325,36 @@ def h_stale_reminder(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
 # H6  retire -> reinstate -> conditionalise
 # --------------------------------------------------------------------------
 
-def h_reinstate_arc(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_reinstate_arc(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
+    """retire -> reverse, `cycles` times, then a conditional ban that toggles."""
     d, x, alt, z = c.dom, ents[0], ents[1], ents[2]
     k = ctxs[0]
-    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
-              Probe("", (x, alt), "ADD", c.ns, "baseline"))
-    b1 = Beat("retire", [
-        _hev(c, "SUPERSEDE", "retire", c.say("SUPERSEDE", e=c.name(x)),
-             rid=c.rid(f"r_{x}"), head=_deny(d, x), body=(), prio=c.pr(3)),
-    ], Probe("", (x, alt), "SUPERSEDE", c.ns, "x retired"))
-    b2 = Beat("reverse", [
-        _hev(c, "SUPERSEDE", "reverse", c.hsay("REVERSE", e=c.name(x)),
-             rid=c.rid(f"r_{x}"), head=_allow(d, x), body=(), prio=c.pr(3), tags=("refable:REVERSE",)),
-    ], Probe("", (x, alt), "SUPERSEDE", c.ns, "retirement reversed"))
-    b3 = Beat("condban", [
+    beats = [Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt")],
+                  Probe("", (x, alt), "ADD", c.ns, "baseline"))]
+    for i in range(cycles):
+        beats.append(Beat(f"retire{i}", [
+            _hev(c, "SUPERSEDE", f"retire{i}", c.say("SUPERSEDE", e=c.name(x)),
+                 rid=c.rid(f"r_{x}"), head=_deny(d, x), body=(), prio=c.pr(3)),
+        ], Probe("", (x, alt), "SUPERSEDE", c.ns, f"x retired (cycle {i + 1})")))
+        beats.append(Beat(f"reverse{i}", [
+            _hev(c, "SUPERSEDE", f"reverse{i}", c.hsay("REVERSE", e=c.name(x)),
+                 rid=c.rid(f"r_{x}"), head=_allow(d, x), body=(), prio=c.pr(3),
+                 tags=("refable:REVERSE",)),
+        ], Probe("", (x, alt), "SUPERSEDE", c.ns, f"retirement reversed (cycle {i + 1})")))
+    beats.append(Beat("condban", [
         _hev(c, "CONFLICT", "condban", c.say("CONFLICT", e=c.name(x), c=c.clause(k)),
              rid=c.rid("rbx"), head=_deny(d, x), body=(lit(k),), prio=c.pr(5)),
         _ctx_on(c, k),
-    ], Probe("", (x, alt), "CONDITION", c.ns, "x banned under the condition"))
-    b4 = Beat("clear", [
+    ], Probe("", (x, alt), "CONDITION", c.ns, "x banned under the condition")))
+    beats.append(Beat("clear", [
         _ctx_off(c, k),
         _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)),
              rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(5)),
-    ], Probe("", (x, alt), "CONDITION", c.ns, "condition off: x is the only licensed option"))
-    b5 = Beat("retrigger", [_ctx_on(c, k), _allow_ev(c, z, "allow_z")],
-              Probe("", (x, alt, z), "CONDITION", c.ns, "condition back: x banned, z licensed"))
-    return MotifPlan("reinstate_arc", [b0, b1, b2, b3, b4, b5], [], (x, alt, z))
+    ], Probe("", (x, alt), "CONDITION", c.ns, "condition off: x is the only licensed option")))
+    beats.append(Beat("retrigger", [_ctx_on(c, k), _allow_ev(c, z, "allow_z")],
+                      Probe("", (x, alt, z), "CONDITION", c.ns,
+                            "condition back: x banned, z licensed")))
+    return MotifPlan("reinstate_arc", beats, [], (x, alt, z))
 
 
 # --------------------------------------------------------------------------
@@ -350,7 +381,7 @@ def h_proposal_noise(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
 # H8  numeric threshold: the task's own parameter decides, and the threshold moves
 # --------------------------------------------------------------------------
 
-def h_threshold(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_threshold(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
     from .domains.hard_ext import NUMERIC, fmt_value
     d, x, alt = c.dom, ents[0], ents[1]
     cfg = NUMERIC[d.key]
@@ -366,13 +397,20 @@ def h_threshold(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
              rid=c.rid("rthr"), head=_deny(d, x), body=(lit(k),), prio=c.pr(3, 2), tags=("numeric",)),
     ], Probe("", (x, alt), "CONDITION", c.ns, "threshold rule live; verdict depends on the task's parameter", ))
     b2 = Beat("probe_side", [], Probe("", (x, alt), "CONDITION", c.ns, "same rule, parameter on the other side"))
-    b3 = Beat("move", [setl(v1, "limit1")],
-              Probe("", (x, alt), "CONDITION", c.ns, "threshold moved: the same parameter now falls on the other side"))
-    b4 = Beat("probe_again", [
+    beats = [b0, b1, b2]
+    vals = cfg["values"]
+    for i in range(cycles):
+        beats.append(Beat("move", [setl(vals[(i + 1) % len(vals)], f"limit{i + 1}")],
+                          Probe("", (x, alt), "CONDITION", c.ns,
+                                f"threshold moved (cycle {i + 1}): the same parameter falls on the other side")))
+        beats.append(Beat("probe_side", [],
+                          Probe("", (x, alt), "CONDITION", c.ns,
+                                f"same threshold, parameter on the other side (cycle {i + 1})")))
+    beats.append(Beat("probe_again", [
         _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)), 2,
              rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(5, 2)),
-    ], Probe("", (x, alt), "CONDITION", c.ns, "alt banned outright; x depends on the parameter"))
-    plan = MotifPlan("threshold", [b0, b1, b2, b3, b4], [], (x, alt))
+    ], Probe("", (x, alt), "CONDITION", c.ns, "alt banned outright; x depends on the parameter")))
+    plan = MotifPlan("threshold", beats, [], (x, alt))
     plan.numeric = True
     return plan
 
@@ -416,30 +454,40 @@ def h_derived(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
 # H10  conjunctive condition: banned only when both conditions hold
 # --------------------------------------------------------------------------
 
-def h_conjunctive(c: _HCtx, ents, ctxs, grp) -> MotifPlan:
+def h_conjunctive(c: _HCtx, ents, ctxs, grp, cycles: int = 1) -> MotifPlan:
     from .domains.hard_ext import CONJ
     d, x, alt, z = c.dom, ents[0], ents[1], ents[2]
     k1, k2 = ctxs[0], ctxs[1]
-    b0 = Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt"),
-                       _ctx_on(c, k1)],
-              Probe("", (x, alt), "ADD", c.ns, "baseline, first condition already true"))
-    b1 = Beat("conjrule", [
-        _hev(c, "CONFLICT", "conj", CONJ[d.key].format(e=c.name(x), c1=c.clause(k1), c2=c.clause(k2)), 3,
+    beats = [Beat("open", [_allow_ev(c, x, "allow_x"), _allow_ev(c, alt, "allow_alt"),
+                           _ctx_on(c, k1)],
+                  Probe("", (x, alt), "ADD", c.ns, "baseline, first condition already true"))]
+    beats.append(Beat("conjrule", [
+        _hev(c, "CONFLICT", "conj",
+             CONJ[d.key].format(e=c.name(x), c1=c.clause(k1), c2=c.clause(k2)), 3,
              rid=c.rid("rconj"), head=_deny(d, x), body=(lit(k1), lit(k2)), prio=c.pr(3, 3),
              tags=("conjunctive",)),
-    ], Probe("", (x, alt), "CONDITION", c.ns, "only one condition holds, so x is still fine"))
-    b2 = Beat("second", [_ctx_on(c, k2), _allow_ev(c, z, "allow_z")],
-              Probe("", (x, alt, z), "CONDITION", c.ns, "both conditions now hold: x banned"))
-    b3 = Beat("drop_first", [
-        _ctx_off(c, k1),
+    ], Probe("", (x, alt), "CONDITION", c.ns, "only one condition holds, so x is still fine")))
+    beats.append(Beat("second", [_ctx_on(c, k2), _allow_ev(c, z, "allow_z")],
+                      Probe("", (x, alt, z), "CONDITION", c.ns,
+                            "both conditions now hold: x banned")))
+    beats.append(Beat("ban_alt", [
         _hev(c, "CONFLICT", "ban_alt", c.say("ADD_BAN", e=c.name(alt)), 2,
              rid=c.rid("rbalt"), head=_deny(d, alt), prio=c.pr(5, 2)),
-    ], Probe("", (x, alt, z), "CONDITION", c.ns, "one condition lapses: x is fine again, alt is not"))
-    b4 = Beat("back", [_ctx_on(c, k1),
-                       _hev(c, "CONFLICT", "ban_z", c.say("ADD_BAN", e=c.name(z)), 2,
-                            rid=c.rid("rbz"), head=_deny(d, z), prio=c.pr(5, 2))],
-              Probe("", (x, alt, z), "CONDITION", c.ns, "both hold again; nothing in the motif is licensed but the trap is"))
-    return MotifPlan("conjunctive", [b0, b1, b2, b3, b4], [], (x, alt, z))
+    ], Probe("", (x, alt, z), "CONDITION", c.ns, "alt banned outright; only z is licensed")))
+    for i in range(cycles):
+        beats.append(Beat(f"drop1_{i}", [_ctx_off(c, k1)],
+                          Probe("", (x, alt, z), "CONDITION", c.ns,
+                                f"first condition lapses (cycle {i + 1}): x is fine again")))
+        beats.append(Beat(f"back1_{i}", [_ctx_on(c, k1)],
+                          Probe("", (x, alt, z), "CONDITION", c.ns,
+                                f"both hold again (cycle {i + 1}): x banned")))
+        beats.append(Beat(f"drop2_{i}", [_ctx_off(c, k2)],
+                          Probe("", (x, alt, z), "CONDITION", c.ns,
+                                f"second condition lapses (cycle {i + 1}): x is fine again")))
+        beats.append(Beat(f"back2_{i}", [_ctx_on(c, k2)],
+                          Probe("", (x, alt, z), "CONDITION", c.ns,
+                                f"both hold again (cycle {i + 1}): x banned")))
+    return MotifPlan("conjunctive", beats, [], (x, alt, z))
 
 
 HARD_MOTIFS = {

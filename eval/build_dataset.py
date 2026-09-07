@@ -41,7 +41,11 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=20260905)
     ap.add_argument("--core", type=int, default=200)
     ap.add_argument("--tier", default="easy", choices=["easy", "hard"],
-                    help="hard: 60-140 sessions, speaker hierarchy, near-miss noise, long arcs")
+                    help="hard: speaker hierarchy, near-miss noise, long arcs")
+    ap.add_argument("--cycles", type=int, default=1,
+                    help="hard tier: extra repeats of each flip-style motif's state arc; "
+                         "raises the compression ratio a memory system faces")
+    ap.add_argument("--gap", default="", help="hard tier: 'lo,hi' sessions between beats")
     args = ap.parse_args()
     prefix = "revoke_full" if args.tier == "easy" else "revoke_hard"
     os.makedirs(args.out, exist_ok=True)
@@ -57,7 +61,8 @@ def main() -> None:
         seed += 1
         sid = f"REVOKE_{dom.key}_{len(items):04d}"
         if args.tier == "hard":
-            sc = build_hard_scenario(dom, sid, seed)
+            gap = tuple(int(x) for x in args.gap.split(",")) if args.gap else None
+            sc = build_hard_scenario(dom, sid, seed, cycles=args.cycles, gap=gap)
         else:
             sc = build_scenario(dom, sid, seed, regime, density)
         rep = verify(sc, dom.allow)

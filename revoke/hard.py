@@ -117,7 +117,20 @@ class Roles:
             self.changes.append((s, who, new))
 
 
-def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Scenario:
+CYCLED = {"ctx_flipflop", "alias", "group_dynamics", "hierarchy", "reinstate_arc",
+          "threshold", "conjunctive"}
+
+
+def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
+                        cycles: int = 1, gap=None) -> Scenario:
+    """`cycles` repeats each flip-style motif's state arc that many extra times.
+
+    Length is not the point of it.  A rule that never changes is cheap to
+    summarise; an entity whose status has toggled eight times is not, because
+    only the latest toggle matters and nothing in the text marks it as the
+    latest.  Raising `cycles` therefore raises the compression ratio a memory
+    system faces without making any single decision harder to derive.
+    """
     rng = random.Random(seed)
     H = HARD[dom.key]
     NUM = NUMERIC[dom.key]
@@ -144,7 +157,10 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
             g = grps[gi]
             gi += 1
         builder = HARD_MOTIFS[name][0] if name in HARD_MOTIFS else MOTIFS[name][0]
-        plan = builder(_HCtx(i, dom, rng, names), e, c, g)
+        if name in CYCLED:
+            plan = builder(_HCtx(i, dom, rng, names), e, c, g, cycles)
+        else:
+            plan = builder(_HCtx(i, dom, rng, names), e, c, g)
         if name not in HARD_MOTIFS:
             for b in plan.beats:
                 for ev in b.events:
@@ -161,8 +177,9 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
     events: List[Event] = []
     beat_noise: Dict[int, List[Tuple[str, str]]] = {}
     pending: List[Tuple[int, object, str, bool, str]] = []   # (session, probe, motif, is_echo, beat label)
+    gap_range = tuple(gap) if gap else GAP
     for pi, beat in order:
-        gap = rng.randint(*GAP)
+        gap = rng.randint(*gap_range)
         for ev in beat.events:
             ev.session = session
             events.append(ev)
@@ -549,4 +566,5 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3) -> Sc
                     meta={"tier": "hard", "hierarchy_session": 1,
                           "n_noise_turns": sum(1 for t in turns if t.kind == "noise"),
                           "role_changes": [{"session": s, "who": w, "rank": r} for s, w, r in roles.changes],
+                          "cycles": cycles,
                           "numeric": {"ctx": NUM["ctx"], "param": NUM["param"], "dir": NUM["dir"]}})
