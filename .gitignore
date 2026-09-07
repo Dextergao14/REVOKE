@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 docs/sample_20_probes.txt
 .claude/
+
+# never commit credentials
+*.env
