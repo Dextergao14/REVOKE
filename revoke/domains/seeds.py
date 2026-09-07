@@ -412,5 +412,7 @@ FINANCE = Domain(
                "Quarterly attestation reminders went out."],
 )
 
+from .meetings import MEETINGS  # noqa: E402
+
 ALL: Dict[str, Domain] = {d.key: d for d in
-                          (DEVOPS, PROCUREMENT, CLINICAL, SMARTHOME, FINANCE)}
+                          (DEVOPS, PROCUREMENT, CLINICAL, SMARTHOME, FINANCE, MEETINGS)}

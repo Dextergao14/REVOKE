@@ -18,6 +18,8 @@ from typing import Dict, List, Tuple
 # noise kinds, in the order the generator samples them
 NOISE_KINDS = ("proposal", "hearsay", "question", "other_team", "stale_echo",
                "praise", "rescind")
+# the meetings domain adds one: a discussion-section line phrased as a decision
+NOISE_KINDS_MEETINGS = NOISE_KINDS + ("near_miss",)
 
 HARD: Dict[str, Dict] = {
  "devops": {
@@ -351,3 +353,17 @@ def rank_of(dom_key: str, speaker: str) -> int:
         if speaker in names:
             return r
     return 0
+
+
+# ---- the meetings domain plugs into every hard-tier table -------------------
+from .meetings import (HARD_MEETINGS, TERSE_MEETINGS, PEOPLE_MEETINGS,  # noqa: E402
+                       NUMERIC_MEETINGS, CERT_MEETINGS, DERIVED_MEETINGS,
+                       CONJ_MEETINGS, HNL_MEETINGS)
+
+HARD["meetings"] = HARD_MEETINGS
+TERSE["meetings"] = TERSE_MEETINGS
+PEOPLE["meetings"] = PEOPLE_MEETINGS
+NUMERIC["meetings"] = NUMERIC_MEETINGS
+CERT["meetings"] = CERT_MEETINGS
+DERIVED["meetings"] = DERIVED_MEETINGS
+CONJ["meetings"] = CONJ_MEETINGS

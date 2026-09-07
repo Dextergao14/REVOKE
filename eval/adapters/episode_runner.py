@@ -99,7 +99,8 @@ def act_from(resp, item):
     return (text, text) if text else ("", "")
 
 
-def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0):
+def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
+                keep_frac=0.55):
     """One continuous pass over the episode. Returns a trace row."""
     tools = [{"type": "function", "function": {
         "name": t["name"], "description": t["doc"],
@@ -123,7 +124,7 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0):
     def compact():
         """Move the oldest blocks out of context; keep them only as a summary."""
         nonlocal summary, blocks
-        keep_chars = int(budget * TOK * 0.55)
+        keep_chars = int(budget * TOK * keep_frac)
         drop, kept, acc = [], [], 0
         for b in reversed(blocks):
             if acc + len(b) <= keep_chars:
@@ -231,13 +232,14 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0):
                                   "error": "no action in response"})
             if pid == stop_after:
                 return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
-                        "steps": steps, "compactions": compactions, "usage": usage,
+                        "keep_frac": keep_frac, "steps": steps,
+                        "compactions": compactions, "usage": usage,
                         "final_summary": summary}
         if lines:
             pending.append("\n".join(lines))
     return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
-            "steps": steps, "compactions": compactions, "usage": usage,
-            "final_summary": summary}
+            "keep_frac": keep_frac, "steps": steps, "compactions": compactions,
+            "usage": usage, "final_summary": summary}
 
 
 def main():
@@ -250,6 +252,10 @@ def main():
     ap.add_argument("--items", default="")
     ap.add_argument("--limit", type=int, default=0, help="only the first N probes")
     ap.add_argument("--max-tokens", type=int, default=3000)
+    ap.add_argument("--keep-frac", type=float, default=0.55,
+                    help="fraction of the budget kept verbatim after a compaction. "
+                         "Raising it compacts more often with less material each time, "
+                         "which separates per-compaction load from retained context.")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--key", default=os.environ.get("OPENROUTER_API_KEY"))
     a = ap.parse_args()
@@ -271,8 +277,8 @@ def main():
           f"x {len(a.modes.split(','))} modes, budget {a.budget} tokens", flush=True)
     t0 = time.time()
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
-        futs = {ex.submit(run_episode, it, m, md, a.budget, a.key, a.max_tokens, a.limit):
-                (it, m, md) for it, m, md in jobs}
+        futs = {ex.submit(run_episode, it, m, md, a.budget, a.key, a.max_tokens,
+                          a.limit, a.keep_frac): (it, m, md) for it, m, md in jobs}
         for n, f in enumerate(as_completed(futs), 1):
             it, m, md = futs[f]
             try:
@@ -281,7 +287,7 @@ def main():
                 print(f"  FAILED {it['id']} {m} {md}: {e}", flush=True)
                 continue
             path = os.path.join(a.out, f"{m.replace('/', '__').replace(':', '_')}"
-                                       f"__{md}__b{a.budget}.jsonl")
+                                       f"__{md}__b{a.budget}__k{int(a.keep_frac * 100)}.jsonl")
             with open(path, "a") as fh:
                 fh.write(json.dumps(row) + "\n")
             acted = sum(1 for s in row["steps"] if s.get("tool_calls"))

@@ -42,7 +42,7 @@ def main() -> None:
     ap.add_argument("--core", type=int, default=200)
     ap.add_argument("--tier", default="easy", choices=["easy", "hard"],
                     help="hard: speaker hierarchy, near-miss noise, long arcs")
-    ap.add_argument("--cycles", type=int, default=1,
+    ap.add_argument("--cycles", type=int, default=6,
                     help="hard tier: extra repeats of each flip-style motif's state arc; "
                          "raises the compression ratio a memory system faces")
     ap.add_argument("--gap", default="", help="hard tier: 'lo,hi' sessions between beats")

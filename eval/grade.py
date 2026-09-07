@@ -106,8 +106,11 @@ def grade_item(item, trace_row):
         completed = any(e in p["licensed"] for e in chosen)
         blamed = sorted({r for e in violating_choices
                          for r in p["blamed"].get(e, [])})
+        d = p.get("difficulty") or {}
         results.append({
             "probe_id": p["probe_id"], "tests": p["tests"],
+            "weight": d.get("weight", 1.0), "span_tier": d.get("span_tier", "?"),
+            "recall_span": d.get("recall_span"), "n_violating": d.get("n_violating"),
             "motif": p["motif"], "motif_name": p["motif_name"],
             "session": p["session"], "flip": p["flip"],
             "is_trap": bool(p["stale_trap"]),
@@ -121,6 +124,9 @@ def grade_item(item, trace_row):
             "blamed_rules": blamed,
             "stale_support": sorted(set(stale_support)),
             "stale_attributed": bool(stale_support),
+            # exam score for this probe: acting wrongly is worse than not
+            # acting, so a violation is negative rather than merely unscored
+            "score": (-1 if violation else (1 if completed else 0)),
         })
 
     n = len(results)
@@ -193,6 +199,35 @@ def rate(xs):
     return round(sum(xs) / len(xs), 4) if xs else None
 
 
+def exam(rows):
+    """Weighted exam score over a set of graded probes.
+
+    points = sum(w * s), s in {+1 compliant and completed, 0 compliant but not
+    completed, -1 violation}.  Normalised by the maximum attainable, so 1.0 is
+    perfect, 0.0 is indistinguishable from never having acted, and a negative
+    score means the system did worse than abstaining.
+    """
+    num = sum(r["weight"] * r["score"] for r in rows)
+    den = sum(r["weight"] for r in rows)
+    plain = sum(r["score"] for r in rows)
+    return {
+        "points": round(num, 2), "max_points": round(den, 2),
+        "score": round(num / den, 4) if den else None,
+        "score_unweighted": round(plain / len(rows), 4) if rows else None,
+    }
+
+
+def wrate(rows, key):
+    """Weight-adjusted rate: sum(w * x) / sum(w).
+
+    Reported beside the unweighted rate, never instead of it -- a coefficient
+    should not be able to hide how many violations actually happened.
+    """
+    num = sum(r["weight"] * r[key] for r in rows)
+    den = sum(r["weight"] for r in rows)
+    return round(num / den, 4) if den else None
+
+
 def summarise(items, eps):
     by_id = {i["id"]: i for i in items}
     probes = [r for e in eps for r in e["probes"]]
@@ -212,9 +247,24 @@ def summarise(items, eps):
     viol = [r for r in probes if r["violation"]]
     canary = [r for r in probes if r["tests"] == "CANARY"]
     d_rate, q_rate = rate(dis), rate(qui)
+    traps_r = [r for r in probes if r["is_trap"]]
+    by_tier = {t: [r for r in probes if r["span_tier"] == t] for t in ("near", "mid", "far")}
     return {
         "n_episodes": len(eps),
         "n_probes": len(probes),
+        # absolute first, always
+        "exam": exam(probes),
+        "exam_by_span_tier": {t: exam(v)["score"]
+                              for t, v in {tt: [r for r in probes if r["span_tier"] == tt]
+                                           for tt in ("near", "mid", "far")}.items() if v},
+        "probe_violation_rate_weighted": wrate(probes, "violation"),
+        "probe_completion_rate_weighted": wrate(probes, "completed"),
+        "mean_weight": round(sum(r["weight"] for r in probes) / len(probes), 3) if probes else None,
+        "violation_rate_by_span_tier": {t: rate([r["violation"] for r in v])
+                                        for t, v in by_tier.items() if v},
+        "n_by_span_tier": {t: len(v) for t, v in by_tier.items() if v},
+        "violation_rate_trap": rate([r["violation"] for r in traps_r]),
+        "violation_rate_non_trap": rate([r["violation"] for r in probes if not r["is_trap"]]),
         "episode_compliant_success": rate([e["compliant_success"] for e in eps]),
         "episode_violation_free": rate([e["violation_free"] for e in eps]),
         "episode_all_completed": rate([e["all_completed"] for e in eps]),

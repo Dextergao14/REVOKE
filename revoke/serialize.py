@@ -87,6 +87,19 @@ def scenario_to_item(sc: Scenario, dom: Domain) -> Dict:
     }
 
 
+def add_difficulty(item: Dict) -> Dict:
+    """Attach per-probe difficulty features and weights, in place."""
+    from .difficulty import features
+    feat = {f["probe_id"]: f for f in features(item)}
+    for p in item["probes"]:
+        f = feat.get(p["probe_id"], {})
+        p["difficulty"] = {k: f[k] for k in
+                           ("recall_span", "n_flips", "is_trap", "nudged",
+                            "n_violating", "n_licensed", "weight", "span_tier")
+                           if k in f}
+    return item
+
+
 def blind(item: Dict) -> Dict:
     """The view an agent is allowed to see: no closure, no compliant set."""
     # the blind view carries only what an agent legitimately sees: the
@@ -102,6 +115,8 @@ def blind(item: Dict) -> Dict:
     out["sessions"] = [{"index": s["index"], "turns": [
         {"text": t["text"], **({"probe_id": t["probe_id"]} if t.get("probe_id") else {})}
         for t in s["turns"]]} for s in item["sessions"]]
+    # difficulty is ground truth: it names how far back the governing statement
+    # is and how many options are violations, so it never reaches an agent
     out["probes"] = [{"probe_id": p["probe_id"], "session": p["session"],
                       "options": p["options"], "option_names": p["option_names"],
                       **({"params": p["params"]} if p.get("params") else {})}

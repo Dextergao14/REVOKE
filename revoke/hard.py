@@ -21,7 +21,7 @@ import random
 from typing import Dict, List, Optional, Tuple
 
 from .domains.base import Domain
-from .domains.hard_ext import (HARD, NOISE_KINDS, SUGGEST, REF_LIFT, REF_REVERSE, PEOPLE,
+from .domains.hard_ext import (HARD, NOISE_KINDS, NOISE_KINDS_MEETINGS, SUGGEST, REF_LIFT, REF_REVERSE, PEOPLE,
                                HIERARCHY_PEOPLE, ROLE_CHANGE, ROLE_DROP, NUMERIC, CERT, fmt_value)
 from .events import Event
 from .generator import ProbeSpec, Scenario, Turn, traverse
@@ -122,7 +122,7 @@ CYCLED = {"ctx_flipflop", "alias", "group_dynamics", "hierarchy", "reinstate_arc
 
 
 def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
-                        cycles: int = 1, gap=None) -> Scenario:
+                        cycles: int = 6, gap=None) -> Scenario:
     """`cycles` repeats each flip-style motif's state arc that many extra times.
 
     Length is not the point of it.  A rule that never changes is cheap to
@@ -133,6 +133,9 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
     """
     rng = random.Random(seed)
     H = HARD[dom.key]
+    noise_kinds = tuple(k for k in
+                        (NOISE_KINDS_MEETINGS if dom.key == "meetings" else NOISE_KINDS)
+                        if k in H["noise"])
     NUM = NUMERIC[dom.key]
     names: Dict[str, str] = {**dom.entities, **H["extra"]}
     motif_names = _choose(rng, n_easy, len(dom.contexts), len(dom.groups), len(names))
@@ -502,9 +505,14 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
     P = roles.cfg
     fmt_people = lambda r: ", ".join(roles.people(r, 1)) or "nobody yet"
     p0 = ", ".join(f"{p} ({P['descr'].get(p, 'no role')})" for p in roles.people(0, 1))
-    notice = HIERARCHY_PEOPLE.format(top=top, r3=P["roles"][3], p3=fmt_people(3), r2=P["roles"][2], p2=fmt_people(2),
-                                     r1=P["roles"][1], p1=fmt_people(1), p0=p0)
+    tpl = H.get("hierarchy") or HIERARCHY_PEOPLE
+    fields = {"top": top, "r3": P["roles"][3], "p3": fmt_people(3),
+              "r2": P["roles"][2], "p2": fmt_people(2),
+              "r1": P["roles"][1], "p1": fmt_people(1), "p0": p0}
+    notice = tpl.format(**{k: v for k, v in fields.items() if "{" + k + "}" in tpl})
     notice = notice[0].upper() + notice[1:]
+    if not notice.startswith(top):
+        notice = f"{top}: {notice}"
     turns.append(Turn(1, "user", "notice", notice, speaker=top))
     by_probe: Dict[int, List[ProbeSpec]] = {}
     for p in probes:
@@ -527,14 +535,21 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
                 sol_s = solve(rb)
                 banned = [e for e in cand if check_assertion(sol_s, [Lit(dom.allow, (e,))]).violation]
                 lic = [e for e in cand if e not in banned and Lit(dom.allow, (e,)) in sol_s.closure]
+                near = "near_miss" in H["noise"]
                 for _ in range(rng.randint(1, 3)):
                     r = rng.random()
-                    if banned and r < 0.5:
+                    if near and r < 0.3:
+                        # phrased as a decision, said by nobody with authority,
+                        # and aimed at whichever side of the current state is
+                        # most tempting to get wrong
+                        pool = banned + lic or cand
+                        e, kind = rng.choice(pool), "near_miss"
+                    elif banned and r < 0.62:
                         e, kind = rng.choice(banned), rng.choice(("stale_echo", "praise", "question"))
-                    elif lic and r < 0.85:
+                    elif lic and r < 0.88:
                         e, kind = rng.choice(lic), rng.choice(("hearsay", "proposal", "other_team", "question"))
                     else:
-                        e, kind = rng.choice(cand), rng.choice(NOISE_KINDS)
+                        e, kind = rng.choice(cand), rng.choice(noise_kinds)
                     spk = roles.who(0, s)
                     turns.append(Turn(s, "user", "noise",
                                       f"{spk}: {rng.choice(H['noise'][kind]).format(e=names[e])}", speaker=spk))

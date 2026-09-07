@@ -26,7 +26,7 @@ from .domains.hard_ext import HARD, NOISE_KINDS, TERSE
 # hard-tier prose, per domain
 # --------------------------------------------------------------------------
 
-HNL: Dict[str, Dict[str, List[str]]] = {
+HNL: Dict[str, Dict[str, object]] = {
  "devops": {
   "ALIAS": ["{x} follows {y}: whatever ruling applies to {y} applies to {x} as well, and this linkage overrides any separate ruling that names only {x}."],
   "ALIAS_BREAK": ["{x} no longer inherits blocks from {y}; from now on only rulings that name {x} directly restrict it."],
@@ -79,6 +79,7 @@ HNL: Dict[str, Dict[str, List[str]]] = {
   "LEAD_DEFAULT": ["Let's make {e} our evening default.", "{e} is the default from now on."],
   "SEC_BAN": ["{e} is not allowed. That is a charter rule.", "Rule: {e} stays off."],
  },
+ "meetings": {},          # filled from the meetings module below
  "finance": {
   "ALIAS": ["{x} is controlled as a variant of {y}: any control on {y} applies to {x} as well, and this linkage overrides any separate delegation that names only {x}."],
   "ALIAS_BREAK": ["{x} is decoupled from {y}; only controls naming {x} directly restrict it from now on."],
@@ -93,6 +94,10 @@ HNL: Dict[str, Dict[str, List[str]]] = {
   "SEC_BAN": ["{e} is not permitted. This is a control ruling.", "Ruling: {e} may not be executed."],
  },
 }
+
+
+from .domains.meetings import HNL_MEETINGS  # noqa: E402
+HNL["meetings"] = HNL_MEETINGS
 
 
 class _HCtx(_Ctx):
@@ -114,7 +119,8 @@ class _HCtx(_Ctx):
         return self.rng.choice(pool).format(**kw)
 
     def hsay(self, key: str, **kw) -> str:
-        return self.rng.choice(HNL[self.dom.key][key]).format(**kw)
+        v = HNL[self.dom.key][key]
+        return (v if isinstance(v, str) else self.rng.choice(v)).format(**kw)
 
     def who(self, rank: int) -> str:
         return self.rng.choice(self.h["speakers"][rank])

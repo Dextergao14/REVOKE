@@ -29,6 +29,10 @@ def main():
             it = items[r["id"]]
             key = (r["model"], r["mode"], r.get("budget", 0))
             R = rows[key]
+            R.setdefault("wnum", 0.0)
+            R.setdefault("wden", 0.0)
+            R.setdefault("tier", collections.defaultdict(lambda: [0, 0]))
+            R.setdefault("trapv", [0, 0])
             acted = [s for s in r["steps"] if s.get("tool_calls")]
             R["cost"] += (r.get("usage") or {}).get("cost", 0) or 0
             R["agg"]["errors"] += len(r["steps"]) - len(acted)
@@ -47,6 +51,14 @@ def main():
             for x in g["probes"]:
                 p = pm[x["probe_id"]]
                 R["agg"]["n"] += 1
+                w = x.get("weight", 1.0)
+                R["wden"] += w
+                R["wnum"] += w * x["violation"]
+                R["tier"][x.get("span_tier", "?")][0] += 1
+                R["tier"][x.get("span_tier", "?")][1] += x["violation"]
+                if x["is_trap"]:
+                    R["trapv"][0] += 1
+                    R["trapv"][1] += x["violation"]
                 R["agg"]["viol"] += x["violation"]
                 R["agg"]["done"] += x["completed"]
                 R["agg"]["csr"] += x["completed"] and not x["violation"]
@@ -80,28 +92,39 @@ def main():
             "compactions": round(statistics.mean(R["compactions"]), 1) if R["compactions"] else 0,
             "ctx_tok": int(statistics.mean(R["ctx"])) if R["ctx"] else 0,
             "summary_chars": int(statistics.mean(R["summ"])) if R["summ"] else 0,
+            "wviol": R["wnum"] / R["wden"] if R["wden"] else None,
+            "mean_w": R["wden"] / A["n"] if A["n"] else None,
+            "tierv": {k: (v[1] / v[0] if v[0] else None) for k, v in R["tier"].items()},
+            "trapv": R["trapv"][1] / R["trapv"][0] if R["trapv"][0] else None,
             "cost": R["cost"],
             "by_event": {k: (v[1] / v[0] if v[0] else None) for k, v in sorted(R["by_event"].items())},
         })
     order = {"full": 0, "compact": 1, "truncate": 2}
     out.sort(key=lambda r: (r["model"], order.get(r["mode"], 9)))
+    out.sort(key=lambda r: (r["model"], order.get(r["mode"], 9), r["budget"]))
     w = max(len(r["model"]) for r in out) + 1
-    print(f"{'model'.ljust(w)}{'mode':>10}{'n':>5}{'err':>5}{'CSR':>8}{'viol':>8}{'done':>8}"
-          f"{'trap':>8}{'lag':>7}{'ctx':>7}{'cmpct':>7}{'notes':>7}{'$':>7}")
-    print("-" * (w + 87))
+    def f3(x):
+        return "  -  " if x is None else f"{x:.3f}"
+    print(f"{'model'.ljust(w)}{'mode':>9}{'budget':>7}{'n':>5}"
+          f"{'viol':>8}{'wviol':>8}{'CSR':>8}{'done':>8}"
+          f"{'near':>7}{'mid':>7}{'far':>7}{'trap':>7}{'ctx':>7}{'cmpct':>7}{'$':>7}")
+    print("-" * (w + 100))
     for r in out:
-        t = f"{r['trap']:.3f}" if r["trap"] is not None else "  -  "
-        lg = f"{r['lag']:.2f}" if r["lag"] is not None else "  -  "
-        print(f"{r['model'].ljust(w)}{r['mode']:>10}{r['n']:>5}{r['errors']:>5}{r['csr']:>8.3f}"
-              f"{r['viol']:>8.3f}{r['done']:>8.3f}{t:>8}{lg:>7}{r['ctx_tok']:>7}"
-              f"{r['compactions']:>7.1f}{r['summary_chars']:>7}{r['cost']:>7.3f}")
+        b = f"{r['budget']}" if r["budget"] else "full"
+        print(f"{r['model'].ljust(w)}{r['mode']:>9}{b:>7}{r['n']:>5}"
+              f"{f3(r['viol']):>8}{f3(r['wviol']):>8}{f3(r['csr']):>8}{f3(r['done']):>8}"
+              f"{f3(r['tierv'].get('near')):>7}{f3(r['tierv'].get('mid')):>7}"
+              f"{f3(r['tierv'].get('far')):>7}{f3(r['trapv']):>7}"
+              f"{r['ctx_tok']:>7}{r['compactions']:>7.1f}{r['cost']:>7.3f}")
+    print("  viol/CSR/done absolute; wviol difficulty-weighted; near/mid/far by recall span.")
     ev = ["ADD", "CONFLICT", "SUPERSEDE", "CONDITION", "SUPPORT", "RETRACT", "NOISE", "CANARY"]
     present = [e for e in ev if any(r["by_event"].get(e) is not None for r in out)]
-    print(f"\nviolation rate by event type\n{'model + mode'.ljust(w + 10)}"
+    print(f"\nviolation rate by event type\n{'model + mode + budget'.ljust(w + 18)}"
           + "".join(e[:9].rjust(11) for e in present))
-    print("-" * (w + 10 + 11 * len(present)))
+    print("-" * (w + 18 + 11 * len(present)))
     for r in out:
-        print(f"{(r['model'] + ' ' + r['mode']).ljust(w + 10)}" + "".join(
+        tag = f"{r['model']} {r['mode']} {r['budget'] or 'full'}"
+        print(f"{tag.ljust(w + 18)}" + "".join(
             ("  -  " if r["by_event"].get(e) is None else f"{r['by_event'][e]:.3f}").rjust(11)
             for e in present))
     print(f"\ntotal spend: ${sum(r['cost'] for r in out):.3f}")
