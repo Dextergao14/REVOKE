@@ -161,7 +161,7 @@ def render_long(sc: Scenario, corpus: Dict, seed: int = 0, target_tokens: int = 
             lines = [pad.side()]
         if flat:
             # a chat block is a mini-thread between one or two filler people
-            who = [pad.person()] + ([pad.person()] if rng.random() < 0.4 else [])
+            who = [pad.person() for _ in range(rng.randint(1, 3))]
             lines = [f"{rng.choice(who)}: {x}" for x in lines]
         return [Turn(session, "user", "pad", x) for x in lines]
 
