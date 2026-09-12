@@ -27,7 +27,7 @@ def main():
             if r["id"] not in items:
                 continue
             it = items[r["id"]]
-            key = (r["model"], r["mode"], r.get("budget", 0))
+            key = (r["model"], r["mode"], r.get("budget", 0), r.get("keep_frac", 0.0))
             R = rows[key]
             R.setdefault("wnum", 0.0)
             R.setdefault("wden", 0.0)
@@ -76,12 +76,12 @@ def main():
             R["censored"] += c
 
     out = []
-    for (model, mode, budget), R in rows.items():
+    for (model, mode, budget, keepf), R in rows.items():
         A = R["agg"]
         if not A["n"]:
             continue
         out.append({
-            "model": model, "mode": mode, "budget": budget,
+            "model": model, "mode": mode, "budget": budget, "keep": keepf,
             "episodes": R["episodes"], "n": A["n"], "errors": A["errors"],
             "csr": A["csr"] / A["n"], "viol": A["viol"] / A["n"], "done": A["done"] / A["n"],
             "trap": A["trap_hit"] / A["traps"] if A["traps"] else None,
@@ -101,17 +101,18 @@ def main():
         })
     order = {"full": 0, "compact": 1, "truncate": 2}
     out.sort(key=lambda r: (r["model"], order.get(r["mode"], 9)))
-    out.sort(key=lambda r: (r["model"], order.get(r["mode"], 9), r["budget"]))
+    out.sort(key=lambda r: (r["model"], order.get(r["mode"], 9), r["budget"], r["keep"]))
     w = max(len(r["model"]) for r in out) + 1
     def f3(x):
         return "  -  " if x is None else f"{x:.3f}"
-    print(f"{'model'.ljust(w)}{'mode':>9}{'budget':>7}{'n':>5}"
+    print(f"{'model'.ljust(w)}{'mode':>9}{'budget':>7}{'keep':>6}{'n':>5}"
           f"{'viol':>8}{'wviol':>8}{'CSR':>8}{'done':>8}"
           f"{'near':>7}{'mid':>7}{'far':>7}{'trap':>7}{'ctx':>7}{'cmpct':>7}{'$':>7}")
-    print("-" * (w + 100))
+    print("-" * (w + 106))
     for r in out:
         b = f"{r['budget']}" if r["budget"] else "full"
-        print(f"{r['model'].ljust(w)}{r['mode']:>9}{b:>7}{r['n']:>5}"
+        k = f"{r['keep']:.2f}" if r["keep"] else "-"
+        print(f"{r['model'].ljust(w)}{r['mode']:>9}{b:>7}{k:>6}{r['n']:>5}"
               f"{f3(r['viol']):>8}{f3(r['wviol']):>8}{f3(r['csr']):>8}{f3(r['done']):>8}"
               f"{f3(r['tierv'].get('near')):>7}{f3(r['tierv'].get('mid')):>7}"
               f"{f3(r['tierv'].get('far')):>7}{f3(r['trapv']):>7}"
@@ -123,7 +124,7 @@ def main():
           + "".join(e[:9].rjust(11) for e in present))
     print("-" * (w + 18 + 11 * len(present)))
     for r in out:
-        tag = f"{r['model']} {r['mode']} {r['budget'] or 'full'}"
+        tag = f"{r['model']} {r['mode']} {r['budget'] or 'full'} k{int(r['keep']*100) or ''}"
         print(f"{tag.ljust(w + 18)}" + "".join(
             ("  -  " if r["by_event"].get(e) is None else f"{r['by_event'][e]:.3f}").rjust(11)
             for e in present))
