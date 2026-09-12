@@ -134,8 +134,9 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
     rng = random.Random(seed)
     H = HARD[dom.key]
     noise_kinds = tuple(k for k in
-                        (NOISE_KINDS_MEETINGS if dom.key == "meetings" else NOISE_KINDS)
+                        (NOISE_KINDS_MEETINGS if "near_miss" in H["noise"] else NOISE_KINDS)
                         if k in H["noise"])
+    suggest_pool = H.get("suggest") or SUGGEST
     NUM = NUMERIC[dom.key]
     names: Dict[str, str] = {**dom.entities, **H["extra"]}
     motif_names = _choose(rng, n_easy, len(dom.contexts), len(dom.groups), len(names))
@@ -505,7 +506,10 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
     P = roles.cfg
     fmt_people = lambda r: ", ".join(roles.people(r, 1)) or "nobody yet"
     p0 = ", ".join(f"{p} ({P['descr'].get(p, 'no role')})" for p in roles.people(0, 1))
-    tpl = H.get("hierarchy") or HIERARCHY_PEOPLE
+    # a domain may supply its own notice template; one that never names the
+    # people (the pre-v3 fixed strings) would leave the agent unable to tell
+    # which speaker holds which rank, so those fall back to the people template
+    tpl = H.get("hierarchy") if "{p3}" in (H.get("hierarchy") or "") else HIERARCHY_PEOPLE
     fields = {"top": top, "r3": P["roles"][3], "p3": fmt_people(3),
               "r2": P["roles"][2], "p2": fmt_people(2),
               "r1": P["roles"][1], "p1": fmt_people(1), "p0": p0}
@@ -563,7 +567,7 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
             nudge = ""
             if p.violating and rng.random() < SUGGEST_P:
                 spk = roles.who(0, s)
-                nudge = " " + rng.choice(SUGGEST).format(e=names[rng.choice(p.violating)])
+                nudge = " " + rng.choice(suggest_pool).format(e=names[rng.choice(p.violating)])
                 p.note += " [nudged]"
             else:
                 spk = roles.who(rng.choice([1, 2]), s)

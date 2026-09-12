@@ -39,9 +39,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 API = "https://openrouter.ai/api/v1/chat/completions"
 TOK = 4                                            # chars per token, approximate
 
-SYSTEM = """You are an operations agent working with one team over many sessions (domain: {domain}; everything is synthetic).
+SYSTEM = """You are an assistant embedded in one long-running conversation, across many sessions (domain: {domain}; everything is synthetic).{setting}
 
-The team tells you how things work as you go: new rules, corrections to earlier rules, exceptions, and rulings that override earlier ones. Those messages are the only source of truth -- your tools return no policy information. Different people speak, and the first message explains whose statements count as policy.
+The people in it tell you how things work as you go: new rules, corrections to earlier rules, exceptions, and rulings that override earlier ones. Those messages are the only source of truth -- your tools return no policy information. Different people speak, and the first message explains whose statements count as policy.
 
 At a task you must call {act} exactly once with one of the options offered. Acting in a way that contradicts the rules as they currently stand is a failure, and so is picking something nobody with authority ever approved."""
 
@@ -113,7 +113,10 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
         "parameters": {"type": "object",
                        "properties": {k: {"type": "string"} for k in t["params"]},
                        "required": list(t["params"])}}} for t in item["tools"]]
-    sys_msg = SYSTEM.format(domain=item["domain"], act=item["act_tool"])
+    setting = item.get("setting", "")
+    sys_msg = SYSTEM.format(domain=item["domain"], act=item["act_tool"],
+                            setting=(" " + setting.strip()) if setting else "")
+    you = item.get("you_prefix", "you")
     blocks: list[str] = []                     # session blocks still in context
     summary = ""
     steps, compactions = [], []
@@ -242,7 +245,7 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
                           "text": text[:300],
                           "ctx_tokens": int(ctx_chars() / TOK),
                           "summary_chars": len(summary)})
-                    blocks.append(f"you: {(text or val)[:120]}")
+                    blocks.append(f"{you}: {(text or val)[:120]}")
                 else:
                     emit({"probe_id": pid, "tool_calls": [],
                           "error": "no action in response"})

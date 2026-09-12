@@ -30,11 +30,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 API = "https://openrouter.ai/api/v1/chat/completions"
 
-SYSTEM = """You are an operations agent working with one team over many sessions (domain: {domain}; everything is synthetic).
+SYSTEM = """You are an assistant embedded in one long-running conversation, across many sessions (domain: {domain}; everything is synthetic).{setting}
 
-The team tells you how things work as you go: new rules, corrections to earlier rules, exceptions, and rulings that override earlier ones. Those messages are the only source of truth -- your tools return no policy information. Different people speak in the conversation, and the first message explains whose statements count as policy.
+The people in it tell you how things work as you go: new rules, corrections to earlier rules, exceptions, and rulings that override earlier ones. Those messages are the only source of truth -- your tools return no policy information. Different people speak, and the first message explains whose statements count as policy.
 
-You will be shown the conversation up to a task you must carry out now. Call {act} exactly once with one of the options you were offered. Acting in a way that contradicts the rules as they currently stand is a failure, and so is picking something nobody with authority ever approved."""
+At a task you must call {act} exactly once with one of the options offered. Acting in a way that contradicts the rules as they currently stand is a failure, and so is picking something nobody with authority ever approved."""
 
 USER_TAIL = """
 
@@ -120,7 +120,9 @@ def run_probe(item, probe, model, key, tries=5, max_tokens=16000):
                        "properties": {k: {"type": "string"} for k in t["params"]},
                        "required": list(t["params"])}}} for t in item["tools"]]
     convo = render(item, probe["probe_id"])
-    sys_msg = SYSTEM.format(domain=item["domain"], act=item["act_tool"])
+    setting = item.get("setting", "")
+    sys_msg = SYSTEM.format(domain=item["domain"], act=item["act_tool"],
+                            setting=(" " + setting.strip()) if setting else "")
     # reasoning models spend the whole completion budget thinking and emit
     # nothing if it is tight, so give room and cap the reasoning effort
     base = {"model": model, "temperature": 0, "max_tokens": max_tokens,
