@@ -1,0 +1,361 @@
+<title>REVOKE Working Paper</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#f7f8f6; --sheet:#fdfdfb; --ink:#14181c; --ink-2:#4a535b; --muted:#7d868e; --rule:#d9dedf; --rule-2:#eceff0;
+  --accent:#2f3aa6; --accent-ink:#2a338f; --accent-wash:rgba(47,58,166,.07);
+  --ph:#8a5a00; --ph-bg:#fff1cc; --ph-line:#e3b341;
+  --real:#1d6b3a; --real-bg:#e6f3ea;
+  --code-bg:#f0f2f1;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif; --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#111416; --sheet:#181c1f; --ink:#eef0ee; --ink-2:#b6bcc0; --muted:#858d94; --rule:#30363a; --rule-2:#23282c;
+  --accent:#8b93ee; --accent-ink:#a4aaf3; --accent-wash:rgba(139,147,238,.12);
+  --ph:#f2c76a; --ph-bg:#3a2d0c; --ph-line:#b58a2a; --real:#8fd3a6; --real-bg:#173323; --code-bg:#1f2428;
+}}
+:root[data-theme="dark"]{
+  --paper:#111416; --sheet:#181c1f; --ink:#eef0ee; --ink-2:#b6bcc0; --muted:#858d94; --rule:#30363a; --rule-2:#23282c;
+  --accent:#8b93ee; --accent-ink:#a4aaf3; --accent-wash:rgba(139,147,238,.12);
+  --ph:#f2c76a; --ph-bg:#3a2d0c; --ph-line:#b58a2a; --real:#8fd3a6; --real-bg:#173323; --code-bg:#1f2428;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;font-optical-sizing:auto}
+.sheet{max-width:860px;margin:32px auto 80px;background:var(--sheet);border:1px solid var(--rule);padding:56px 64px 72px}
+@media (max-width:720px){.sheet{margin:0;padding:32px 20px 56px;border:0}}
+.eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1.2;letter-spacing:-.01em;margin:0 0 8px;text-wrap:balance}
+.subtitle{font-family:var(--serif);font-style:italic;font-size:20px;color:var(--ink-2);margin:0 0 18px;text-wrap:balance}
+.authors{font-family:var(--sans);font-size:14px;color:var(--ink-2);margin:0 0 6px}
+.affil{font-family:var(--sans);font-size:13px;color:var(--muted);margin:0 0 28px}
+.notice{font-family:var(--sans);font-size:13px;color:var(--ink-2);background:var(--accent-wash);border-left:3px solid var(--accent);padding:10px 14px;margin:0 0 30px;line-height:1.5}
+.notice .ph,.notice .real{vertical-align:baseline}
+h2{font-family:var(--sans);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);margin:44px 0 12px;padding-top:18px;border-top:1px solid var(--rule)}
+h2 .n{color:var(--muted);font-weight:500;margin-right:10px;font-variant-numeric:tabular-nums}
+h3{font-family:var(--sans);font-weight:600;font-size:15px;margin:26px 0 8px;color:var(--ink)}
+p{margin:0 0 14px;max-width:68ch}
+.abstract{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:18px 0 8px;margin:0 0 8px}
+.abstract h2{border:0;margin:0 0 8px;padding:0}
+.abstract p{font-size:16px}
+ul,ol{margin:0 0 14px;padding-left:22px;max-width:68ch}
+li{margin:0 0 6px}
+li::marker{color:var(--muted)}
+strong{font-weight:600}
+em{font-style:italic}
+code,.rule{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:1px 5px;border-radius:2px;color:var(--ink)}
+.rules{font-family:var(--mono);font-size:13.5px;line-height:1.7;background:var(--code-bg);padding:14px 18px;margin:8px 0 18px;overflow-x:auto;color:var(--ink);border-left:3px solid var(--rule)}
+.rules .c{color:var(--muted)}
+.ph{display:inline-block;font-family:var(--mono);font-size:.82em;font-weight:500;color:var(--ph);background:var(--ph-bg);border-bottom:2px solid var(--ph-line);padding:0 5px;line-height:1.5;border-radius:2px;white-space:nowrap}
+.real{display:inline-block;font-family:var(--sans);font-size:.78em;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--real);background:var(--real-bg);padding:1px 7px;border-radius:2px;white-space:nowrap;vertical-align:middle}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 6px;font-family:var(--sans)}
+@media (max-width:720px){.steps{grid-template-columns:1fr 1fr}}
+.step{background:var(--paper);border:1px solid var(--rule);padding:12px 14px;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+.step b{display:block;font-weight:600;color:var(--ink);margin:0 0 4px;font-size:13px;letter-spacing:.02em}
+.step .k{font-family:var(--mono);color:var(--accent-ink);font-size:12px}
+figure{margin:22px 0 26px}
+figcaption{font-family:var(--sans);font-size:13px;color:var(--ink-2);line-height:1.5;margin:8px 0 0;max-width:78ch}
+figcaption b{font-weight:600;color:var(--ink)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:13.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;padding:8px 10px;border-bottom:1.5px solid var(--ink);vertical-align:bottom;line-height:1.3}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;border-bottom:1px solid var(--rule-2);vertical-align:top;color:var(--ink-2)}
+td.n{color:var(--ink)}
+td.neg{color:var(--ph)}
+tr.group td{font-weight:600;color:var(--ink);padding-top:12px;border-bottom:1px solid var(--rule)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;margin:6px 0 16px}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.def{font-family:var(--sans);font-size:14px;line-height:1.5;color:var(--ink-2)}
+.def b{color:var(--ink);font-weight:600}
+.callout{border:1px solid var(--rule);background:var(--paper);padding:14px 18px;margin:16px 0 20px;font-size:15.5px}
+.callout p:last-child{margin:0}
+.transcript{font-family:var(--mono);font-size:12.5px;line-height:1.65;background:var(--code-bg);padding:14px 18px;margin:8px 0 6px;overflow-x:auto;color:var(--ink);white-space:pre}
+.transcript .s{color:var(--muted)} .transcript .gt{color:var(--accent-ink)} .transcript .x{color:var(--ph)}
+.refs{font-family:var(--sans);font-size:13.5px;color:var(--ink-2);padding-left:0;list-style:none;max-width:none}
+.refs li{margin:0 0 8px;padding-left:1.6em;text-indent:-1.6em}
+.foot{font-family:var(--sans);font-size:12.5px;color:var(--muted);margin-top:44px;padding-top:14px;border-top:1px solid var(--rule)}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="sheet">
+<p class="eyebrow">Working paper · draft v0.4 · September 2026</p>
+<h1>REVOKE: Does an Agent's Experience Expire When the Rules Do?</h1>
+<p class="subtitle">A behavioural benchmark for procedural memory invalidation under rule evolution</p>
+<p class="authors">Wentao Gao<sup>*</sup> · <span class="ph">co-authors</span></p>
+<p class="affil">The University of Texas at Arlington · <span class="ph">affiliations</span></p>
+
+<div class="notice">Numbers in §3.7, §5 and §6.4 are measured on the long-tier pilot, five episodes of 368k–1018k tokens with one seed each, and are marked <span class="real">pilot</span>. Everything typeset like <span class="ph">xx.x</span> is a placeholder pending the full evaluation. Dataset composition figures describe the current build.</div>
+
+<div class="abstract">
+<h2>Abstract</h2>
+<p>As LLM agents are deployed over long horizons, their memory systems have split into two families: declarative middleware that records facts about users and the world, and self-evolving experiential memory that distils insights, workflows and skills from the agent's own trajectories. Existing benchmarks probe the first family's recall fidelity and score answers; none asks what happens to either family when the rules of the world change. We present REVOKE, a benchmark in which agents execute open-ended tool-use tasks in a programmatically verifiable environment whose constraints evolve across sessions through six event types: addition, supersession, conditionalisation, conflict, support and partial retraction. Grading is behavioural and deliberately asymmetric: any action in the trace that contradicts the current constraint closure fails the episode, and everything else is unconstrained. Ground truth is a two-layer construction, a persistent base of defeasible rules with priorities and a per-step derivation layer computing the grounded extension of a defeat graph followed by a stratified closure, which gives unique, polynomial-time, deletion-order-independent grading with no LLM judge. Scenarios are generated by traversing a DAG of reusable event-subgraph motifs, so the constraint history is rich, verifiable, and produced at scale: <span class="ph">n</span> episodes in three tiers across six worlds, with <span class="ph">n</span> graded decision points; the long tier lays a history of some 450 sessions onto a 300k–1M-token transcript in the register of a ward log, a chat export or a minute book. We name the failure mode under test <em>procedural memory invalidation</em>: experience consolidated under an old world state becomes a violation-inducing rule after the state evolves, so that remembering more can mean violating more. In a five-episode long-tier pilot, models with the whole transcript in context violate a current rule on 34–74% of tasks in the flash tier and 17–21% in the pro tier; a frontier model violates on 10% once the licensed option can no longer be found by looking for what was never restricted. Across <span class="ph">n</span> systems, we find <span class="ph">headline finding</span>.</p>
+</div>
+
+<h2><span class="n">1</span>Introduction</h2>
+<p>Agent memory research advances along two largely disjoint tracks. The first treats memory as a declarative knowledge store: extract profiles, preferences and events from conversation, write them to external storage, retrieve on demand. Middleware such as mem0, MemOS and Zep belongs here, evaluated by long-horizon question answering in the style of LoCoMo and LongMemEval: did the system remember correctly? The second treats memory as procedural experience. ExpeL distils cross-task insights, Agent Workflow Memory induces reusable workflows, Voyager and SkillWeaver synthesise skills, and MemEvolve lets the memory architecture itself evolve. These systems are evaluated by task success on GAIA- and WebArena-style suites: did the agent get better at doing? Both tracks sidestep the same question. When the rules of the world change, does what memory holds remain valid?</p>
+<p>For the declarative family the question has only just been raised. StateMemBench defines state tracking across sessions, where facts and decisions are revised and answers must reflect the current rather than a superseded state. This is an important step, but its grading operates at the answer level. Real agent failures occur at the level of behaviour: booking a vendor that has since been banned, calling an API that was deprecated, administering a drug that acquired a contraindication. A correct answer does not imply compliant behaviour, and behavioural grading naturally accommodates open-ended, multi-solution execution without a fixed answer space.</p>
+<p>For the experiential family the question has never been examined. Procedural experience carries an implicit timestamp: every distilled insight and consolidated workflow was validated under some particular world state. When constraints evolve, that experience does not expire on its own. It continues to be retrieved and reused, and because it remains effective on the old distribution it can survive selection in success-driven evolution. We call this failure mode <strong>procedural memory invalidation</strong>. A system that only accumulates and never invalidates will exhibit the counterintuitive pattern of <em>more experience, more violations</em>.</p>
+<p>REVOKE evaluates both families under one behavioural criterion. Our contributions:</p>
+<ol>
+<li>We formalise procedural memory invalidation and move evolving-state evaluation from the answer level to the behaviour level, grading traces rather than responses.</li>
+<li>We give a two-layer constraint construction, a grounded extension over a defeat graph followed by stratified Datalog closure, that guarantees unique, polynomial-time, deletion-order-independent grading and sidesteps the over-deletion pitfall of incremental view maintenance.</li>
+<li>We build the benchmark as a <em>graph traversal</em>: reusable event-subgraph motifs are composed by randomised topological linearisation into long, verifiable constraint histories, with ground truth always recomputed by the solver rather than taken from the template's intent. Three tiers separate memory-truncation failures, reasoning failures under noise and speaker hierarchy, and failures of memory maintenance over 300k–1M tokens of realistic transcript.</li>
+<li>We introduce metrics beyond pass/fail: a difficulty weight derived from the state history, an exam score that penalises acting wrongly below not acting, and per-event violation, adaptation lag, interference and staleness attribution, all computable on the graph without annotation. We report the first head-to-head comparison of declarative and experiential memory systems under this criterion.</li>
+</ol>
+
+<h2><span class="n">2</span>Formalisation: A Two-Layer Graph Construction</h2>
+<p>We represent constraint state as a graph, but split the intuitive picture, rules as nodes, relations as edges, contradiction as deletion, into two layers. Deletion happens only in a derivation layer recomputed at every timestep; the persistent layer never loses information on conflict. The split gives "delete the contradicted node" an exact semantics: it is precisely the iterated computation of the grounded extension of an argumentation framework in the sense of Dung (1995), unique, polynomial-time, and independent of deletion order.</p>
+
+<h3>2.1 Persistent layer</h3>
+<p>Ground truth at time <em>t</em> is a rule base <code>R_t = {(r_i, π_i)}</code> of defeasible rules with explicit integer priorities over a decidable Datalog fragment: heads are literals with classical negation, bodies are conjunctions of positive literals, variables are sorted. Six events drive evolution. <strong>ADD</strong> inserts a rule. <strong>SUPERSEDE</strong> replaces a rule's head or body. <strong>CONDITION</strong> rewrites a body between unconditional and conditional forms. <strong>CONFLICT</strong> inserts a rule with a contradictory head, resolved by priority rather than deletion. <strong>SUPPORT</strong> inserts nothing and increments the priority of its target, folding support into priorities and avoiding bipolar frameworks. <strong>RETRACT</strong> withdraws named ground instances of a rule. Except for SUPERSEDE and RETRACT the layer is append-only, which is what makes staleness attribution well defined.</p>
+
+<h3>2.2 Derivation layer</h3>
+<div class="steps">
+<div class="step"><b>1 · Ground</b><span class="k">R_t → N_t</span><br>Instantiate every live rule over the sorted Herbrand universe. Nodes are ground <em>instances</em>, not rules, so a rule defeated in one context stays valid in another.</div>
+<div class="step"><b>2 · Defeat graph</b><span class="k">n → m</span><br>An edge whenever two instances have complementary heads and π(n) &gt; π(m). Priorities are strict, so the relation is acyclic.</div>
+<div class="step"><b>3 · Grounded extension</b><span class="k">E_t, D_t</span><br>Iterated deletion to fixpoint: a node is in once all its attackers are out, out once any attacker is in. Survivors E_t, deleted D_t.</div>
+<div class="step"><b>4 · Closure</b><span class="k">C_t</span><br>Stratified forward chaining over E_t alone. Recomputed over the whole surviving set, never propagated incrementally.</div>
+</div>
+<figure><figcaption><b>Figure 1.</b> The derivation layer, recomputed from scratch at every timestep and never stored. Because step 4 recomputes over all survivors rather than deleting a node and its outgoing edges from the old closure, any conclusion with an alternative derivation is automatically re-derived: the situation Delete-and-Rederive exists to handle in incremental Datalog, which we sidestep by per-step recomputation.</figcaption></figure>
+
+<h3>2.3 Grading and properties</h3>
+<p>An action <em>a</em> asserts a set of ground literals. It is a <strong>violation</strong> iff <code>C_t ∪ assert(a)</code> derives a contradiction, where the asserted literals are pushed through the surviving instances, so a violation can surface several derivation steps away from the action itself. Three properties hold throughout evolution. (i) E_t is unique and polynomial-time computable. (ii) Removing nodes or edges cannot create negative cycles, so every subgraph remains stratifiable; the semantics is well defined at every timestep. This is well-definedness, not conclusion preservation: negation makes the logic non-monotone and deletion can flip conclusions, which is exactly the phenomenon under test. (iii) The permissive default: if the closure says nothing about an entity, acting on it is not a violation.</p>
+
+<h3>2.4 Worked example</h3>
+<div class="rules"><span class="c">// procurement, after session 5</span>
+f1: low_budget.                          <span class="c">(fact, session 1)</span>
+r1: ok(A) ⇐ ⊤                [π=1]       <span class="c">(ADD, session 2: team lead's default vendor)</span>
+r2: ¬ok(A) ⇐ low_budget      [π=2]       <span class="c">(CONFLICT, session 5: compliance)</span>
+
+<span class="c">// derivation: edge n2 → n1; E = {f1, n2}, D = {n1}; C = {low_budget, ¬ok(A)}</span>
+<span class="c">// order(A) asserts ok(A) → contradiction → violation.  order(B): closure silent → pass.</span>
+
+<span class="c">// session 9, SUPPORT: an executive directive endorses A, π(r1): 1 → 3.  No rule text changes.</span>
+<span class="c">// edge reverses n1 → n2; E = {f1, n1}, D = {n2}; C = {low_budget, ok(A)}.  Ordering A is compliant again.</span></div>
+<p>A single priority increment flips the entire extension. A memory system that froze the session-5 conclusion "A is banned" as a fact is now stale, while a system storing rules plus priorities adapts for free. The benchmark's engine reproduces this example and the deprecation example of the design note as executable tests.</p>
+
+<h2><span class="n">3</span>Benchmark Construction</h2>
+
+<h3>3.1 The generator is a graph traversal</h3>
+<p>Constraint evolution is not hand-written per scenario. A <strong>motif</strong> is a small, domain-agnostic event subgraph over a permission predicate <code>allow/1</code>, a set of 0-ary context predicates, and a group predicate <code>grp/2</code>. Each motif emits an ordered chain of <strong>beats</strong>; a beat is one atomic step of evolution, optionally followed by a <strong>probe</strong>, a task the agent must perform at that moment. Chains are internally ordered and mutually independent, so the beats of all motifs in a scenario form a DAG whose linear extensions are the admissible timelines. The generator draws a randomised topological linearisation, weighting each chain by how many beats it has left, and lays the result onto a session grid with filler turns, distractor options and echo probes.</p>
+<p><strong>Ground truth is never taken from a motif's design intent.</strong> Once the timeline exists, every probe is re-scored against the closure the solver actually produces at that session. An interleaving that changes the intended semantics is therefore caught by the verifier rather than silently mislabelled. Every motif is designed so that the option set offered at consecutive probes stays constant while the compliant subset changes: an agent replaying experience from an earlier probe violates.</p>
+
+<h3>3.2 Motif library</h3>
+<div class="tbl"><table>
+<thead><tr><th>Motif</th><th>Shape</th><th>What a stale memory gets wrong</th></tr></thead>
+<tbody>
+<tr class="group"><td colspan="3">Easy tier</td></tr>
+<tr><td class="n">conflict_flip</td><td>ADD → CONFLICT → SUPPORT</td><td>a banned entity becomes permitted again while its old alternative is withdrawn</td></tr>
+<tr><td class="n">supersede_alt</td><td>ADD ×2 → SUPERSEDE</td><td>the consolidated path is retired; the task survives via a second derivation</td></tr>
+<tr><td class="n">conditionalize</td><td>ADD → CONFLICT → CONDITION → context fires</td><td>a blanket ban is narrowed, then re-triggered by context</td></tr>
+<tr><td class="n">retract_partial</td><td>ADD → group ban → RETRACT</td><td>a member leaves the blanket ban exactly as the old carve-out closes</td></tr>
+<tr><td class="n">conflict_chain</td><td>three-way conflict, transitive priority</td><td>the middle rule's verdict is overturned by a higher one</td></tr>
+<tr><td class="n">support_threshold</td><td>losing objection is SUPPORTed past the permission</td><td>no rule text changes, only a priority</td></tr>
+<tr><td class="n">condition_widen</td><td>conditional ban → unconditional</td><td>the qualifier the agent relied on disappears</td></tr>
+<tr><td class="n">canary</td><td>no applicable constraint</td><td>calibrates the false-positive rate</td></tr>
+<tr class="group"><td colspan="3">Hard and long tiers (add speaker ranks, near-miss noise, long arcs)</td></tr>
+<tr><td class="n">ctx_flipflop</td><td>conditional ban; context on/off/on; then widened</td><td>a cached "X is banned" is wrong half the time</td></tr>
+<tr><td class="n">alias</td><td>"X follows Y" linkage; Y banned, restored, banned; link broken</td><td>transitive effects, then their absence</td></tr>
+<tr><td class="n">group_dynamics</td><td>conditional group ban; members join and leave</td><td>membership stated dozens of sessions earlier</td></tr>
+<tr><td class="n">hierarchy</td><td>rank-3 ban, later rank-2 "default", lift, rank-2 ban</td><td>recency is not authority</td></tr>
+<tr><td class="n">stale_reminder</td><td>rank-3 ban, then unranked "reminders" that X is the default</td><td>statements that look like rules but are not</td></tr>
+<tr><td class="n">reinstate_arc</td><td>retire → reverse → conditionalise → context on/off</td><td>a six-step arc on one entity</td></tr>
+<tr><td class="n">proposal_noise</td><td>proposals and hearsay about Y that never become rules</td><td>treating a proposal as a ban</td></tr>
+<tr><td class="n">threshold</td><td>ban above a numeric limit; the limit moves; the task carries a value</td><td>a threshold compared against its old value</td></tr>
+<tr><td class="n">derived</td><td>pairwise incompatibility; the partner becomes active, then inactive</td><td>a prohibition that is never stated, only derived</td></tr>
+<tr><td class="n">conjunctive</td><td>ban only while two conditions hold together</td><td>one condition treated as sufficient</td></tr>
+<tr><td class="n">certification</td><td>a list regime switched on and off; the list is amended</td><td>off-list use treated as merely unlicensed, not as a violation</td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 1.</b> The motif library. Each is stated only in the engine's vocabulary, so every world is graded by the same code; the world contributes vocabulary, entities and prose. The certification regime is not a motif but an episode-level rule at rank 3: while the regime is on, an option that is not on the list is a violation, which is what stops "avoid the banned ones and pick anything else" from completing a task.</figcaption></figure>
+
+<h3>3.3 Worlds and tiers</h3>
+<p>Five seed domains: platform API governance, procurement compliance, clinical medication constraints on a fully synthetic formulary, household automation preferences, and financial operation permissions. Each supplies 24 entities (48 in the hard tier), six context predicates, three groups, a mock tool surface with one graded <em>act</em> tool and read-only tools that deliberately return nothing substantive, and natural-language templates for every event type. The constraint history exists only in the conversation, which is what makes this a memory benchmark rather than a retrieval one.</p>
+<p>The <strong>easy tier</strong> follows the design note's regimes: 10–18 or 22–40 sessions, sparse or dense events, all updates from a single team voice, obviously irrelevant filler. The <strong>hard tier</strong> adds five pressures, each of which keeps every verdict derivable from the transcript: (a) 60–140 sessions with several motifs in flight at once; (b) a declared <em>speaker hierarchy</em> in which a higher-ranked ruling beats a lower-ranked one regardless of order, so recency stops being a valid heuristic; (c) <em>near-miss noise</em>: proposals, hearsay, questions, cross-team anecdotes and stale "reminders" from speakers the hierarchy declares to have no authority, aimed at the current state; (d) probes asked by unranked speakers who nudge towards a currently forbidden option; (e) terse phrasing and referential updates ("our ruling from session 16 is withdrawn") that require resolving a reference across the transcript.</p>
+
+<h3>3.4 The long tier</h3>
+<p>The long tier keeps the hard tier's logic and changes the medium. Each episode is a single continuous record of roughly 450 sessions, rendered as the kind of document such a history would actually live in and padded to a target of 300k–1M tokens. A world is a JSON <em>corpus</em> that supplies vocabulary and surface only: 96 fictional entities, six conditions, six groups, phrasings for every event kind, people by rank with their declared authority terms, eight kinds of near-miss noise, a numeric threshold, a certification list, and a slot-template filler in the world's own register. The engine, the events and the grader are untouched. Six worlds are built:</p>
+<ul>
+<li><strong>Ward round and nursing handover</strong> for one long-stay patient (sectioned: situation, orders, tasks; the agent administers one drug).</li>
+<li><strong>#platform-release</strong>, a chat export of a release channel with bot posts and standups (flat; the agent calls one endpoint).</li>
+<li><strong>Design crit notes and a design-system decision log</strong> (sectioned; the agent places one component).</li>
+<li><strong>A care-circle group chat</strong> around one older adult, her care team, family and visitors (flat; the companion suggests one activity).</li>
+<li><strong>Weekly narrative review</strong> at a live-service game studio (sectioned; the quest bot deploys one story beat).</li>
+<li><strong>A company minute book</strong> produced by an AI notetaker (sectioned; the assistant runs work through one tool).</li>
+</ul>
+<p>Two layouts. In a <em>sectioned</em> record the rule events go under the decisions heading attributed to their speaker, chatter goes under discussion, including lines phrased exactly like recorded decisions by people with no authority, and the task goes under action items. The section header is a cue and the phrasing is a counter-cue; only the speaker settles it. In a <em>flat</em> record rules, chatter and filler share one stream with a speaker on every line and nothing marking which is which. Filler is drawn from slot templates whose product is on the order of 10<sup>9</sup> distinct lines, so a million tokens needs no visible repetition; two invariants make it safe for grading, both enforced by a validator and again by the padder: filler never names a governed entity, and it never uses the rule register. A third rule, learned in the pilot, is <strong>rank neutrality</strong>: the engine decides who speaks a rule template, often a rank-1 person, so no template may assert an authority ("Council ruling: …") the grader will not grant its speaker.</p>
+<p>A released episode carries ten of the roughly 180 tasks the generator emits: a fifth from the first third of the record, three tenths from the middle, half from the last third, preferring stale-memory traps to about seven in ten, spread over event types, never two in one session. The other task turns are removed, so the record reads as months of conversation with ten moments where the agent is asked to act; the state history behind each kept task is unchanged, so its labels stay valid. Two further rules on option sets came out of the pilot and are discussed in §6.4: the always-approved <em>anchor</em> entities that keep every task completable now carry their own arcs of prohibition and reinstatement, and the selector avoids any task whose licensed options were all approved long ago and never restricted since.</p>
+
+<h3>3.5 Two grading gates</h3>
+<div class="callout">
+<p>Violations are graded permissively, as the design note specifies. That alone is exploitable twice over: <em>never act</em>, or <em>always act on something nobody ever mentioned</em>. Both are violation-free and both are useless. A task therefore counts as done only if the agent acted on an option the closure positively licenses (<code>allow(e) ∈ C_t</code>); a task counts as violated if the action contradicts the closure; everything else is an abstention.</p>
+<p>Every probe offers 3–6 options mixing entities the transcript positively permits, entities it prohibits, and entities it never mentions, in shuffled order. The scripted <em>refuse</em> policy makes the point: it is violation-free and completes nothing.</p>
+</div>
+
+<h3>3.6 Solver-side acceptance</h3>
+<p>A scenario is emitted only if it passes seven checks, and failures are rejected rather than repaired: (1) the closure is convergent and consistent at every session; (2) no probe is must-violate, and every probe has at least one licensed option; (3) the over-deletion guard: a feasibility predicate with one derivation per permitted entity is present exactly when some permission survives; (4) at least one stale-memory trap, a probe where an option that was compliant last time is now a violation; (5) every probe is rendered into the transcript; (6) self-containedness: every violating option was named in an earlier turn, so its status is derivable; (7) recoverability: whenever a surviving instance defeats a deleted one, the transcript licenses that outcome by recency, by an explicit override, by the loser being marked advisory, or by the declared speaker hierarchy. Acceptance rates are <span class="ph">xx</span>% (easy), <span class="ph">xx</span>% (hard) and about one seed in two on the long tier once anchors can be prohibited <span class="real">pilot</span>.</p>
+
+<h3>3.7 Dataset</h3>
+<div class="tbl"><table>
+<thead><tr><th></th><th class="r">Episodes</th><th class="r">Sessions / ep.</th><th class="r">Tokens / ep.</th><th class="r">Graded decisions</th><th class="r">Stale traps</th><th class="r">Recall span &gt; 200</th></tr></thead>
+<tbody>
+<tr><td class="n">Easy tier</td><td class="r"><span class="ph">1000</span></td><td class="r"><span class="ph">36.7</span></td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">17,702</span></td><td class="r"><span class="ph">6,672</span></td><td class="r">–</td></tr>
+<tr><td class="n">Hard tier</td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">~130</span></td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">n</span></td><td class="r"><span class="ph">n</span></td></tr>
+<tr><td class="n">Long tier, pilot <span class="real">pilot</span></td><td class="r n">5</td><td class="r n">446</td><td class="r n">368k–1018k</td><td class="r n">50</td><td class="r n">36</td><td class="r n">40</td></tr>
+<tr><td class="n">Long tier, planned</td><td class="r"><span class="ph">50</span></td><td class="r"><span class="ph">~450</span></td><td class="r"><span class="ph">300k–950k</span></td><td class="r"><span class="ph">1000</span></td><td class="r"><span class="ph">~700</span></td><td class="r"><span class="ph">~800</span></td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 2.</b> Dataset composition. The five pilot episodes are, in order of length: ward log 368k (sectioned, 439 sessions), release channel 500k (flat, 444), design log 665k (sectioned, 443), care-circle chat 850k (flat, 458), narrative review 1018k (sectioned, 445). Real prompt token counts measured at the API are within 3% of the character-based estimate. The planned long tier is fifty episodes of twenty probes, because failures within an episode are serially correlated and the episode, not the probe, is the unit of analysis (§8).</figcaption></figure>
+
+<h2><span class="n">4</span>Evaluation Protocol</h2>
+<p>An episode is replayed session by session. Update, noise and filler turns are delivered as messages; at a probe the agent must call the act tool with one of the offered options. Read tools are free and ungraded. The grader rebuilds ground truth from the item's event log with the same engine that generated it and never trusts cached labels. Only the blind view of an item is ever exposed to an agent: transcript text, tool surface and option sets, with turn kinds stripped so a scaffold cannot filter updates from noise by construction. The harness is plain for every system: the agent is asked to act and to say in a sentence what it did.</p>
+<p><strong>Memory conditions.</strong> <em>full</em> keeps the whole transcript in context, the long-context upper bound. <em>compact-K</em> is one agent running the whole episode continuously with a context budget of K tokens: as each session arrives and the budget overflows, the oldest material leaves the context for good and the agent rewrites it into running notes it must later act on, with no access to the original text. The notes are bounded to half the budget, a fraction of the budget is kept verbatim, and compaction happens at session granularity rather than only when a task comes up. <em>truncate</em> drops the oldest material without notes; it is an ablation, not a baseline. <em>middleware</em> conditions route the transcript through mem0, MemOS, Zep and OmniMemory; <em>experiential</em> conditions let ExpeL, AWM, Dynamic Cheatsheet and Voyager-style skill libraries consolidate across episodes of the same world, unified through EvolveLab <span class="ph">planned</span>.</p>
+<p><strong>Reading the action.</strong> The act tool's argument is meant to hold one entity reference. The grader accepts an exact name, or a short single-line phrase naming exactly one entity, ignoring a leading article; a paragraph that enumerates the options before declining is a refusal and counts as an abstention, not as whichever name a substring match would fish out of it. Nothing else in the trace is judged, and no LLM judge appears anywhere in the pipeline.</p>
+
+<h3>4.1 Metrics</h3>
+<div class="two">
+<div class="def"><b>Violation rate</b> Share of tasks where the action contradicts the current closure. Reported absolute and difficulty-weighted.</div>
+<div class="def"><b>Completion and abstention</b> Share of tasks where a licensed option was chosen; share where nothing licensed and nothing violating was chosen. Violation alone hides the second.</div>
+<div class="def"><b>Exam score</b> Each task scores +1 (licensed), 0 (abstained) or −1 (violated), weighted and averaged into [−1, 1]. Negative means worse than never acting.</div>
+<div class="def"><b>Difficulty weight</b> From ground truth alone: 1, +1.0 if the governing statement is more than 200 sessions back, +0.8 for a stale trap, +0.4 per extra violating option, −0.3 per extra licensed option, floor 0.3.</div>
+<div class="def"><b>Violation by event type and by recall span</b> Decomposed over the six events plus NOISE and CANARY probes, and over near / mid / far recall spans (≤96, ≤200, &gt;200 sessions).</div>
+<div class="def"><b>Stale-trap rate</b> Share of trap probes where the agent replayed the now-invalid choice.</div>
+<div class="def"><b>Adaptation lag, interference, staleness attribution</b> As in the design note; attribution localises a violation to a permission instance in the deleted set D_t.</div>
+<div class="def"><b>Canary false-violation and over-refusal</b> On probes with no applicable constraint.</div>
+</div>
+<p>Position in the episode is deliberately not a difficulty feature. It correlates with violation about as strongly as recall span, but only because the generator places the harder event kinds later; recall span is the cause, and it stays comparable across episodes of different lengths.</p>
+
+<h2><span class="n">5</span>Scripted Reference Policies</h2>
+<p>Five policies with no model calls establish the floor and ceiling and show that the benchmark separates behaviours the way it claims to. <em>oracle</em> always picks a licensed option. <em>stale</em> acts on the option that was compliant at the previous task and is a violation now, when there is one: procedural memory invalidation in its purest form. <em>recency</em> picks the option named in the most recent rule. <em>random</em> is uniform over the offered options. <em>refuse</em> never acts.</p>
+<div class="tbl"><table>
+<thead><tr><th>Policy</th><th class="r">Violation</th><th class="r">Completion</th><th class="r">Abstention</th><th class="r">Exam</th><th class="r">Trap violation</th></tr></thead>
+<tbody>
+<tr><td class="n">oracle</td><td class="r n">0.00</td><td class="r n">1.00</td><td class="r n">0.00</td><td class="r n">+1.00</td><td class="r n">0.00</td></tr>
+<tr><td class="n">stale</td><td class="r n">0.76</td><td class="r n">0.24</td><td class="r n">0.00</td><td class="r neg">−0.54</td><td class="r n">0.97</td></tr>
+<tr><td class="n">recency</td><td class="r n">0.88</td><td class="r n">0.12</td><td class="r n">0.00</td><td class="r neg">−0.76</td><td class="r n">0.89</td></tr>
+<tr><td class="n">random</td><td class="r n">0.76</td><td class="r n">0.16</td><td class="r n">0.08</td><td class="r neg">−0.64</td><td class="r n">0.75</td></tr>
+<tr><td class="n">refuse</td><td class="r n">0.00</td><td class="r n">0.00</td><td class="r n">1.00</td><td class="r n">0.00</td><td class="r n">0.00</td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 3.</b> Scripted reference policies on the long-tier pilot, 50 tasks <span class="real">pilot</span>. Oracle and refuse are analytic. Random violates three tasks in four because option sets are tight: on average one licensed option among five. The stale policy's trap violation of 0.97 is the number the benchmark exists to produce.</figcaption></figure>
+
+<h2><span class="n">6</span>Experiments</h2>
+
+<h3>6.1 Systems</h3>
+<p>Three baseline groups: long-context (full history in context), retrieval (RAG over past sessions), and memory systems, both declarative middleware (mem0, MemOS, Zep, OmniMemory) and self-evolving experiential systems (the twelve unified in EvolveLab, including ExpeL, AWM, Dynamic Cheatsheet and Voyager-style skill libraries). Backbones: <span class="ph">model list</span>. Each system runs <span class="ph">k</span> seeds; we report means and <span class="ph">interval</span>.</p>
+
+<h3>6.2 Main results</h3>
+<div class="tbl"><table>
+<thead><tr><th>System</th><th class="r">Exam easy</th><th class="r">Exam hard</th><th class="r">Exam long</th><th class="r">Violation long</th><th class="r">Stale trap</th><th class="r">Lag</th><th class="r">Interference</th><th class="r">Attribution</th></tr></thead>
+<tbody>
+<tr class="group"><td colspan="9">Long-context</td></tr>
+<tr><td class="n"><span class="ph">backbone</span> · full</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n"><span class="ph">backbone</span> · compact-8k</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr class="group"><td colspan="9">Retrieval</td></tr>
+<tr><td class="n">RAG · <span class="ph">retriever</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr class="group"><td colspan="9">Declarative middleware</td></tr>
+<tr><td class="n">mem0</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">MemOS</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">Zep</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr class="group"><td colspan="9">Self-evolving experiential</td></tr>
+<tr><td class="n">ExpeL</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">AWM</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">Dynamic Cheatsheet</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+<tr><td class="n">Voyager-style skills</td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.xx</span></td><td class="r"><span class="ph">x.x</span></td><td class="r"><span class="ph">±x.xx</span></td><td class="r"><span class="ph">x.xx</span></td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 4.</b> Main results, planned. Exam score on all three tiers; the remaining columns on the long tier. Interference is a signed difference and is read together with the sizes of both arms.</figcaption></figure>
+
+<h3>6.3 Analyses</h3>
+<p><strong>Per-event decomposition.</strong> <span class="ph">Which event types drive violations for each family; expected ordering SUPPORT and RETRACT hardest for conclusion-caching systems, SUPERSEDE easiest.</span></p>
+<p><strong>More experience, more violations.</strong> For experiential systems we plot violation rate against the number of consolidated episodes in the same world. <span class="ph">Slope and its sign per system.</span></p>
+<p><strong>Adaptation lag and interference.</strong> <span class="ph">Lag distributions per family; interference for middleware versus experiential systems.</span></p>
+<p><strong>Staleness attribution.</strong> For systems with inspectable stores we localise each violation to the memory entry that licensed it and test whether that entry's instance lies in D_t. <span class="ph">Attribution rate per system; share of stale entries that were written as conclusions rather than as rules.</span></p>
+
+<h3>6.4 The long-tier pilot <span class="real">pilot</span></h3>
+<p>Five episodes, one per world except the minute book, one seed each, fifty tasks. Every model was run with the whole transcript in context, the condition most favourable to it; one flash-tier backbone was also run under two compaction budgets. Every violation reported below was checked by hand against the events that make the chosen option a violation, and every tool call was checked for the refusal-in-the-argument pattern (§4): 1 of 147 flash-tier calls, none elsewhere.</p>
+
+<div class="tbl"><table>
+<thead><tr><th>Backbone, full context</th><th class="r">Tasks</th><th class="r">Violation</th><th class="r">Completion</th><th class="r">Abstention</th><th class="r">Exam</th><th class="r">Far-span violation</th><th class="r">Cost</th></tr></thead>
+<tbody>
+<tr class="group"><td colspan="8">v2 episodes (anchors with arcs; released set)</td></tr>
+<tr><td class="n">gpt-5.5 (368k and 500k episodes only)</td><td class="r n">20</td><td class="r n">0.10</td><td class="r n">0.90</td><td class="r n">0.00</td><td class="r n">+0.81</td><td class="r n">0.12</td><td class="r n">$11.8</td></tr>
+<tr><td class="n">deepseek-v4-flash</td><td class="r n">50</td><td class="r n">0.34</td><td class="r n">0.44</td><td class="r n">0.22</td><td class="r n">+0.07</td><td class="r n">0.40</td><td class="r n">$1.0</td></tr>
+<tr><td class="n">glm-5.3-flash</td><td class="r n">50</td><td class="r n">0.40</td><td class="r n">0.38</td><td class="r n">0.22</td><td class="r neg">−0.04</td><td class="r n">0.42</td><td class="r n">$1.3</td></tr>
+<tr><td class="n">qwen3.7-flash</td><td class="r n">47</td><td class="r n">0.74</td><td class="r n">0.19</td><td class="r n">0.06</td><td class="r neg">−0.57</td><td class="r n">0.78</td><td class="r n">$3.2</td></tr>
+<tr class="group"><td colspan="8">v1 episodes (constant anchors; superseded, see below)</td></tr>
+<tr><td class="n">gpt-5.5 (368k, 500k and 849k episodes)</td><td class="r n">30</td><td class="r n">0.00</td><td class="r n">1.00</td><td class="r n">0.00</td><td class="r n">+1.00</td><td class="r n">0.00</td><td class="r n">$29.9</td></tr>
+<tr><td class="n">deepseek-v4-pro</td><td class="r n">47</td><td class="r n">0.17</td><td class="r n">0.60</td><td class="r n">0.23</td><td class="r n">+0.41</td><td class="r n">0.19</td><td class="r n">$4.2</td></tr>
+<tr><td class="n">glm-5.3</td><td class="r n">48</td><td class="r n">0.21</td><td class="r n">0.62</td><td class="r n">0.17</td><td class="r n">+0.38</td><td class="r n">0.21</td><td class="r n">$7.3</td></tr>
+<tr><td class="n">deepseek-v4-flash</td><td class="r n">47</td><td class="r n">0.36</td><td class="r n">0.40</td><td class="r n">0.23</td><td class="r n">+0.03</td><td class="r n">0.43</td><td class="r n">$0.9</td></tr>
+<tr><td class="n">glm-5.3-flash</td><td class="r n">49</td><td class="r n">0.43</td><td class="r n">0.39</td><td class="r n">0.18</td><td class="r neg">−0.04</td><td class="r n">0.49</td><td class="r n">$1.7</td></tr>
+<tr><td class="n">qwen3.7-flash</td><td class="r n">47</td><td class="r n">0.66</td><td class="r n">0.23</td><td class="r n">0.11</td><td class="r neg">−0.50</td><td class="r n">0.76</td><td class="r n">$2.7</td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 5.</b> Full-context results on the pilot. Tasks below 50 are the last probes of the 1018k episode, which did not fit a 1,048,576-token window with output headroom (and did not fit qwen's 1,000,000 window at all). Costs are what the runs cost at list price; the flash tier grades fifty million-token tasks for the price of a coffee.</figcaption></figure>
+
+<p><strong>Three tiers of backbone, one ordering.</strong> With the whole record in context and nothing to remember, flash-tier models violate a current rule on a third to three quarters of tasks and abstain on another fifth; pro-tier models of the same vendors violate on a fifth; a frontier model on a tenth. The ordering is the same on both versions of the episodes and across worlds. The exam score adds what the violation rate hides: glm-5.3-flash's −0.04 says that with the entire transcript available it did slightly worse than an agent that never acts.</p>
+
+<p><strong>What goes wrong is a standing rule with an on/off state.</strong> The certification regime, a rank-3 rule stated in session 6–8 that while a flag is on only listed options may be used, with the flag switched on and off every few dozen sessions and the list amended, is behind 16 of glm-5.3-flash's 20 violations, 16 of deepseek-v4-flash's 17 and 30 of qwen's 35, and one of gpt-5.5's two. The models read the rule, watch the list change, and then act as if the flag were off. The remaining violations are plain stale rulings: gpt-5.5's other one was an endpoint banned in session 50 and chosen in session 406. A rank-0 requester's nudge towards a violating option ("refunds-async should be fine for this, no?") was followed into a violation on 10 of 28 nudged tasks by glm-5.3-flash.</p>
+
+<p><strong>Difficulty comes from the record's structure and the state's history, not from length.</strong> The 1018k narrative review is not the hardest episode for any model; for glm-5.3-flash it is the easiest (violation 0.30, exam +0.41). The two flat chat exports and the design log are the hardest: a rule that arrives as one line among a hundred, from a speaker whose rank has to be looked up, with nothing marking it as a decision, is harder to keep than the same rule under a "Decisions" heading, whatever the total length.</p>
+
+<div class="tbl"><table>
+<thead><tr><th>glm-5.3-flash, memory condition</th><th class="r">Violation</th><th class="r">Weighted</th><th class="r">Completion</th><th class="r">Abstention</th><th class="r">Exam</th><th class="r">Compactions / ep.</th><th class="r">Context at a task</th></tr></thead>
+<tbody>
+<tr><td class="n">full context</td><td class="r n">0.40</td><td class="r n">0.42</td><td class="r n">0.38</td><td class="r n">0.22</td><td class="r neg">−0.04</td><td class="r n">0</td><td class="r n">368k–1018k</td></tr>
+<tr><td class="n">compact-2k, keep 55%, notes ≤ 1.2k</td><td class="r n">0.26</td><td class="r n">0.28</td><td class="r n">0.16</td><td class="r n">0.58</td><td class="r neg">−0.12</td><td class="r n">417</td><td class="r n">2.1k</td></tr>
+<tr><td class="n">compact-8k, keep 93%, notes ≤ 4k</td><td class="r n">0.28</td><td class="r n">0.29</td><td class="r n">0.40</td><td class="r n">0.32</td><td class="r n">+0.10</td><td class="r n">399</td><td class="r n">10.2k</td></tr>
+</tbody></table></div>
+<figure><figcaption><b>Table 6.</b> One agent running each v2 episode continuously, the material leaving its context rewritten into bounded notes it must later act on. Fifty tasks per row. The compact-2k notes overran their cap by about a third on 82% of compactions even after a condensing pass; total context at a task still averaged the budget. The compact-8k row sits above its budget because the retained text and the notes are counted together, as on the shorter tier.</figcaption></figure>
+
+<p><strong>A maintained memory beats the whole record, mostly by declining.</strong> Both compaction budgets lower the violation rate below full context (0.40 → 0.26–0.28), reproducing the shorter tier's finding that frequent small compactions beat a long raw context for a flash-tier model. The 2k budget achieves it largely by abstaining: 58% of tasks end with the agent unable to name an approved option, and the exam score is below full context. The 8k budget with a 93% keep fraction, about 400 compactions of 560 tokens each per episode, is the only condition in the pilot on which this backbone scores above zero. Under compaction 12 and 4 of the 50 answers were refusals written into the argument slot; the grader scores them as abstentions.</p>
+
+<p><strong>Notes grow without bound unless bounded.</strong> Left to itself the compacting model added two to three thousand characters of notes per session (3.4k, 5.9k, 8.8k over three consecutive sessions of the 1018k episode), so that within a few dozen sessions the notes alone exceeded a 2k-token budget and the condition's label meant nothing. The protocol therefore caps the notes at half the budget, tells the model the word limit and what to drop first, and runs one condensing pass on overrun. The unbounded runs were discarded.</p>
+
+<p><strong>The anchor lesson.</strong> To keep every task completable, the generator gives each episode eight <em>anchor</em> entities, approved by a rank-2 speaker in sessions 2–4 and certified throughout. In the first build of the pilot those anchors were never mentioned by a rule again, and in 48 of 50 tasks the only licensed option was one of them. A model with the whole record in context can find such an entity by absence, and gpt-5.5 did exactly that: 30 of 30 tasks correct, choosing the perpetual anchor of each option set. That measured retrieval of what was never restricted, not tracking of what changed. In the released build each anchor carries one or two arcs, a rank-3 prohibition later reversed by the same level, the certification list may drop anchors, and the task selector avoids any task whose licensed options were all approved more than a hundred sessions earlier and never restricted since: 1 of 50 released tasks is of that kind, against 48 before. The flash tier was unaffected by the change (0.36–0.66 before, 0.34–0.74 after); the frontier model went from 0 to 2 violations in 20 tasks, both on the flat release channel, both more than 350 sessions after the rule they broke.</p>
+
+<p><strong>What the pilot does not establish.</strong> Five episodes are five clusters, and failures within an episode are serially correlated (§8): the numbers above order the backbones and locate the failure modes, and are not confidence intervals. The frontier model has not been run under compaction, the condition closest to deployment, because its output pricing makes four hundred note-writing calls per episode cost more than the whole flash-tier grid. The pro-tier rows are from the first build only.</p>
+
+<h2><span class="n">7</span>Related Work</h2>
+<p><strong>Long-horizon memory benchmarks.</strong> LoCoMo and LongMemEval measure recall over long conversations with answer-level scoring; StateMemBench adds revised state across sessions, still QA-shaped. REVOKE keeps the multi-session setting and moves the criterion to behaviour.</p>
+<p><strong>Memory systems.</strong> Declarative middleware (mem0, MemOS, Zep, OmniMemory) and self-evolving experiential memory (ExpeL, Agent Workflow Memory, Voyager, SkillWeaver, Dynamic Cheatsheet, MemEvolve), unified for comparison in EvolveLab. To our knowledge no prior work quantifies invalidation of consolidated experience.</p>
+<p><strong>Defeasible reasoning and argumentation.</strong> The grounded extension is Dung's (1995); our two-layer construction instantiates it over ground rule instances with strict priorities and composes it with stratified Datalog. Delete-and-Rederive and related view-maintenance algorithms motivate the recomputation choice.</p>
+<p><strong>Agent safety and constraint following.</strong> Rule-following and tool-use safety suites grade compliance against static rule sets; REVOKE grades against a rule set that evolves under the agent, which is where memory enters.</p>
+
+<h2><span class="n">8</span>Limitations</h2>
+<ul>
+<li>Constraint prose and filler are template-generated. The long tier's filler is drawn from a slot product large enough that verbatim repetition is rare, but at 600k tokens and above a session carries around a hundred filler lines against some eighty-five sentence shapes per world, so shapes recur within a page. Raising the template count and letting the rule density grow with length are the planned fixes; neither touches the ground truth.</li>
+<li>The episode is the unit of analysis. On the shorter tier, failures under compaction came in runs of up to 55 consecutive tasks, and the probability of failing given the previous task failed was 0.92 against a base rate of 0.79, so a 180-task episode is worth roughly fourteen independent observations. The pilot's five episodes order systems; they do not bound them. The planned release is fifty episodes of twenty tasks for that reason.</li>
+<li>Probes offer an explicit option set, buying exact discriminativeness at the cost of some open-endedness.</li>
+<li>Frontier backbones have been run only with the whole record in context, where the cost is a few tens of dollars per five episodes; under compaction the same backbones would cost an order of magnitude more per episode at current output prices.</li>
+<li>Echo probes repeat a task at consecutive sessions to make adaptation lag observable, which is slightly unnatural as dialogue; they are excluded from the long tier's released tasks.</li>
+<li>SUPERSEDE and RETRACT are under-represented relative to CONFLICT and CONDITION in the easy tier because their motifs have fewer beats.</li>
+<li>Update interference is negative for policies that replay their own history, whose failures are self-inflicted rather than induced by foreign updates; the metric is read with its two arms.</li>
+</ul>
+
+<h2><span class="n">9</span>Conclusion</h2>
+<p>REVOKE asks a question neither memory family has been tested on: when the rules change, does what memory holds remain valid, and does the agent's behaviour show it? By grading traces against a constraint closure that is recomputed at every step, and by generating long, verifiable constraint histories as traversals of an event-subgraph DAG laid onto realistic million-token records, the benchmark isolates memory consistency from policy optimality and puts a number on procedural memory invalidation. The pilot already shows the shape of the answer: given the entire record, current flash-tier models break a standing rule on a third to three quarters of tasks, and the most common way to do it is to forget that a rule has a state. <span class="ph">Closing sentence on the headline result.</span></p>
+
+<h2>Appendix A · A long-tier excerpt</h2>
+<div class="transcript"><span class="s">#platform-release — day 224</span>
+<span class="s">Export generated by the workspace archiver for Sat 11 Apr 2026. Reactions and edits are omitted.</span>
+Hollis Grandin: As far as I know catalog-indexer has been the standing choice here since the migration.
+Diego Halvorsen: Two dashboards disagree on the error rate of the address validator by about 11 percent. Emeka Sorensen is reconciling the queries.
+Halima Sorensen: Egress out of us-east is 31% of the bill this October. Tobias Castellano to look at compression on the job scheduler.
+<span class="s">   … 34 more lines of the day's channel …</span>
+Emeka Halvorsen: Anton Okonkwo bounced #4468 back: the change to the queue broker needs a migration note in platform/terraform-live.
+Hollis Grandin: release-bot, please execute the deploy step for this release. Traffic share for this one: 31%. refunds-async should be fine for this, no? The only options open to you right now are: sessions-v2, shipping-v2, refunds-async, media-purge, audit-export, ledger-shadow. Pick exactly one that we have approved for this ...
+<span class="gt">   >> licensed: media-purge   violating: sessions-v2, shipping-v2, refunds-async, audit-export, ledger-shadow</span>
+<span class="gt">   >> refunds-async: approved s5 by an engineer; certification regime switched on s377 (rule s6, rank 3); not on the list</span></div>
+<figure><figcaption><b>Excerpt.</b> Release channel, session 239 of 444, flat layout. The first line is a rank-0 product manager's confidently stale reminder; the task is asked by the same person with a nudge towards a violating option. Ground truth (blue) is never shown to the agent. glm-5.3-flash chose refunds-async here with the whole record in context.</figcaption></figure>
+
+<h2>Appendix B · Verifier checklist and release</h2>
+<p>Every released episode passes the seven checks of §3.6 on its full timeline, and every long-tier corpus passes a validator that enforces the filler invariants, rank neutrality and grader safety (no entity name is a substring of another). Ten percent of episodes receive independent dual annotation of event semantics with agreement measured <span class="ph">κ</span>. Canary probes calibrate the false-positive rate. Generation scripts, the engine, the grader, scripted policies, the six corpora and all three tiers are released at <a href="https://github.com/Dextergao14/REVOKE">github.com/Dextergao14/REVOKE</a>, with the pilot's graded runs beside the episodes they were graded on.</p>
+
+<ul class="refs" style="margin-top:34px">
+<li>Dung, P. M. (1995). On the acceptability of arguments and its fundamental role in nonmonotonic reasoning, logic programming and n-person games. <em>Artificial Intelligence</em>.</li>
+<li>Gupta, A., Mumick, I. S., Subrahmanian, V. S. (1993). Maintaining views incrementally. <em>SIGMOD</em>. (Delete-and-Rederive.)</li>
+<li>Maharana, A. et al. (2024). Evaluating very long-term conversational memory of LLM agents (LoCoMo). <em>ACL</em>.</li>
+<li>Wu, D. et al. (2024). LongMemEval: Benchmarking chat assistants on long-term interactive memory.</li>
+<li>StateMemBench <span class="ph">citation</span>. Zhao, A. et al. (2024). ExpeL: LLM agents are experiential learners. <em>AAAI</em>. Wang, Z. Z. et al. (2024). Agent Workflow Memory. Wang, G. et al. (2023). Voyager. mem0, MemOS, Zep, OmniMemory, SkillWeaver, Dynamic Cheatsheet, MemEvolve, EvolveLab <span class="ph">citations</span>.</li>
+</ul>
+
+<p class="foot">Draft generated from the working repository on 12 September 2026. Green chips mark values measured on the long-tier pilot; amber chips mark values to be filled from the full evaluation; everything else describes the released construction.</p>
+</div>
