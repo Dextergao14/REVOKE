@@ -28,8 +28,12 @@ def main():
     meta = {}
     for d in a.runs:
         for path in sorted(glob.glob(os.path.join(d, "*.jsonl")) + glob.glob(os.path.join(d, "*.jsonl.part"))):
-            if path.endswith(".part") and os.path.exists(path[:-5]):
-                continue
+            if path.endswith(".part"):
+                # a per-item checkpoint is superseded by the condition's final
+                # file (same prefix up to the item id)
+                final = path.split("__REVOKE")[0] + ".jsonl"
+                if os.path.exists(final) or os.path.exists(path[:-5]):
+                    continue
             for line in open(path):
                 r = json.loads(line)
                 if r["id"] not in items:
