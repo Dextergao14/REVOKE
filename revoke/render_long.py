@@ -143,14 +143,23 @@ def render_long(sc: Scenario, corpus: Dict, seed: int = 0, target_tokens: int = 
     # hand-written blocks and follow-ups are drawn without replacement,
     # reshuffled only when the pool runs dry, so nothing repeats within a
     # stretch of the transcript shorter than the pool
+    # A hand-written pool is small (40-60 items) and an episode has ~450
+    # sessions, so unlimited cycling would show every item ten times verbatim.
+    # Each pool is used at most MAX_CYCLES times; after that the combinatorial
+    # padder, which never repeats, supplies the rest.
+    MAX_CYCLES = 2
     pool: List[str] = []
     todo_pool: List[str] = []
+    cycles = {"blocks": 0, "todo": 0}
 
     def story_block() -> List[str]:
         nonlocal pool
         if not pool:
+            if cycles["blocks"] >= MAX_CYCLES:
+                return pad.block(rng.randint(3, 5))
             pool = list(S["blocks"])
             rng.shuffle(pool)
+            cycles["blocks"] += 1
         return pool.pop().split("\n")
 
     def follow_up() -> str:
@@ -159,8 +168,11 @@ def render_long(sc: Scenario, corpus: Dict, seed: int = 0, target_tokens: int = 
         if rng.random() < 0.7:
             return pad.action()
         if not todo_pool:
+            if cycles["todo"] >= MAX_CYCLES:
+                return pad.action()
             todo_pool = list(S["action_items"])
             rng.shuffle(todo_pool)
+            cycles["todo"] += 1
         return todo_pool.pop()
 
     # a running calendar: sessions are one to three days apart
