@@ -106,7 +106,10 @@ def act_from(resp, item):
 
 
 def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
-                keep_frac=0.55, sink_path: str = ""):
+                keep_frac=0.55, sink_path: str = "", notes_cap: int = 0):
+    """One continuous pass over the episode.  `notes_cap` (tokens) bounds the
+    running notes; default half the budget and at least 1200."""
+    notes_cap = notes_cap or max(1200, budget // 2)
     """One continuous pass over the episode. Returns a trace row."""
     tools = [{"type": "function", "function": {
         "name": t["name"], "description": t["doc"],
@@ -158,42 +161,69 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
         if mode == "truncate":
             compactions.append({"dropped_blocks": len(drop), "summary_chars": 0})
             return
+        # The notes are bounded.  Left to itself the model grows them by a
+        # few thousand characters per session (3.4k -> 5.9k -> 8.8k over three
+        # sessions of a 1M-token episode), until they alone exceed the budget
+        # and the condition's label stops meaning anything.  The cap is a fixed
+        # share of the budget, so a "2000-token memory" is one.
+        cap_chars = notes_cap * TOK
+        words = int(notes_cap * 0.75)
+        t_c = time.time()
         body = {"model": model, "temperature": 0,
-                "max_tokens": max(max_tokens, 6000),
+                "max_tokens": int(notes_cap * 1.5) + 500,
                 "reasoning": {"effort": "low"},
                 "messages": [{"role": "system", "content": COMPACT_SYS},
                              {"role": "user", "content":
                               (f"Your current notes:\n{summary or '(none yet)'}\n\n"
                                f"Sessions leaving your context now:\n" + "\n".join(drop) +
-                               "\n\nWrite your updated notes.")}]}
+                               f"\n\nWrite your updated notes.  Hard limit: {words} words. "
+                               f"If space is short, drop actions taken and one-off events before "
+                               f"any rule, ruling, condition, list membership or role.")}]}
         resp, err = call(body, key)
         got_summary = False
-        if resp:
-            u = resp.get("usage") or {}
+
+        def take(resp_):
+            u = resp_.get("usage") or {}
             usage["in"] += u.get("prompt_tokens", 0)
             usage["out"] += u.get("completion_tokens", 0)
             usage["cost"] += u.get("cost", 0) or 0
-            new = ((resp.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
-            if new.strip():
-                summary = new.strip()
-                got_summary = True
+            return (((resp_.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
+
+        if resp:
+            new = take(resp)
+            if new:
+                summary, got_summary = new, True
         if not got_summary:
             # retry once with more room rather than silently losing the notes
-            body["max_tokens"] = max(max_tokens, 6000) * 2
-            body.pop("reasoning", None)
+            body["max_tokens"] = body["max_tokens"] * 2
             resp2, err2 = call(body, key, tries=2)
             if resp2:
-                u = resp2.get("usage") or {}
-                usage["in"] += u.get("prompt_tokens", 0)
-                usage["out"] += u.get("completion_tokens", 0)
-                usage["cost"] += u.get("cost", 0) or 0
-                new = ((resp2.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
-                if new.strip():
-                    summary = new.strip()
-                    got_summary = True
+                new = take(resp2)
+                if new:
+                    summary, got_summary = new, True
             err = err or err2
+        condensed = False
+        if got_summary and len(summary) > cap_chars * 1.2:
+            # one condensing pass; if the model still will not fit, keep what
+            # it wrote and record the overrun rather than cut rules blind
+            body2 = {"model": model, "temperature": 0, "max_tokens": body["max_tokens"],
+                     "reasoning": {"effort": "low"},
+                     "messages": [{"role": "system", "content": COMPACT_SYS},
+                                  {"role": "user", "content":
+                                   (f"These notes are too long ({len(summary.split())} words). Rewrite "
+                                    f"them in under {words} words. Keep every rule and who issued it, what "
+                                    f"overrides what, conditions and whether they hold, thresholds, list "
+                                    f"membership, and roles. Drop actions taken and one-off events first.\n\n"
+                                    + summary)}]}
+            resp3, err3 = call(body2, key, tries=2)
+            if resp3:
+                new = take(resp3)
+                if new:
+                    summary, condensed = new, True
         compactions.append({"dropped_blocks": len(drop), "summary_chars": len(summary),
-                            "kept": got_summary, "error": err})
+                            "kept": got_summary, "condensed": condensed,
+                            "over_cap": len(summary) > cap_chars * 1.2,
+                            "latency": round(time.time() - t_c, 1), "error": err})
 
     for s in item["sessions"]:
         lines = [f"[Session {s['index']}]"]
@@ -253,7 +283,7 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
                 if sink:
                     sink.close()
                 return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
-                        "keep_frac": keep_frac, "steps": steps,
+                        "keep_frac": keep_frac, "notes_cap": notes_cap, "steps": steps,
                         "compactions": compactions, "usage": usage,
                         "final_summary": summary}
         if lines:
@@ -271,8 +301,8 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
     if sink:
         sink.close()
     return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
-            "keep_frac": keep_frac, "steps": steps, "compactions": compactions,
-            "usage": usage, "final_summary": summary}
+            "keep_frac": keep_frac, "notes_cap": notes_cap, "steps": steps,
+            "compactions": compactions, "usage": usage, "final_summary": summary}
 
 
 def main():
@@ -289,6 +319,8 @@ def main():
                     help="fraction of the budget kept verbatim after a compaction. "
                          "Raising it compacts more often with less material each time, "
                          "which separates per-compaction load from retained context.")
+    ap.add_argument("--notes-cap", type=int, default=0,
+                    help="token cap on the running notes (default: half the budget, min 1200)")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--key", default=os.environ.get("OPENROUTER_API_KEY"))
     a = ap.parse_args()
@@ -315,7 +347,7 @@ def main():
                                        f"__{md}__b{a.budget}__k{int(a.keep_frac * 100)}"
                                        f"__{it['id']}.jsonl.part")
         futs = {ex.submit(run_episode, it, m, md, a.budget, a.key, a.max_tokens,
-                          a.limit, a.keep_frac, sink_for(it, m, md)): (it, m, md)
+                          a.limit, a.keep_frac, sink_for(it, m, md), a.notes_cap): (it, m, md)
                 for it, m, md in jobs}
         for n, f in enumerate(as_completed(futs), 1):
             it, m, md = futs[f]
