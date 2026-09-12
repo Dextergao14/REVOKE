@@ -43,7 +43,12 @@ def run(item, policy, rng):
             # first time it sees this choice set it solves it correctly; from
             # then on it replays the consolidated choice -- exactly what a
             # success-driven experiential memory does
-            pick = memory.get(key) or p["licensed"][0]
+            # On the long tier a released episode keeps ten of ~180 generated
+            # tasks, so a choice set rarely recurs; the consolidated choice is
+            # then the option that was compliant at the previous generated
+            # task and is a violation now -- the stale_trap label -- which is
+            # what a memory that remembered the old state would act on.
+            pick = memory.get(key) or (p["stale_trap"][0] if p.get("stale_trap") else p["licensed"][0])
         elif policy == "first":
             order = {}
             for i, t in enumerate(turns):
