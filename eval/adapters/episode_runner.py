@@ -258,6 +258,16 @@ def run_episode(item, model, mode, budget, key, max_tokens=3000, limit=0,
                         "final_summary": summary}
         if lines:
             pending.append("\n".join(lines))
+        # Sessions are read as they arrive, so memory is maintained at session
+        # granularity, not only when a task comes up.  With ten tasks in a
+        # 400-session episode the alternative would fold ~40 sessions into the
+        # notes in one call at each task -- the per-compaction load that the
+        # 33k sweep showed is what breaks a compacting agent -- and could
+        # exceed the model's window outright.
+        if mode != "full" and ctx_chars() + sum(len(x) for x in pending) > budget * TOK:
+            blocks += pending
+            pending = []
+            compact()
     if sink:
         sink.close()
     return {"id": item["id"], "model": model, "mode": mode, "budget": budget,
