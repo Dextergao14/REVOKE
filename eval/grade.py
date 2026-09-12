@@ -60,19 +60,33 @@ def load_steps(trace_row):
 ARG_MAX = 80
 
 
+_ARTICLE = re.compile(r"^(the|a|an)\s+", re.I)
+
+
+def _norm(s: str) -> str:
+    """Lowercase, single spaces, no leading article: "the community lunch" and
+    "community lunch" name the same activity."""
+    return _ARTICLE.sub("", " ".join(s.lower().split()))
+
+
 def resolve_entity(item, tc):
     """Map a tool call's arguments onto an entity constant, or '' if none."""
     args = tc.get("arguments") or tc.get("args") or {}
     vals = [str(v) for v in args.values()] if isinstance(args, dict) else [str(args)]
     blob = " ".join(vals).strip()
-    low = blob.lower()
+    low = _norm(blob)
     for eid, name in item["entity_names"].items():
-        if low == eid.lower() or low == name.lower():
+        if low == eid.lower() or low == _norm(name):
             return eid
     if len(blob) > ARG_MAX or "\n" in blob:
         return ""
-    hits = {eid for eid, name in item["entity_names"].items()
-            if name.lower() in low or eid.lower() in low}
+    hits = set()
+    for eid, name in item["entity_names"].items():
+        n = _norm(name)
+        # the name inside a short phrase ("use Toast v2"), or a clipped name
+        # that is still most of the real one ("video call with twins")
+        if n in low or eid.lower() in low or (low in n and len(low) >= 0.6 * len(n)):
+            hits.add(eid)
     if len(hits) != 1:
         return ""
     return hits.pop()
