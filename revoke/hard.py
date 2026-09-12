@@ -288,7 +288,7 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
     cert_changes: List[Tuple[int, str, bool]] = []
     for _ in range(rng.randint(2, 4)):
         s_ = rng.randint(roster_session + 6, max(roster_session + 7, n_sessions - 4))
-        droppable = sorted(certified - set(anchors))
+        droppable = sorted(certified)
         if rng.random() < 0.5 and len(droppable) > 2:
             cert_changes.append((s_, rng.choice(droppable), False))
         else:
@@ -304,11 +304,49 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
                 c.add(e) if grant else c.discard(e)
         return c
 
+    from .motifs_hard import HNL as _HNL
+    _h = _HNL[dom.key]
+
+    def _pick(key):
+        v = _h[key]
+        return v if isinstance(v, str) else rng.choice(v)
+
     for i, a in enumerate(anchors):
         events.append(Event(eid=f"anchor{i}", kind="ADD", session=2 + (i % 3),
                             text=rng.choice(dom.nl["ADD"]).format(e=names[a]),
                             speaker="@rank2", rid=f"r_anchor_{a}",
                             head=Lit(dom.allow, (a,)), prio=80000 + i, tags=("anchor", "rank:2")))
+        # An anchor is not a constant.  Left untouched, the anchors are the
+        # entities "approved early and never restricted since", and a model
+        # with the whole transcript finds them by absence: 44 of 50 pilot
+        # probes were solved that way.  Each anchor therefore carries one or
+        # two arcs -- a rank-3 prohibition, later reversed by the same level --
+        # so which anchors are licensed at a given session is a fact about the
+        # current state, not about what was never said.
+        # first arc starts in the first half so that by mid-episode most
+        # anchors have a history; a second arc, half the time, later on
+        starts = [rng.randint(10, max(11, n_sessions // 2))]
+        if rng.random() < 0.5:
+            starts.append(rng.randint(n_sessions // 2, max(n_sessions // 2 + 1, n_sessions - 45)))
+        s_cur = 0
+        for k, lo in enumerate(starts):
+            s_ban = max(lo, s_cur)
+            s_back = s_ban + rng.randint(20, 70)
+            if s_back > n_sessions - 6:
+                break
+            rid = f"r_anchor_ban_{a}_{k}"
+            # a later arc must outrank the reversed (now positive) rule of the
+            # earlier one, or the two tie and the closure is inconsistent
+            prio = 85000 + 10 * i + k
+            events.append(Event(eid=f"anchor{i}_ban{k}", kind="CONFLICT", session=s_ban,
+                                text=_pick("SEC_BAN").format(e=names[a]), speaker="@rank3",
+                                rid=rid, head=Lit(dom.allow, (a,), neg=True), prio=prio,
+                                tags=("anchor_arc", "rank:3")))
+            events.append(Event(eid=f"anchor{i}_back{k}", kind="SUPERSEDE", session=s_back,
+                                text=_pick("REVERSE").format(e=names[a]), speaker="@rank3",
+                                rid=rid, head=Lit(dom.allow, (a,)), prio=prio,
+                                tags=("anchor_arc", "rank:3", "refable:REVERSE")))
+            s_cur = s_back + rng.randint(8, 30)
     events.append(Event(eid="cert_roster", kind="NOTE", session=roster_session,
                         text=CERT[dom.key]["roster"].format(
                             roster=", ".join(sorted(names[e] for e in certified))),
@@ -431,24 +469,58 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
     for i, (psess, probe, mname, is_echo, blabel) in enumerate(pend):
         idx_by_key.setdefault(tuple(sorted(probe.options)), []).append(i)
 
+    # Which entities were ever forbidden, and when.  A licensed option whose
+    # licence depends on the state history -- banned once, permitted again --
+    # cannot be found by spotting the entities nobody ever touched.  With the
+    # always-approved anchors as the licensed option, 44 of 50 pilot probes
+    # were solved by "pick the one that was cleared in session 3 and never
+    # mentioned since", which a strong model does without tracking anything.
+    forbidden_at: Dict[str, List[int]] = {e: [] for e in used}
+    for s_ in sorted({ev.session for ev in events}):
+        rb_s = fresh_base()
+        for ev in events:
+            if ev.session <= s_:
+                ev.apply(rb_s)
+        sol_s = solve(rb_s)
+        for e in used:
+            if check_assertion(sol_s, [Lit(dom.allow, (e,))]).violation:
+                forbidden_at[e].append(s_)
+
     option_sets: Dict[Tuple[str, ...], Tuple[str, ...]] = {}
     used_anchors: set = set()
+    anchor_probes = 0
     for key, idxs in idx_by_key.items():
         probe = pend[idxs[0]][1]
         opts = list(probe.options)
+        first_s = min(pend[i][0] for i in idxs)
         if probe.tests == "CANARY":
             pool = [e for e in unmentioned if e not in opts]
             rng.shuffle(pool)
             opts += pool[:rng.randint(*N_DISTRACTORS)]
         else:
-            # anchor: licensed at every probe sharing this option set
-            free = [a for a in anchors if a not in used_anchors] or list(anchors)
-            rng.shuffle(free)
-            anchor = next((a for a in free
-                           if all(status(sols[i], a) == "licensed" for i in idxs)), None)
+            # the licensed option: prefer an entity that is licensed at every
+            # probe sharing this set AND was forbidden at some earlier point,
+            # so its licence has to be read off the history
+            dyn = [e for e, s_ in mentioned_at.items()
+                   if e not in opts and e not in anchors and s_ <= first_s
+                   and any(f < first_s for f in forbidden_at[e])
+                   and all(status(sols[i], e) == "licensed" for i in idxs)]
+            rng.shuffle(dyn)
+            anchor = dyn[0] if dyn else None
+            if anchor is None:
+                # an anchor, preferring one that was prohibited earlier and has
+                # since been reinstated, so "approved and never restricted"
+                # does not pick it out; rotate through them
+                free = [a for a in anchors if a not in used_anchors] or list(anchors)
+                rng.shuffle(free)
+                free.sort(key=lambda a: not any(f < first_s for f in forbidden_at[a]))
+                anchor = next((a for a in free
+                               if all(status(sols[i], a) == "licensed" for i in idxs)), None)
+                if anchor is not None:
+                    anchor_probes += len(idxs)
             if anchor is None:
                 cand = [e for e, s_ in mentioned_at.items()
-                        if e not in opts and s_ <= min(pend[i][0] for i in idxs)]
+                        if e not in opts and s_ <= first_s]
                 rng.shuffle(cand)
                 anchor = next((e for e in cand
                                if all(status(sols[i], e) == "licensed" for i in idxs)), None)
@@ -586,4 +658,5 @@ def build_hard_scenario(dom: Domain, sid: str, seed: int, n_easy: int = 3,
                           "n_noise_turns": sum(1 for t in turns if t.kind == "noise"),
                           "role_changes": [{"session": s, "who": w, "rank": r} for s, w, r in roles.changes],
                           "cycles": cycles,
+                          "anchor_fallback_probes": anchor_probes,
                           "numeric": {"ctx": NUM["ctx"], "param": NUM["param"], "dir": NUM["dir"]}})
