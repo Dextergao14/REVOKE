@@ -60,8 +60,9 @@ class CorpusPadder:
     def _slots(self) -> Dict[str, str]:
         r = self.rng
         d = {k: r.choice(v) for k, v in self.slots.items()}
+        p1, p2 = r.sample(self.people, 2)
         d.update({
-            "p": r.choice(self.people),
+            "p": p1, "p2": p2,
             "n_small": str(r.randint(2, 9)), "n_few": str(r.randint(2, 6)),
             "n_few2": str(r.randint(4, 12)), "n_weeks": str(r.randint(2, 8)),
             "n_days": str(r.randint(2, 14)), "n_min": str(r.randint(4, 55)),
@@ -79,6 +80,9 @@ class CorpusPadder:
         s = ""
         for _ in range(tries):
             s = self.rng.choice(pool).format(**self._slots())
+            # a slot value at the head of a sentence keeps its lowercase article
+            # ("the plan picker is back"); a line always starts with a capital
+            s = s[0].upper() + s[1:] if s else s
             if s in self.seen or any(b in s.lower() for b in self.banned):
                 continue
             self.seen.add(s)

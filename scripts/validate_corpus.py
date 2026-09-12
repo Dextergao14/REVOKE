@@ -39,6 +39,14 @@ HNL = {
 TERSE = {"ADD": (3, {"e"}, {"e"}), "ADD_BAN": (3, {"e"}, {"e"}), "CONFLICT": (2, {"e", "c"}, {"e", "c"})}
 NOISE_KEYS = ("proposal", "hearsay", "question", "other_team", "stale_echo", "praise", "rescind", "near_miss")
 
+# words that assert a specific level of authority.  The engine chooses who speaks
+# a rule template, often a rank-1 or rank-2 person, so a template that names the
+# top body would claim an authority the grader does not grant the speaker.
+AUTHORITY = ["council", "board", "committee", "directors?", "leadership", "consultants?",
+             "registrars?", "coordinator", "policy", "signed off", "sign-off", "minuted at"]
+# templates whose speaker rank is fixed by the engine and matches their wording
+RANK_FIXED = {("hnl", "SEC_BAN"), ("hnl", "LIFT"), ("hnl", "LEAD_DEFAULT"), ("derived", "PAIR")}
+
 REGISTER = re.compile(
     r"\b(approved?|approval|prohibit(ed|ion)?|bann?ed|ban\b|supersed\w*|reaffirm\w*|reinstat\w*|"
     r"contraindicat\w*|deprecat\w*|forbid(den)?|may not|must not|off the list|on the list|"
@@ -58,6 +66,7 @@ class V:
         self.c = c
         self.fails: List[str] = []
         self.ents: List[str] = []
+        self.auth_re = re.compile(r"(?!x)x")
 
     def fail(self, msg: str) -> None:
         self.fails.append(msg)
@@ -70,6 +79,16 @@ class V:
             self.fail(f"{where}.{key}: expected {typ.__name__}")
             return None
         return d[key]
+
+    def neutral(self, lst, where):
+        """Rank-variable rule templates may not assert a specific authority."""
+        for i, t in enumerate(lst if isinstance(lst, list) else [lst]):
+            if not isinstance(t, str):
+                continue
+            m = self.auth_re.search(t)
+            if m:
+                self.fail(f"{where}[{i}]: asserts authority ('{m.group(0)}') but the engine may "
+                          f"have a rank-1 or rank-2 speaker say it -- make it rank-neutral")
 
     def templates(self, lst, where, n_min, allowed, required=frozenset(), no_entity=False,
                   no_register=False):
@@ -183,6 +202,25 @@ class V:
         for p in by_rank[0]:
             if p not in descr:
                 self.fail(f"people.descr: missing description for rank-0 person '{p}'")
+        terms = P.get("authority_terms")
+        if not (isinstance(terms, list) and len(terms) >= 3 and all(isinstance(x, str) and x.strip() for x in terms)):
+            self.fail("people.authority_terms: ≥3 words/phrases that assert rank-3 or rank-2 authority")
+            terms = []
+        pats = AUTHORITY + [re.escape(x.strip()) for x in terms]
+        self.auth_re = re.compile(r"(?<![A-Za-z])(" + "|".join(pats) + r")(?![A-Za-z])", re.I)
+        for table in ("nl", "hnl", "terse"):
+            for k, v in (c.get(table) or {}).items():
+                if (table, k) not in RANK_FIXED:
+                    self.neutral(v, f"{table}.{k}")
+        M_ = c.get("numeric") or {}
+        self.neutral(M_.get("set", []), "numeric.set")
+        self.neutral(M_.get("ban", []), "numeric.ban")
+        D_ = c.get("derived") or {}
+        for k in ("ON", "OFF"):
+            if k in D_:
+                self.neutral([D_[k]], f"derived.{k}")
+        if "conj" in c:
+            self.neutral([c["conj"]], "conj")
         h = c.get("hierarchy")
         if h is not None:
             if not isinstance(h, str):
@@ -288,13 +326,13 @@ class V:
         if not (isinstance(slots, dict) and len(slots) >= 6):
             self.fail("pad.slots: ≥6 named vocabularies")
         for k, v in (slots.items() if isinstance(slots, dict) else []):
-            if not re.fullmatch(r"[a-z_]+", k) or k in NUMSLOTS or k == "p":
+            if not re.fullmatch(r"[a-z_]+", k) or k in NUMSLOTS or k in ("p", "p2"):
                 self.fail(f"pad.slots.{k}: bad slot name (snake_case, not a reserved slot)")
             if not (isinstance(v, list) and len(v) >= 8):
                 self.fail(f"pad.slots.{k}: ≥8 entries")
             else:
                 self.templates(v, f"pad.slots.{k}", 8, set(), no_entity=True)
-        allowed = set(slots) | NUMSLOTS | {"p"}
+        allowed = set(slots) | NUMSLOTS | {"p", "p2"}
         fams = Pd.get("families", {})
         if not (isinstance(fams, dict) and len(fams) >= 5):
             self.fail("pad.families: ≥5 families")

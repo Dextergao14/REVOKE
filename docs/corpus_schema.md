@@ -33,7 +33,7 @@ key may appear in it; a stray `{foo}` fails validation.
 | `{top}` `{r3}` `{p3}` `{r2}` `{p2}` `{r1}` `{p1}` `{p0}` | hierarchy notice: top speaker, role names and people lists by rank |
 | `{who}` `{role}` | role-change notices |
 | `{n}` `{people}` `{date}` | surface headers |
-| `{p}` | a filler person (padder-generated, never a real speaker) |
+| `{p}` `{p2}` | two distinct filler people (padder-generated, never real speakers); use `{p2}` whenever a template needs a second person |
 | `{d}` `{mon}` `{tk}` | filler date "Mar 14", month name, ticket-ish id |
 | `{n_small}` 2-9 · `{n_few}` 2-6 · `{n_few2}` 4-12 · `{n_weeks}` 2-8 · `{n_days}` 2-14 · `{n_min}` 4-55 · `{n_min_small}` 3-12 · `{n_people}` 2-12 · `{n_tickets}` 6-70 · `{n_k}` 15-200 · `{n_big}` 100-900 · `{pct}` "4%"-"40%" · `{n_pct_small}` "3 percent"-"18 percent" · `{hour}` "06:00"-"22:00" | numeric filler slots, supplied by the padder |
 | `{<slot>}` | any key of `pad.slots` |
@@ -106,11 +106,32 @@ SEC_BAN        ≥2  a rank-3 speaker bans {e}, named as a policy ruling
 
 ## people
 ```
-roles   {"3": role name, "2": role name, "1": role name}
-start   {person: rank} -- ≥2 at rank 3, ≥1 at rank 2, ≥2 at rank 1, ≥4 at rank 0.
-        Rank 0 people never make policy; their lines are the noise.
-descr   {rank-0 person: short description}  ("night agency nurse")
+roles           {"3": role name, "2": role name, "1": role name}
+start           {person: rank} -- ≥2 at rank 3, ≥1 at rank 2, ≥2 at rank 1, ≥4 at rank 0.
+                Rank 0 people never make policy; their lines are the noise.
+descr           {rank-0 person: short description}  ("night agency nurse")
+authority_terms ≥3 words or short phrases that, in this world, assert rank-3 or
+                rank-2 authority when they appear in a statement: the role names
+                and their common short forms ("Council", "the Board", "consultant",
+                "P&T", "care plan", "narrative leadership", "the lead's call").
 ```
+
+### Rank neutrality (enforced)
+The engine decides who speaks a template.  Only `hnl.SEC_BAN` and `hnl.LIFT`
+(always rank 3), `hnl.LEAD_DEFAULT` (always rank 2), `derived.PAIR` (rank 3) and
+every `cert.*` line are spoken at a fixed rank that matches their wording, so
+they may name that authority.  **Every other rule template** -- all of `nl`
+including SUPPORT and SUPPORT_BAN (which are spoken at rank 2 in one motif and
+must say "reaffirmed at a higher level ... outranks the restriction" without
+naming a body), the rest of `hnl`, all of `terse`, `numeric.set/ban`,
+`derived.ON/OFF`, `conj` -- is spoken by whichever rank the motif assigns,
+often rank 1 or 2, and so must be **rank-neutral**: it may not contain
+any `authority_terms` entry nor the generic words council, board, committee,
+director(s), leadership, consultant(s), registrar(s), coordinator, policy,
+"signed off", "sign-off", "minuted at".  Otherwise a rank-1 speaker would be
+saying "Council ruling: {e} is prohibited", the reader would rank it above a
+later rank-2 ruling, and the grader would not.  Say what changes, not whose
+authority it carries: "{e} is prohibited. Pull it from anything in progress."
 `hierarchy`: template for the session-1 authority notice using the eight
 hierarchy placeholders, or `null` for the default.  It must state that a
 higher-ranked ruling stands even if someone lower says otherwise later, that
@@ -183,6 +204,14 @@ side         ≥10 one-line asides
 actions      ≥6 follow-up templates using {p} and {d}
 ```
 
+## Slot grammar (checked by review, not by the validator)
+Slot values are inserted verbatim, so a template must work with every value of
+the slot.  If a slot's entries begin with an article ("the wordmark files"),
+no template may put "the", "a" or an adjective directly before it ("Old {asset}"
+renders as "Old the wordmark files").  Keep plural/singular consistent within a
+slot, and never use `{p}` twice in one template -- use `{p2}` for the second
+person.
+
 ## Hard rules, enforced
 1. No entity name anywhere in `filler_nl`, `surface.*`, or `pad.*`.
 2. No rule register in filler: the words approve(d), prohibit(ed), ban(ned),
@@ -193,3 +222,4 @@ actions      ≥6 follow-up templates using {p} and {d}
 3. Every template formats cleanly with its allowed placeholders and no others.
 4. Entity names: 96, unique, no substring collisions.
 5. `tools.act.param == sort`.
+6. Rank neutrality, as above.
