@@ -53,6 +53,14 @@ class CorpusPadder:
         self.side_t = spec["side"]
         self.act_t = spec["actions"]
         self.seen: set = set()
+        # templates already used in the current session: the same sentence
+        # shape twice on one page with different slot values ("... came in 32%
+        # over" then "... came in 25% over") is what reads as generated, even
+        # when the rendered strings differ
+        self.used_tpl: set = set()
+
+    def new_session(self) -> None:
+        self.used_tpl = set()
 
     def person(self) -> str:
         return self.rng.choice(self.people)
@@ -78,14 +86,17 @@ class CorpusPadder:
 
     def _draw(self, pool: Sequence[str], tries: int = 14) -> str:
         s = ""
+        fresh = [t for t in pool if t not in self.used_tpl] or list(pool)
         for _ in range(tries):
-            s = self.rng.choice(pool).format(**self._slots())
+            tpl = self.rng.choice(fresh)
+            s = tpl.format(**self._slots())
             # a slot value at the head of a sentence keeps its lowercase article
             # ("the plan picker is back"); a line always starts with a capital
             s = s[0].upper() + s[1:] if s else s
             if s in self.seen or any(b in s.lower() for b in self.banned):
                 continue
             self.seen.add(s)
+            self.used_tpl.add(tpl)
             return s
         return s
 
@@ -177,6 +188,7 @@ def render_long(sc: Scenario, corpus: Dict, seed: int = 0, target_tokens: int = 
         add(notice.session, "meta", S["notice_frame"][1])
 
     for seq, (session, turns) in enumerate(sessions, 1):
+        pad.new_session()
         day += _dt.timedelta(days=rng.randint(1, 3))
         date = f"{day.strftime('%a')} {day.day} {MONTHS[day.month - 1][:3]} {day.year}"
         present = rng.sample(people, min(len(people), rng.randint(3, 6)))
