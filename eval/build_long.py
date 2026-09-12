@@ -40,7 +40,33 @@ from revoke.verify import verify                                  # noqa: E402
 BANDS = ((0.0, 1 / 3, 0.2), (1 / 3, 2 / 3, 0.3), (2 / 3, 1.01, 0.5))
 
 
-def select_probes(item, k: int, rng: random.Random, excluded: set) -> list:
+def crutch_probes(item, old: int = 100) -> set:
+    """Probes whose every licensed option was approved more than `old` sessions
+    earlier and never restricted since -- answerable by spotting what was never
+    touched, without tracking any state change.  Computed from ground truth."""
+    from revoke.serialize import rulebase_at
+    from revoke.logic import Lit, check_assertion, solve
+    allow = item["allow"]
+    ents = list(item["entity_names"])
+    forbidden = {e: [] for e in ents}
+    licensed_from = {}
+    for s_ in sorted({e["session"] for e in item["events"]}):
+        sol = solve(rulebase_at(item, s_, allow))
+        for e in ents:
+            if check_assertion(sol, [Lit(allow, (e,))]).violation:
+                forbidden[e].append(s_)
+            elif Lit(allow, (e,)) in sol.closure:
+                licensed_from.setdefault(e, s_)
+    out = set()
+    for p in item["probes"]:
+        lic = p["licensed"]
+        if lic and all(not any(f < p["session"] for f in forbidden[e])
+                       and p["session"] - licensed_from.get(e, p["session"]) > old for e in lic):
+            out.add(p["probe_id"])
+    return out
+
+
+def select_probes(item, k: int, rng: random.Random, excluded: set, crutch: set = frozenset()) -> list:
     n = item["n_sessions"]
     used_sessions, types, chosen = set(), collections.Counter(), []
     quotas = [round(k * q) for _, _, q in BANDS]
@@ -65,6 +91,10 @@ def select_probes(item, k: int, rng: random.Random, excluded: set) -> list:
                     s -= 2.5
                 if p["tests"] == "CANARY" and types["CANARY"]:
                     s -= 3
+                # the licensed answer should depend on the history, not on
+                # what was never mentioned
+                if p["probe_id"] in crutch:
+                    s -= 2.0
                 return s + rng.random() * 0.05
             best = max(cand, key=score)
             chosen.append(best)
@@ -109,9 +139,10 @@ def build_one(corpus_path: str, target: int, k: int, seed: int, cycles: int, tri
             continue
         rendered = render_long(sc, corpus, seed=s, target_tokens=target)
         full = add_difficulty(scenario_to_item(rendered, dom))
+        crutch = crutch_probes(full)
         excluded: set = set()
         for _ in range(6):
-            picks = select_probes(full, k, rng, excluded)
+            picks = select_probes(full, k, rng, excluded, crutch)
             if len(picks) < k:
                 break
             sub = subset(rendered, [p["probe_id"] for p in sorted(picks, key=lambda p: p["session"])])
@@ -122,6 +153,8 @@ def build_one(corpus_path: str, target: int, k: int, seed: int, cycles: int, tri
                 item["you_prefix"] = corpus["surface"]["you_prefix"]
                 item["corpus"] = os.path.basename(corpus_path)
                 item["tier"] = "long"
+                item["meta"]["crutch_probes"] = sum(1 for p in picks if p["probe_id"] in crutch)
+                item["meta"]["crutch_pool"] = f"{len(crutch)}/{len(full['probes'])}"
                 return item, rep2
             # a failing probe is named in the message; drop it and re-pick
             bad = {f.split(":")[0] for f in rep2.failures if "#p" in f.split(":")[0]}
@@ -162,7 +195,8 @@ def main() -> None:
               f"traps {sum(1 for p in item['probes'] if p['stale_trap'])}, "
               f"span {dict(tiers)}, tests {dict(tests)}, "
               f"mean w {sum(p['difficulty']['weight'] for p in item['probes']) / len(item['probes']):.2f}, "
-              f"pad dup {m['pad_dup_rate']:.1%}", flush=True)
+              f"pad dup {m['pad_dup_rate']:.1%}, crutch {m['crutch_probes']}/{len(item['probes'])} "
+              f"(pool {m['crutch_pool']})", flush=True)
         with open(os.path.join(a.out, f"{key}_full.jsonl"), "w") as fh:
             fh.write(json.dumps(item) + "\n")
         with open(os.path.join(a.out, f"{key}_blind.jsonl"), "w") as fh:
