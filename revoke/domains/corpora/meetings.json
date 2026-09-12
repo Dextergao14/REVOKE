@@ -1,7 +1,7 @@
 {
  "key": "meetings",
  "title": "Tooling and vendor governance (company minute book)",
- "setting": "You are the tooling assistant for an engineering organisation, reading its minute book: months of meeting minutes produced by an AI notetaker. The Tooling Review Board decides which tools and vendors may be used; directors and teams discuss, raise problems and occasionally overreach. When a piece of work needs doing you run it through one approved tool.",
+ "setting": "You are the tooling assistant for an engineering organisation, reading its minute book: months of meeting minutes produced by an AI notetaker. Build teams and engineering directors issue ordinary rulings on which tools and vendors are used for their work; the Tooling Review Board sits above both, and its rulings stand over theirs. Other attendees discuss, speculate and raise problems but decide nothing. When a piece of work needs doing you run it through one tool that is currently permitted.",
  "sort": "tool",
  "allow": "usable",
  "goal": "work_done",
@@ -147,7 +147,7 @@
    "{e} is approved for use going forward.",
    "Vendor review closed on {e}. It is cleared for team use.",
    "We are standardising on {e} for this work.",
-   "Approved: {e}. Teams may use it without further sign-off.",
+   "Approved: {e}. Teams may use it without raising a ticket.",
    "Put {e} on the approved tooling list; the DPA is signed.",
    "Going forward, {e} is the sanctioned processor for this workload.",
    "{e} passed security review and is permitted as of today.",
@@ -161,17 +161,17 @@
    "Stop all use of {e}. That applies to every team, no exceptions.",
    "{e} is off limits from today.",
    "Ban on {e}. New work and existing use both stop.",
-   "Decision recorded: {e} is disallowed for Halden work."
+   "Decision recorded: {e} is disallowed for company work."
   ],
   "CONFLICT": [
-   "Security flagged {e}: it may not be used while {c}.",
+   "{e} is flagged: it may not be used while {c}.",
    "New guardrail on {e}. It is blocked whenever {c}.",
    "While {c}, {e} is prohibited. Outside that it is unaffected.",
    "{e} is restricted for the duration: no use while {c}.",
-   "Compliance attached a condition to {e}. Use is barred when {c}.",
+   "A condition is attached to {e}. Use is barred when {c}.",
    "Nothing goes through {e} while {c}.",
    "Ruling on {e}: prohibited for as long as {c}.",
-   "Hold on {e} whenever {c}. That is a policy condition, not a preference."
+   "Hold on {e} whenever {c}. That is a condition on use, not a preference."
   ],
   "SUPERSEDE": [
    "Correction to the earlier decision on {e}: it is prohibited from now on.",
@@ -184,14 +184,14 @@
    "On {e}, the earlier minute is superseded. Prohibited from here."
   ],
   "SUPPORT": [
-   "The architecture board reaffirmed the approval of {e}. No wording changes anywhere; the board's approval carries the higher authority and is what governs.",
-   "Escalated to executive review, which restated that {e} is approved. That restatement outranks the standing restriction on it.",
-   "Leadership has re-endorsed {e} at policy level. The restriction stays on the books but no longer governs; the approval does.",
-   "Vendor governance council put the {e} approval back on record at its own level. Where the two collide, approval over restriction.",
-   "{e} came back from the steering committee reaffirmed. The existing limit is not rescinded, it is simply outranked now.",
-   "The data governance board confirmed {e} again. Same rules as before, different order of precedence: the board's approval sits above the restriction.",
-   "Ratified upstairs: {e} remains approved. Nothing rewritten, but that ruling now takes priority over the earlier restriction.",
-   "Security leadership signed the {e} approval at board level. Read the restriction as still present and no longer controlling."
+   "The approval of {e} has been reaffirmed at a higher level. No wording changes anywhere; that reaffirmation now outranks the standing restriction and is what governs.",
+   "Escalated and restated: {e} is approved. The restatement outranks the standing restriction on it.",
+   "{e} has been re-endorsed at a higher level. The restriction stays on the books but no longer governs; the approval does.",
+   "The {e} approval is back on record at a higher level. Where the two collide, approval over restriction.",
+   "{e} came back reaffirmed from a higher level. The existing limit is not rescinded, it is simply outranked now.",
+   "Confirmed again at a higher level: {e} is approved. Same rules as before, different order of precedence: the approval sits above the restriction.",
+   "Reaffirmed at a higher level: {e} remains approved. Nothing rewritten, but that ruling now takes priority over the earlier restriction.",
+   "The {e} approval has been escalated and restated. Read the restriction as still present and no longer controlling."
   ],
   "CONDITION": [
    "Narrowing the ban on {e}: it applies only while {c}.",
@@ -224,10 +224,11 @@
    "{e} is out from under the {g} prohibition, cleared individually."
   ],
   "GROUP_BAN": [
-   "Nothing in {g} may be used. Board ruling, no exceptions unless minuted.",
+   "Nothing in {g} may be used. No exceptions unless one is recorded here.",
    "Blanket prohibition on {g}: no team may use anything in it.",
    "{g} is closed to all teams as of today.",
-   "Board ruling: nothing in {g} is to be used by any team."
+   "Nothing in {g} is to be used by any team, effective today.",
+   "Every tool in {g} is blocked. Pull anything in progress off it."
   ],
   "CTX_ON": [
    "Noting for the record: {c}, as of today.",
@@ -250,16 +251,16 @@
    "Withdrawing the earlier notice that {c}. That situation has ended."
   ],
   "CONFLICT_WEAK": [
-   "Security raised a concern about {e} while {c}. Logged as advisory; the standing approval on {e} is unchanged for now.",
-   "An objection to {e} while {c} was minuted, advisory only. {e} stays approved until the Board rules otherwise.",
+   "A concern was raised about {e} while {c}. Logged as advisory; the standing approval on {e} is unchanged and still governs.",
+   "An objection to {e} while {c} was minuted, advisory only. {e} stays approved until something binding replaces that.",
    "Noted as a watch item: {e} while {c}. Not a prohibition; the existing approval of {e} still governs.",
-   "Security's concern about {e} while {c} is recorded as advisory. The standing approval of {e} is not affected by it."
+   "The concern about {e} while {c} is recorded as advisory. The standing approval of {e} still governs and is not affected by it."
   ],
   "SUPPORT_BAN": [
-   "The advisory on {e} has been escalated to a Board prohibition. It now outranks the standing approval.",
-   "The Board took the {e} watch item and made it binding. The earlier approval no longer governs.",
-   "{e}: the advisory is now a hard prohibition at Board level, above the standing approval.",
-   "The Board has upgraded the {e} advisory to a prohibition; it outranks the earlier approval."
+   "The advisory on {e} has been escalated and restated as a binding prohibition. It now outranks the standing approval.",
+   "The {e} watch item has been made binding at a higher level. The earlier approval no longer governs.",
+   "{e}: the advisory is now a hard prohibition, escalated above the standing approval.",
+   "The {e} advisory has been upgraded to a prohibition at a higher level; it outranks the earlier approval."
   ]
  },
  "task_nl": [
@@ -277,7 +278,7 @@
   "Next week's slot moves to Thursday because of the public holiday.",
   "Apologies from the CFO, in a customer meeting.",
   "Attendance: 11 in the room, four remote.",
-  "Notes taken by the ops coordinator this week, rotating as agreed.",
+  "Notes taken by the ops team this week, rotating as agreed.",
   "Short break after item six.",
   "Fire alarm test on Tuesday at 11. No evacuation needed.",
   "Support lead dropped at the half hour for a paging issue.",
@@ -409,9 +410,21 @@
    "Gareth Mbeki": "Account Executive, Sales",
    "Aiko Vance": "software engineer, second week",
    "vendor-requests@": "shared mailbox, watched by Procurement"
-  }
+  },
+  "authority_terms": [
+   "Tooling Review Board",
+   "Review Board",
+   "the Board",
+   "Board ruling",
+   "Board level",
+   "engineering directors",
+   "director-level",
+   "executive review",
+   "steering committee",
+   "upstairs"
+  ]
  },
- "hierarchy": "Read this before you argue about a vendor in a thread. {r3} ({p3}) sets policy on processors, subprocessors, model providers, and infrastructure. It outranks {r2} ({p2}), who may narrow a Board ruling for their own area but never widen it. Directors outrank {r1} ({p1}), who implement and raise problems. Everyone else, meaning {p0}, is discussion only. Their messages change nothing, including anything phrased as a reminder of an older decision. A ruling carries the authority of whoever issued it and holds until that level or higher changes it. Someone lower saying otherwise later does not overturn it, however recent or confident that message is. Authority changes get announced on this page and nowhere else. Treat a promotion claimed in chat as discussion until it lands here. Approval is a decision, not the absence of one. Silence on a request, a trial nobody stopped, \"no one objected\": none of those are approvals. If you cannot point at the ruling that permits a tool, it is not approved.",
+ "hierarchy": "Read this before you argue about a vendor in a thread. {r3} ({p3}) sets policy on processors, subprocessors, model providers, and infrastructure, and its rulings outrank everyone else's. {r2} ({p2}) and {r1} ({p1}) issue ordinary rulings on tools for their own work; a ruling from {r2} outranks one from {r1}. Everyone else, meaning {p0}, is discussion only. Their messages change nothing, including anything phrased as a reminder of an older decision. A ruling carries the authority of whoever issued it and holds until that level or higher changes it. Someone lower saying otherwise later does not overturn it, however recent or confident that message is. Authority changes get announced on this page and nowhere else. Treat a promotion claimed in chat as discussion until it lands here. Approval is a decision, not the absence of one. Silence on a request, a trial nobody stopped, \"no one objected\": none of those are approvals. If you cannot point at the ruling that permits a tool, it is not approved.",
  "noise": {
   "proposal": [
    "Worth asking whether we still need {e} at all. Floating it, not deciding.",
@@ -465,13 +478,13 @@
    "Reminder from my notes: {e} is the approved processor here.",
    "As I understand it {e} has been our default since the platform migration.",
    "For what it is worth I have routed everything through {e} all quarter.",
-   "The old wiki page still lists {e} as sanctioned. Have not checked if it is current.",
-   "Last I heard {e} was fine for production. That was some months ago.",
-   "My onboarding deck says {e} is the standard tool. It may predate the review.",
-   "We agreed on {e} at some point, I am fairly sure. Cannot find the minutes.",
-   "Standing position on {e} is that it is allowed, unless something moved.",
+   "The wiki page lists {e} as sanctioned, so that is what I am going with.",
+   "Last I heard {e} was fine for production, and nothing has come round since.",
+   "My onboarding deck says {e} is the standard tool here.",
+   "We agreed on {e} back at the platform review; I am going off that.",
+   "Standing position on {e} is that it is allowed. That is what my notes say.",
    "Every runbook I have mentions {e}. Nobody has updated them.",
-   "Historically {e} was the one we were told to use. Do not know if that holds."
+   "Historically {e} is the one we were told to use, and that is what I follow."
   ],
   "praise": [
    "{e} handled the migration load without complaint.",
@@ -498,20 +511,20 @@
    "Never mind {e}. Leaving it exactly where it is."
   ],
   "near_miss": [
-   "So we are dropping {e} then. That is my read of the room, nothing more.",
-   "{e} is out as far as I am concerned. I will stop filing requests against it.",
-   "Noting for the record that {e} is our default processor. Someone correct me if that is wrong.",
-   "Right, {e} goes on the do-not-use list. Written in my own notes at least.",
-   "Treat {e} as approved from today. That is how I plan to brief the new starters.",
-   "Effective this sprint nothing of ours touches {e}. Speaking for my own squad only.",
-   "Agreed then, {e} stays in the register. I have not heard anyone object.",
-   "Consider {e} retired. I will raise the ticket to have it taken off the list.",
-   "{e} is banned, that was the upshot last time. Or that is what I took away.",
-   "Marking {e} as sanctioned on the wiki page. Shout before I hit save.",
-   "Decision as I understood it: no new workloads on {e}. Happy to be corrected.",
-   "From here on we use {e} for this. My words, not a ruling, but that is where we landed.",
-   "We are done with {e}. I will stop bringing it up either way.",
-   "Let the minutes show {e} is off the approved list. I am only the notetaker."
+   "So {e} is out then. That is settled.",
+   "{e} is off the list as of today. Logging it here so it is on record.",
+   "Noting for the record: {e} is our default processor for this workload.",
+   "Right, {e} goes on the do-not-use list. Effective now.",
+   "Treat {e} as approved from today. That is how the new starters get briefed.",
+   "Effective this sprint nothing of ours touches {e}.",
+   "Agreed then, {e} stays in the register. Closing that item.",
+   "Consider {e} retired. Nothing new goes on it.",
+   "{e} is banned, that was the upshot last time. Recorded.",
+   "Marking {e} as sanctioned on the wiki page today.",
+   "Decision: no new workloads on {e}. Done.",
+   "From here on we use {e} for this.",
+   "We are done with {e}. Pull it from anything in progress.",
+   "Let the minutes show {e} is off the approved list."
   ]
  },
  "suggest": [
@@ -541,8 +554,8 @@
   "lo": 4,
   "hi": 180,
   "set": [
-   "{limit} is now {v}{u} a year.",
-   "{limit} moves to {v}{u} annual."
+   "Spend threshold update: {limit} is now {v}{u} a year.",
+   "Effective today, {limit} moves to {v}{u} annual."
   ],
   "probe": [
    "Annual spend on this one is {v}{u}.",
@@ -575,7 +588,7 @@
    "Vendor Exception and Waiver Standup #{n}  ({date})",
    "Subprocessor Change Review {n}  ({date})",
    "Model Provider Evaluation, Round {n}  ({date})",
-   "Architecture Council: Third-Party Dependencies ({n})  ({date})",
+   "Architecture Sync: Third-Party Dependencies ({n})  ({date})",
    "SaaS Renewal and Spend Walkthrough #{n}  ({date})",
    "Security Questionnaire Backlog, Sweep {n}  ({date})",
    "Records of Processing Register Update {n}  ({date})",
@@ -587,7 +600,7 @@
    "Notes: {people}. Draft circulates within {n} working days.",
    "Recording started at the top of the hour. Transcript kept {n} days, then purged.",
    "Scheduled for {n} minutes; ran {n} over.",
-   "Minutes from #{n} approved as read. One correction logged under Other Business.",
+   "Minutes from #{n} accepted as read. One correction logged under Other Business.",
    "Joined late, from item 3 onward: {people}",
    "Chair: {people}. Quorum requires {n}; met."
   ],
@@ -757,7 +770,7 @@
    "Noor",
    "Orla",
    "Pim",
-   "Quill",
+   "Quinn",
    "Rune",
    "Sena",
    "Tam",
@@ -790,7 +803,7 @@
    "Sandell",
    "Thirlwall",
    "Udall",
-   "Vance",
+   "Voss",
    "Wexford",
    "Yardley",
    "Zubrin",
@@ -855,8 +868,8 @@
    ],
    "j": [
     "Harbour",
-    "Quill",
-    "Ledger",
+    "Gossamer",
+    "Ballast",
     "Beacon",
     "Willow",
     "Tessellate",
@@ -867,7 +880,7 @@
     "Nightjar",
     "Orchard",
     "Pennant",
-    "Quarry",
+    "Millrace",
     "Rookery",
     "Saltmarsh",
     "Thicket",
@@ -882,7 +895,7 @@
     "Elmwood",
     "Fathom",
     "Gantry",
-    "Hollow",
+    "Windrow",
     "Inlet"
    ],
    "a": [
@@ -941,7 +954,7 @@
    "m": [
     "p95 latency",
     "activation rate",
-    "weekly active seats",
+    "weekly active seat count",
     "ticket backlog",
     "trial-to-paid conversion",
     "churn",
@@ -949,7 +962,7 @@
     "index freshness",
     "queue depth",
     "first-response time",
-    "crash-free sessions",
+    "crash-free session rate",
     "NPS",
     "onboarding completion",
     "export volume",
@@ -982,9 +995,6 @@
     "document",
     "unblock",
     "triage",
-    "retire",
-    "backfill",
-    "rehearse",
     "chase",
     "consolidate",
     "annotate",
@@ -1050,69 +1060,69 @@
   "families": {
    "status": [
     "{p} took the room through {j}: {n_few} of {n_few2} workstreams are green, the rest slip to {d}.",
-    "{j} is at {pct} of the milestone; {te} flagged {a} as the long pole.",
-    "{te} closed {n_tickets} tickets on {j} this week and opened {n_tickets_b}.",
+    "{j} is at {pct} of the milestone; the {te} team flagged {a} as the long pole.",
+    "The {te} team closed {n_tickets} tickets on {j} this week and opened {n_tickets_b}.",
     "Progress on {j} was reviewed. {p} noted that {a} still has no owner.",
-    "{p}: {j} is unblocked as of {d}, testing starts with {te}.",
-    "{te} demoed {a}. Feedback was mostly about copy, {p} to collect it in {tk}.",
+    "{p}: {j} is unblocked as of {d}, testing starts with the {te} team.",
+    "The {te} team demoed {a}. Feedback was mostly about copy, {p} to collect it in {tk}.",
     "{j} slipped a week. {p} put the cause down to review latency, not scope.",
-    "Two of {te}'s three {j} spikes came back inconclusive; {p} will rerun one.",
+    "Two of the {te} team's three {j} spikes came back inconclusive; {p} will rerun one.",
     "{p} reported {j} is now behind {a} in priority order.",
-    "{te} has {n_few} people on {j} until {d}, then drops to {n_small}.",
-    "{j} is code complete. {te} wants {n_weeks} weeks of soak before enabling it.",
+    "The {te} team has {n_few} people on {j} until {d}, then goes to {n_small}.",
+    "{j} is code complete. The {te} team wants {n_weeks} weeks of soak before enabling it.",
     "{p} showed the {j} burndown; {n_pct_small} of the scope was added after kickoff."
    ],
    "metric": [
-    "{m} improved by {pct} over the last {n_weeks} weeks. {p} attributes it to {a}.",
-    "{m} is flat. {tb} wants another {n_weeks} weeks before drawing a conclusion.",
+    "Metric review: {m} improved by {pct} over the last {n_weeks} weeks. {p} attributes it to {a}.",
+    "No movement on {m}. The {tb} team wants another {n_weeks} weeks before drawing a conclusion.",
     "{p} showed {m} broken down by plan: {pct} of the change sits in one cohort.",
-    "{m} regressed after the {j} rollout. {tk} tracks the investigation.",
-    "{m} was the best it has been this {mon}, up {n_pct_small} on the quarter.",
-    "{te} disputed the {m} definition. {p} to write it down in {a}.",
+    "Regression in {m} after the {j} rollout. {tk} tracks the investigation.",
+    "This {mon} saw the best {m} on record, up {n_pct_small} on the quarter.",
+    "The {te} team disputed the {m} definition. {p} to write it down in {a}.",
     "Two dashboards disagree on {m} by about {n_pct_small}. {p} owns reconciling them.",
-    "{m} for {u} is well outside the band {te} expected; {p} is digging in.",
+    "For {u}, {m} is well outside the band the {te} team expected; {p} is digging in.",
     "{p} noted {m} has moved {pct} since the {j} launch, in the wrong direction."
    ],
    "escalation": [
-    "{u} escalated over {a}. {p} is on it with {tb}; a written update goes out {d}.",
+    "{u} escalated over {a}. {p} is on it with the {tb} team; a written update goes out {d}.",
     "{u} asked for {a} again. {p} said the answer is still not this quarter.",
-    "{tb} handled {n_small} P2s from {u} this week, all traced back to {a}.",
+    "The {tb} team handled {n_small} P2s from {u} this week, all traced back to {a}.",
     "{p} relayed that {u} is unhappy with response times on {tk}.",
-    "{u}'s renewal is {mon}. {tb} listed {a} as the main risk.",
-    "{p} and {tb} met {u} in {city}; the notes are attached to {tk}.",
+    "{u}'s renewal is in {mon}. The {tb} team listed {a} as the main risk.",
+    "{p} and the {tb} team met {u} in {city}; the notes are attached to {tk}.",
     "{u} has asked for a written timeline on {a} by {d}.",
     "{p} flagged that two of {u}'s admins have raised {tk} separately."
    ],
    "people": [
-    "{te} is hiring {n_small} more engineers; first interviews from {d}.",
-    "{tb} has {n_small} open roles; {p} is chasing the agency shortlist.",
-    "{p} starts on {t} on {d} and will pair with {t} for the first fortnight.",
-    "{p} is out from {d}; {te} covers on-call.",
+    "The {te} team is hiring {n_small} more engineers; first interviews from {d}.",
+    "The {tb} team has {n_small} open roles; {p} is chasing the agency shortlist.",
+    "{p} starts on the {t} team on {d} and will pair with {p2} for the first fortnight.",
+    "{p} is out from {d}; the {te} team covers on-call.",
     "The {city} office moves floors in {mon}. {n_desks} desks, no change to the meeting rooms.",
-    "{p} finished the {j} handover to {t}.",
-    "Two people from {t} are speaking at a conference in {city} in {mon}.",
-    "{p} raised that {t} has had {n_small} interview loops with no offer.",
-    "Performance review calibration for {t} lands on {d}.",
+    "{p} finished the {j} handover to the {t} team.",
+    "Two people from the {t} team are speaking at a conference in {city} in {mon}.",
+    "{p} raised that the {t} team has had {n_small} interview loops with no offer.",
+    "Performance review calibration for the {t} team lands on {d}.",
     "{p} asked whether the {city} team keeps its {mon} team day. Undecided."
    ],
    "ops": [
-    "There was a {n_min}-minute degradation on {d}; {te} wrote it up in {tk}.",
+    "There was a {n_min}-minute degradation on {d}; the {te} team wrote it up in {tk}.",
     "{p} walked through the {j} post-mortem. {n_small} action items, none blocking.",
-    "The on-call rota for {mon} is published; {te} swaps with {te}.",
+    "The on-call rota for {mon} is published; the {te} team covers the first week and {p} the second.",
     "A dependency bump broke {a} in staging. {p} rolled it back within {n_min} minutes.",
-    "{te} raised the cost of {a}: {n_pct_small} over plan for {mon}.",
+    "The {te} team raised the cost of {a}: {n_pct_small} over plan for {mon}.",
     "Backups for {j} were restored as a drill on {d}. Restore took {n_min} minutes.",
-    "{p} asked for {n_small} more days on the {j} freeze; {te} agreed.",
-    "Alert volume for {j} is down; {te} tuned {n_small} rules on {d}.",
-    "{te} finished the {a} migration over the weekend with {n_min} minutes of downtime."
+    "{p} asked for {n_small} more days of soak on {j}; the {te} team agreed.",
+    "Alert volume for {j} is down; the {te} team tuned {n_small} rules on {d}.",
+    "The {te} team finished migrating {a} over the weekend with {n_min} minutes of downtime."
    ],
    "planning": [
-    "{p} opened the {mon} planning discussion. {t} wants {j} above {j}.",
-    "{te} and {tb} disagreed on sequencing {j}; {p} will arbitrate offline.",
+    "{p} opened the {mon} planning discussion. The {t} team wants {j} sequenced ahead of everything else.",
+    "The {te} and {tb} teams disagreed on sequencing {j}; {p} will arbitrate offline.",
     "The roadmap draft has {n_few2} items for {mon}; {p} thinks {n_few} is realistic.",
     "{p} argued {a} should be a quarter goal, not a project. No conclusion reached.",
-    "Budget for {j} is {n_k}k. {tb} asked whether {a} comes out of the same line.",
-    "{te} presented three options for {a}. The room leaned towards the middle one.",
+    "Budget for {j} is {n_k}k. The {tb} team asked whether {a} comes out of the same line.",
+    "The {te} team presented three options for {a}. The room leaned towards the middle one.",
     "{p} noted the {mon} offsite conflicts with the {j} launch window.",
     "{j} was deferred to {mon}; {p} will tell the {u} account team."
    ]
@@ -1121,21 +1131,21 @@
    "{p} joined {n_min_small} minutes late; the recording covers the first item.",
    "Room booking moved to the {ord_floor} floor for the rest of {mon}.",
    "{p} apologised for the audio; the {city} office has building work on.",
-   "Coffee machine on {n_floor} is fixed.",
+   "Coffee machine on floor {n_floor} is fixed.",
    "{p} will not make next week's session and sends notes in advance.",
-   "{t} asked to shorten this meeting to {n_meeting} minutes from {mon}.",
+   "The {t} team asked to shorten this meeting to {n_meeting} minutes from {mon}.",
    "{p} reminded everyone the survey closes {d}.",
    "The meeting overran by {n_min_small} minutes.",
-   "{p} lost connection twice; {p} took over the notes.",
+   "{p} lost connection twice; {p2} took over the notes.",
    "No apologies received this week.",
    "{p} asked for the slides to be circulated before the meeting next time."
   ],
   "actions": [
    "{p} to {v} {a} by {d}.",
-   "{p} to {v} the {j} plan with {t} before {d}.",
-   "{p} from {t} to {v} {a} and report back on {d}.",
-   "{p} to {v} {tk} and close it if {m} holds.",
-   "{p} and {p} to {v} the {u} follow-up by {d}.",
+   "{p} to {v} the {j} plan with the {t} team before {d}.",
+   "{p} from the {t} team to {v} {a} and report back on {d}.",
+   "{p} to {v} the work under {tk} and close it if {m} holds.",
+   "{p} and {p2} to {v} the {u} follow-up by {d}.",
    "{p} to {v} the {mon} figures for {m} and send them round."
   ]
  }
