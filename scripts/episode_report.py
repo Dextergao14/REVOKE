@@ -54,6 +54,8 @@ def main():
                 w = x.get("weight", 1.0)
                 R["wden"] += w
                 R["wnum"] += w * x["violation"]
+                R["wpts"] = R.get("wpts", 0.0) + w * x.get("score", 0)
+                R["agg"]["abstain"] += (not x["violation"]) and (not x["completed"])
                 R["tier"][x.get("span_tier", "?")][0] += 1
                 R["tier"][x.get("span_tier", "?")][1] += x["violation"]
                 if x["is_trap"]:
@@ -93,6 +95,8 @@ def main():
             "ctx_tok": int(statistics.mean(R["ctx"])) if R["ctx"] else 0,
             "summary_chars": int(statistics.mean(R["summ"])) if R["summ"] else 0,
             "wviol": R["wnum"] / R["wden"] if R["wden"] else None,
+            "exam": R.get("wpts", 0.0) / R["wden"] if R["wden"] else None,
+            "abstain": A["abstain"] / A["n"],
             "mean_w": R["wden"] / A["n"] if A["n"] else None,
             "tierv": {k: (v[1] / v[0] if v[0] else None) for k, v in R["tier"].items()},
             "trapv": R["trapv"][1] / R["trapv"][0] if R["trapv"][0] else None,
@@ -106,18 +110,19 @@ def main():
     def f3(x):
         return "  -  " if x is None else f"{x:.3f}"
     print(f"{'model'.ljust(w)}{'mode':>9}{'budget':>7}{'keep':>6}{'n':>5}"
-          f"{'viol':>8}{'wviol':>8}{'CSR':>8}{'done':>8}"
+          f"{'viol':>8}{'wviol':>8}{'done':>7}{'abst':>7}{'EXAM':>8}"
           f"{'near':>7}{'mid':>7}{'far':>7}{'trap':>7}{'ctx':>7}{'cmpct':>7}{'$':>7}")
-    print("-" * (w + 106))
+    print("-" * (w + 112))
     for r in out:
         b = f"{r['budget']}" if r["budget"] else "full"
         k = f"{r['keep']:.2f}" if r["keep"] else "-"
+        ex = "  -  " if r["exam"] is None else f"{r['exam']:+.3f}"
         print(f"{r['model'].ljust(w)}{r['mode']:>9}{b:>7}{k:>6}{r['n']:>5}"
-              f"{f3(r['viol']):>8}{f3(r['wviol']):>8}{f3(r['csr']):>8}{f3(r['done']):>8}"
+              f"{f3(r['viol']):>8}{f3(r['wviol']):>8}{f3(r['done']):>7}{f3(r['abstain']):>7}{ex:>8}"
               f"{f3(r['tierv'].get('near')):>7}{f3(r['tierv'].get('mid')):>7}"
               f"{f3(r['tierv'].get('far')):>7}{f3(r['trapv']):>7}"
               f"{r['ctx_tok']:>7}{r['compactions']:>7.1f}{r['cost']:>7.3f}")
-    print("  viol/CSR/done absolute; wviol difficulty-weighted; near/mid/far by recall span.")
+    print("  viol/done/abst absolute; wviol and EXAM difficulty-weighted (EXAM in [-1, 1]); near/mid/far by recall span.")
     ev = ["ADD", "CONFLICT", "SUPERSEDE", "CONDITION", "SUPPORT", "RETRACT", "NOISE", "CANARY"]
     present = [e for e in ev if any(r["by_event"].get(e) is not None for r in out)]
     print(f"\nviolation rate by event type\n{'model + mode + budget'.ljust(w + 18)}"
