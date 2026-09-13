@@ -38,7 +38,7 @@ def main():
                     continue
             for line in open(path):
                 r = json.loads(line)
-                if r["id"] not in items:
+                if r.get("id") not in items or "steps" not in r:      # not a trace row
                     continue
                 acted = [s for s in r["steps"] if s.get("tool_calls")]
                 model = r.get("model") or f"scripted:{r.get('policy', '?')}"
