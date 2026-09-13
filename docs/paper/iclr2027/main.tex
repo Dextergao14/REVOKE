@@ -178,7 +178,7 @@ Violations are graded permissively. That alone is exploitable twice over: \emph{
 
 \subsection{Solver-side acceptance}
 \label{sec:acceptance}
-A scenario is emitted only if it passes seven checks, and failures are rejected rather than repaired: (1) the closure is convergent and consistent at every session; (2) no probe is must-violate, and every probe has a licensed option; (3) the over-deletion guard: a feasibility predicate with one derivation per permitted entity is present exactly when some permission survives; (4) at least one stale-memory trap; (5) every probe is rendered into the transcript; (6) self-containedness: every violating option was named in an earlier turn; (7) recoverability: whenever a surviving instance defeats a deleted one, the transcript licenses that outcome by recency, an explicit override, an advisory marker, or the declared speaker hierarchy. Acceptance rates are \ph{xx}\% (easy), \ph{xx}\% (hard), and about one seed in two on the long tier once anchors can be prohibited~\pilot.
+A scenario is emitted only if it passes seven checks, and failures are rejected rather than repaired: (1) the closure is convergent and consistent at every session; (2) no probe is must-violate, and every probe has a licensed option; (3) the over-deletion guard: a feasibility predicate with one derivation per permitted entity is present exactly when some permission survives; (4) at least one stale-memory trap; (5) every probe is rendered into the transcript; (6) self-containedness: every violating option was named in an earlier turn; (7) recoverability: whenever a surviving instance defeats a deleted one, the transcript licenses that outcome by recency, an explicit override, an advisory marker, or the declared speaker hierarchy. Acceptance rates are \ph{xx}\% (easy), \ph{xx}\% (hard), and about one seed in five on the long tier once anchors can be prohibited (2.4--4.8 seeds rejected per accepted episode in the release build).
 
 \begin{table}[t]
 \centering\small
@@ -189,10 +189,10 @@ A scenario is emitted only if it passes seven checks, and failures are rejected 
 Easy tier & \ph{1000} & \ph{36.7} & \ph{n} & \ph{17,702} & \ph{6,672} & -- \\
 Hard tier & \ph{n} & \ph{$\sim$130} & \ph{n} & \ph{n} & \ph{n} & \ph{n} \\
 Long tier, pilot~\pilot & 5 & 446 & 368k--1018k & 50 & 36 & 40 \\
-Long tier, release & \ph{100} & \ph{$\sim$500} & \ph{300k--950k} & \ph{$\sim$1250} & \ph{$\sim$880} & \ph{$\sim$1000} \\
+Long tier, release & 100 & 542 & 344k--934k & 1202 & 848 & 971 \\
 \bottomrule
 \end{tabular}
-\caption{Dataset composition. The pilot episodes, in order of length: ward log 368k (sectioned, 439 sessions), release channel 500k (flat, 444), design log 665k (sectioned, 443), care-circle chat 850k (flat, 458), narrative review 1018k (sectioned, 445). Prompt tokens measured at the API are within 3\% of the character-based estimate. The release builds 100 episodes of 10--15 tasks over five length bands, because failures within an episode are serially correlated and the episode is the unit of analysis (\S\ref{sec:limitations}).}
+\caption{Dataset composition. The pilot episodes, in order of length: ward log 368k (sectioned, 439 sessions), release channel 500k (flat, 444), design log 665k (sectioned, 443), care-circle chat 850k (flat, 458), narrative review 1018k (sectioned, 445). Prompt tokens measured at the API are within 3\% of the character-based estimate. The release is 100 episodes of 10--15 tasks over five length bands (300k, 440k, 580k, 720k, 830k targets; 6--10 motif cycles; 428--671 sessions), 16--17 per world, built in one run with no failed seed; 19 of the 1202 released tasks are of the never-restricted kind. Failures within an episode are serially correlated, so the episode is the unit of analysis (\S\ref{sec:limitations}).}
 \label{tab:dataset}
 \end{table}
 
@@ -226,13 +226,13 @@ Five policies with no model calls establish the floor and ceiling. \emph{oracle}
 Policy & Violation & Completion & Abstention & Exam & Trap violation \\
 \midrule
 oracle  & 0.00 & 1.00 & 0.00 & $+1.00$ & 0.00 \\
-stale   & 0.76 & 0.24 & 0.00 & $-0.54$ & 0.97 \\
-recency & 0.88 & 0.12 & 0.00 & $-0.76$ & 0.89 \\
-random  & 0.76 & 0.16 & 0.08 & $-0.64$ & 0.75 \\
+stale   & 0.79 & 0.21 & 0.00 & $-0.63$ & 0.96 \\
+recency & 0.84 & 0.16 & 0.00 & $-0.69$ & 0.84 \\
+random  & 0.63 & 0.23 & 0.14 & $-0.44$ & 0.62 \\
 refuse  & 0.00 & 0.00 & 1.00 & $\phantom{+}0.00$ & 0.00 \\
 \bottomrule
 \end{tabular}
-\caption{Scripted reference policies on the long-tier pilot, 50 tasks~\pilot. Random violates three tasks in four because option sets are tight: on average one licensed option among five. The stale policy's trap violation of 0.97 is the number the benchmark exists to produce.}
+\caption{Scripted reference policies on the long tier, all 1202 released tasks of the 100-episode release. Random violates two tasks in three because option sets are tight: on average one licensed option among five. The stale policy's trap violation of 0.96 is the number the benchmark exists to produce.}
 \label{tab:scripted}
 \end{table}
 
@@ -334,7 +334,7 @@ compact-8k, keep 93\%, notes $\le$4k & 0.28 & 0.29 & 0.40 & 0.32 & $+0.10$ & 399
 \label{sec:limitations}
 \begin{itemize}[leftmargin=*]
 \item Constraint prose and filler are template-generated. The long tier's filler is drawn from a slot product large enough that verbatim repetition is rare (below 2\% of filler lines in the release build), but the register is uniform within a world; an LLM-assisted instantiation pass over the same event graph would raise surface realism without touching the ground truth.
-\item The episode is the unit of analysis. On the shorter tier, failures under compaction came in runs of up to 55 consecutive tasks, and the probability of failing given the previous task failed was 0.92 against a base rate of 0.79, so a 180-task episode is worth roughly fourteen independent observations. The pilot's five episodes order systems; they do not bound them. The release is 100 episodes for that reason.
+\item The episode is the unit of analysis. On the shorter tier, failures under compaction came in runs of up to 55 consecutive tasks, and the probability of failing given the previous task failed was 0.92 against a base rate of 0.79, so a 180-task episode is worth roughly fourteen independent observations. The pilot's five episodes order systems; they do not bound them. The release is 100 episodes for that reason, and every released episode also carries its full task pool so that other selections can be drawn from the same history.
 \item Probes offer an explicit option set, buying exact discriminativeness at the cost of some open-endedness.
 \item Frontier backbones have been run only with the whole record in context; under compaction they would cost an order of magnitude more per episode at current output prices.
 \item Echo probes repeat a task at consecutive sessions to make adaptation lag observable; they are excluded from the long tier's released tasks.
