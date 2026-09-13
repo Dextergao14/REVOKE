@@ -22,7 +22,9 @@ def main():
     ap.add_argument("--runs", nargs="+", required=True)
     ap.add_argument("--detail", action="store_true", help="list every violation")
     a = ap.parse_args()
-    items = {json.loads(l)["id"]: json.loads(l) for l in open(a.full)}
+    import gzip
+    opener = gzip.open if a.full.endswith(".gz") else open
+    items = {json.loads(l)["id"]: json.loads(l) for l in opener(a.full, "rt")}
     short = {k: k.split("_", 2)[2].rsplit("_", 1)[0] for k in items}
     rows = {}                                 # (model, cell, item) -> graded probes
     meta = {}

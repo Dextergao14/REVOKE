@@ -109,7 +109,7 @@ def blind(item: Dict) -> Dict:
     out = {k: v for k, v in item.items()
            if k not in ("timeline", "events", "motifs", "base_rules", "allow",
                         "sort", "goal", "contexts", "universe", "seed", "meta",
-                        "signature")}
+                        "signature", "probe_pool")}
     # turn kinds (update / noise / filler) would let a scaffold filter the
     # transcript by construction; only the probe marker is legitimately visible
     out["sessions"] = [{"index": s["index"], "turns": [

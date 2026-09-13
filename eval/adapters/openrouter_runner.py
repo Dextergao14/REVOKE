@@ -191,7 +191,9 @@ def main():
     if "full" in os.path.basename(a.blind):
         sys.exit("refusing: that file name suggests it carries ground truth")
 
-    items = [json.loads(l) for l in open(a.blind)]
+    import gzip
+    opener = gzip.open if a.blind.endswith(".gz") else open
+    items = [json.loads(l) for l in opener(a.blind, "rt")]
     if a.items:
         keep = set(a.items.split(","))
         items = [i for i in items if i["id"] in keep]

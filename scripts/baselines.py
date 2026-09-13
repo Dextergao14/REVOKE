@@ -88,7 +88,9 @@ def main():
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
     rng = random.Random(args.seed)
-    items = [json.loads(l) for l in open(args.dataset)]
+    import gzip
+    opener = gzip.open if args.dataset.endswith(".gz") else open
+    items = [json.loads(l) for l in opener(args.dataset, "rt")]
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w") as f:
         for it in items:
