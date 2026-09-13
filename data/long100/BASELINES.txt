@@ -1,0 +1,5 @@
+model               condition           episode            tok   n  viol  done  abst   EXAM   far  trap   cmp      $
+scripted:oracle     scripted            ALL                   1202  0.00  1.00  0.00  +1.00  0.00  0.00   wviol=0.000
+scripted:random     scripted            ALL                   1202  0.63  0.23  0.14  -0.44  0.65  0.62   wviol=0.655
+scripted:recency    scripted            ALL                   1202  0.84  0.16  0.00  -0.69  0.82  0.84   wviol=0.847
+scripted:stale      scripted            ALL                   1202  0.79  0.21  0.00  -0.63  0.75  0.96   wviol=0.813
