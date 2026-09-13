@@ -666,7 +666,15 @@
    "SRE: circulate the rewritten incident severity definitions for review by 22 October.",
    "Finance: bring absorb versus employee share options for the health plan by 6 November.",
    "Section owners: put first drafts of the board pack in the shared folder by 18 October.",
-   "Engineering: generate the 200 store synthetic demo dataset by 7 November."
+   "Engineering: generate the 200 store synthetic demo dataset by 7 November.",
+   "Facilities: dry out the fourth floor kitchen row and confirm the desks are usable by 16 October.",
+   "Release manager: post release notes in the support channel a day ahead for the next two trains.",
+   "Account teams: complete the Nordic account introductions on joint calls before 24 October.",
+   "Sales engineering: export demo scenarios before any environment reset, starting now.",
+   "Engineering managers: cancel recurring meetings that have gone three sessions without an agenda by 31 October.",
+   "Legal: draft the Thornbury reference agreement by 29 October.",
+   "Travel desk: name one booker per customer trip starting with the November visits.",
+   "Platform team: send the joint escalation contact sheet to the Aarhus partner by 17 October."
   ],
   "blocks": [
    "Q3 pipeline review. Logistics suite closed at 82 percent of number, CDP at 61.\nTwo enterprise deals slipped into October, both sitting with customer legal.\nSales lead asked for a forecast reset before the board pack goes out.\nNo decision today. Reset numbers come back next week.",
@@ -724,7 +732,21 @@
    "Commute subsidy. Uptake is about 30 percent and concentrated in head office.\nRemote staff asked for an equivalent home office allowance.\nFinance modelled parity at roughly 90 thousand a year.\nDecision deferred to the November benefits review.",
    "Health plan design. Renewal quote came in 11 percent higher for the same coverage.\nOptions are to absorb it, raise the employee share, or narrow the network.\nNobody supported narrowing the network.\nFinance and people team to bring an absorb versus share split before open enrolment.",
    "Contractor conversions. Four long term contractors are past 18 months.\nTwo sit in roles we would hire for anyway and both want to convert.\nCost is roughly neutral once agency fees stop, so the roles get written up for the next headcount slot.",
-   "Board meeting prep. The pack is due a week before the 30th.\nChurn and services capacity are the sections the board asked about last time.\nDraft narrative runs 40 slides against a target of 25 plus appendix.\nOwners named per section, first drafts in the shared folder by the 18th."
+   "Board meeting prep. The pack is due a week before the 30th.\nChurn and services capacity are the sections the board asked about last time.\nDraft narrative runs 40 slides against a target of 25 plus appendix.\nOwners named per section, first drafts in the shared folder by the 18th.",
+   "Office kitchen flood on the fourth floor. A dishwasher hose came loose overnight and the water reached two desks.\nNothing electrical was damaged; two laptops were on charge and both survived.\nFacilities have the carpet up and a dryer running until Thursday.\nAnyone on that row works from the third floor this week.",
+   "Planning review moves from Tuesday to Wednesday for the rest of the quarter.\nThe Tuesday slot clashed with the Sydney stand-up and half the room was leaving early.\nAgenda still goes out Monday night. No change to the fortnightly cadence.",
+   "The Kelmscott go-live happened on Saturday without a rollback.\nSix depots came up in order, the last one 40 minutes ahead of plan.\nTheir operations lead sent a thank-you note to the whole services team.\nLessons go into the next runbook revision; nothing urgent.",
+   "Complaint from the support team about the release cadence.\nThree releases in four weeks, each with a changelog that arrived after the customer questions did.\nAsk is that release notes land in the support channel a day before anything ships.\nRelease manager agreed to try it for the next two trains.",
+   "Handover of the Nordic accounts. The outgoing account manager leaves on the 24th.\nNine accounts move to two people, split by country rather than size.\nIntroductions to each customer happen on a joint call before the leaving date.\nOpen commitments are listed in a shared sheet with dates against each one.",
+   "Visitors from a Belgian freight customer toured the office on Wednesday.\nThey sat in on a planning demo and asked mostly about depot-level permissions.\nOne of their planners spotted a rounding error on the summary screen in the first ten minutes.\nFix is small and already in review. Follow-up visit pencilled for the spring.",
+   "The demo environment was reset on Tuesday morning without warning.\nTwo sales engineers lost a week of prepared scenarios before a prospect call at 11.\nCall went ahead on slides. Prospect did not notice; the sales engineers did.\nResets now get announced in the channel a day ahead, and demo data gets exported first.",
+   "Backend hiring. Two offers out last week, both accepted within a day.\nOne candidate turned down a larger offer elsewhere on the strength of the take-home conversation.\nBoth start in the first week of next month and will pair with the platform team.\nRecruiting asked for the interview panel to be thanked by name.",
+   "Christmas cover. The office closes on the 24th and reopens on the 2nd.\nOn-call runs as normal with a thinner second line; three people volunteered.\nCustomer-facing teams publish reduced hours to accounts by the 10th.\nAnyone taking the whole fortnight off sets their handover note before the 20th.",
+   "Meeting load. A sample of twelve engineers averaged 14 hours of meetings a week.\nThe worst case was 22 hours, mostly recurring syncs with no agenda.\nProposal is a no-meeting Wednesday for engineering, trialled for six weeks.\nManagers to cancel any recurring meeting that has gone three sessions without an agenda.\nReview of the trial lands at the end of the quarter.",
+   "Thornbury renewed for three years, up from one, with a 20 percent seat increase.\nThe deciding factor named by their head of operations was the planning accuracy work from the spring.\nAccount team wants to use them as a reference for the retail segment.\nLegal to draft the reference agreement; marketing to schedule a case study interview.",
+   "Travel mishap on the Porto trip. Two of the four people booked the wrong airport and missed the customer dinner.\nThe workshop itself ran on time the next morning and the customer was gracious.\nTravel bookings for customer visits now go through one person per trip.\nExpenses for the rebooked flights were reimbursed without argument.",
+   "Project Meridian changes hands. The original lead moves to the mobile team at month end.\nThe incoming lead has shadowed for three weeks and ran the last two stand-ups.\nOpen risks: the depot import edge cases and one unresolved question about time zones.\nA written handover note lives in the project folder with dates against each item.",
+   "An engineering lead from a partner in Aarhus spent Thursday with the platform team.\nTopic was how each side handles on-call during joint incidents.\nThey brought a printed runbook; ours lives in the wiki. Both sides took notes.\nA shared escalation contact sheet goes out to both teams by Friday."
   ],
   "you_prefix": "you"
  },
@@ -919,7 +941,7 @@
     "the permissions matrix",
     "the CSV template",
     "the status page",
-    "the deprecation notices",
+    "the depot map view",
     "the migration runbook",
     "the load test harness",
     "the schema registry",
@@ -1055,6 +1077,124 @@
     "sixth",
     "seventh",
     "eighth"
+   ],
+   "ver": [
+    "4.1",
+    "4.1.2",
+    "4.2",
+    "4.2.1",
+    "4.3",
+    "4.3.1",
+    "4.4",
+    "5.0",
+    "5.0.1",
+    "5.1"
+   ],
+   "lang": [
+    "German",
+    "French",
+    "Dutch",
+    "Spanish",
+    "Italian",
+    "Portuguese",
+    "Swedish",
+    "Polish",
+    "Danish",
+    "Finnish"
+   ],
+   "room": [
+    "Anchor",
+    "Brook",
+    "Cairn",
+    "Dune",
+    "Estuary",
+    "Fjord",
+    "Glade",
+    "Heath",
+    "Isthmus",
+    "Knoll"
+   ],
+   "role": [
+    "backend engineer",
+    "SRE",
+    "product designer",
+    "technical writer",
+    "support engineer",
+    "data analyst",
+    "solutions engineer",
+    "QA engineer",
+    "engineering manager",
+    "account executive"
+   ],
+   "doc": [
+    "the runbook index",
+    "the onboarding checklist",
+    "the incident template",
+    "the API reference",
+    "the style guide",
+    "the glossary",
+    "the FAQ page",
+    "the architecture overview",
+    "the customer FAQ",
+    "the release checklist"
+   ],
+   "event": [
+    "the all-hands",
+    "the engineering offsite",
+    "the sales kickoff",
+    "the customer day",
+    "the hack week",
+    "the user conference",
+    "the quarterly review",
+    "the demo day",
+    "the town hall",
+    "the partner summit"
+   ],
+   "seg": [
+    "grocery",
+    "freight",
+    "retail",
+    "public sector",
+    "3PL",
+    "pharma distribution",
+    "wholesale",
+    "parcel",
+    "fashion retail",
+    "foodservice"
+   ],
+   "feat": [
+    "bulk edits",
+    "depot-level permissions",
+    "scheduled exports",
+    "dark mode",
+    "custom fields",
+    "change history export",
+    "multi-currency invoicing",
+    "route templates",
+    "offline mode",
+    "saved filters"
+   ],
+   "cost": [
+    "travel",
+    "contractors",
+    "training",
+    "recruiting fees",
+    "events",
+    "office fit-out",
+    "professional services",
+    "marketing programs",
+    "hardware refresh",
+    "conference sponsorship"
+   ],
+   "quarter": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "H1",
+    "H2",
+    "FY26",
+    "FY27"
    ]
   },
   "families": {
@@ -1070,7 +1210,12 @@
     "{p} reported {j} is now behind {a} in priority order.",
     "The {te} team has {n_few} people on {j} until {d}, then goes to {n_small}.",
     "{j} is code complete. The {te} team wants {n_weeks} weeks of soak before enabling it.",
-    "{p} showed the {j} burndown; {n_pct_small} of the scope was added after kickoff."
+    "{p} showed the {j} burndown; {n_pct_small} of the scope was added after kickoff.",
+    "{p} gave a one-line update on {j}: nothing changed since {d}, and nothing is expected to before {mon}.",
+    "The {j} demo to the {tb} team is booked for {hour} on {d}; {p} is presenting.",
+    "{n_few} of the {j} stories are blocked on {a}; {p} thinks they unblock together.",
+    "{j} moved from amber to green after the {te} team landed {a} on {d}.",
+    "{p} asked whether {j} still needs a weekly slot. The {t} team wants to keep it through {mon}."
    ],
    "metric": [
     "Metric review: {m} improved by {pct} over the last {n_weeks} weeks. {p} attributes it to {a}.",
@@ -1081,7 +1226,12 @@
     "The {te} team disputed the {m} definition. {p} to write it down in {a}.",
     "Two dashboards disagree on {m} by about {n_pct_small}. {p} owns reconciling them.",
     "For {u}, {m} is well outside the band the {te} team expected; {p} is digging in.",
-    "{p} noted {m} has moved {pct} since the {j} launch, in the wrong direction."
+    "{p} noted {m} has moved {pct} since the {j} launch, in the wrong direction.",
+    "{p} wants {m} reported weekly instead of monthly; the {tb} team will add it to the {mon} pack.",
+    "The {m} target for {quarter} was set at {pct} better than today; {p} called it ambitious.",
+    "{m} for the {seg} segment moved the other way from the rest of the base. {p} has no explanation yet.",
+    "A data quality bug inflated {m} for {n_days} days; the corrected series goes out {d}.",
+    "{p} asked that {m} be split by region before it goes into the {quarter} pack."
    ],
    "escalation": [
     "{u} escalated over {a}. {p} is on it with the {tb} team; a written update goes out {d}.",
@@ -1091,7 +1241,12 @@
     "{u}'s renewal is in {mon}. The {tb} team listed {a} as the main risk.",
     "{p} and the {tb} team met {u} in {city}; the notes are attached to {tk}.",
     "{u} has asked for a written timeline on {a} by {d}.",
-    "{p} flagged that two of {u}'s admins have raised {tk} separately."
+    "{p} flagged that two of {u}'s admins have raised {tk} separately.",
+    "{u} sent a formal complaint about {a}; {p} drafted the reply and {p2} is reviewing it.",
+    "{p} is travelling to {city} on {d} to sit with {u}'s operations team for a day.",
+    "{u} has gone quiet since {d}; {p} thinks the sponsor changed and is trying to confirm.",
+    "The {tb} team closed {u}'s open items in {tk}; {p} will confirm with them on {d}.",
+    "{u} wants {feat} in writing on the roadmap before the {mon} renewal call; {p} said no dates."
    ],
    "people": [
     "The {te} team is hiring {n_small} more engineers; first interviews from {d}.",
@@ -1103,7 +1258,13 @@
     "Two people from the {t} team are speaking at a conference in {city} in {mon}.",
     "{p} raised that the {t} team has had {n_small} interview loops with no offer.",
     "Performance review calibration for the {t} team lands on {d}.",
-    "{p} asked whether the {city} team keeps its {mon} team day. Undecided."
+    "{p} asked whether the {city} team keeps its {mon} team day. Undecided.",
+    "{p} moves from the {te} team to the {tb} team in {mon}; the backfill req is open.",
+    "{p} passed probation on {d}; {p2} sent the note round.",
+    "The {t} team's offsite is in {city} on {d}; {n_people} people are going.",
+    "{p} is reducing to four days a week from {mon}; the {t} team has adjusted the rota.",
+    "{n_small} people from the {t} team have not booked any leave this year; {p} is nudging them.",
+    "The {role} search restarted on {d} with a new agency; {p} is the hiring manager."
    ],
    "ops": [
     "There was a {n_min}-minute degradation on {d}; the {te} team wrote it up in {tk}.",
@@ -1114,7 +1275,12 @@
     "Backups for {j} were restored as a drill on {d}. Restore took {n_min} minutes.",
     "{p} asked for {n_small} more days of soak on {j}; the {te} team agreed.",
     "Alert volume for {j} is down; the {te} team tuned {n_small} rules on {d}.",
-    "The {te} team finished migrating {a} over the weekend with {n_min} minutes of downtime."
+    "The {te} team finished migrating {a} over the weekend with {n_min} minutes of downtime.",
+    "{p} paged {p2} at {hour} on {d} over {a}; it turned out to be a monitoring gap, not an outage.",
+    "The {te} team ran a game day on {j} on {d}; {n_small} gaps found, {tk} has the list.",
+    "{a} has been on the same runbook since {mon}; {p} is rewriting it with the {te} team.",
+    "Capacity for {j} runs out around {mon} at current growth; the {te} team is sizing the next step.",
+    "A stuck job held {a} for {n_min} minutes on {d}; {p} cleared it by hand and wrote {tk}."
    ],
    "planning": [
     "{p} opened the {mon} planning discussion. The {t} team wants {j} sequenced ahead of everything else.",
@@ -1124,7 +1290,124 @@
     "Budget for {j} is {n_k}k. The {tb} team asked whether {a} comes out of the same line.",
     "The {te} team presented three options for {a}. The room leaned towards the middle one.",
     "{p} noted the {mon} offsite conflicts with the {j} launch window.",
-    "{j} was deferred to {mon}; {p} will tell the {u} account team."
+    "{j} was deferred to {mon}; {p} will tell the {u} account team.",
+    "{p} wants {j} broken into {n_few} milestones with a demo at each; the {t} team agreed in principle.",
+    "The {quarter} roadmap is {pct} committed and {p} would like to keep it there.",
+    "{p} moved {feat} into {j} scope, which pushes {a} out to {mon}.",
+    "{p} and {p2} will rewrite the {j} brief before {d}; the current one has three owners and no goal.",
+    "The {t} team asked for {n_weeks} weeks of unplanned time after {j} ships. {p} took it away to think about."
+   ],
+   "customer": [
+    "{u} signed on {d}: {n_k}k a year, {n_people} depots, starting in {mon}.",
+    "The {seg} pipeline stands at {n_k}k for {quarter}; {p} thinks about half of it is real.",
+    "{u} asked for a reference call with another {seg} customer; {p} is finding one.",
+    "{p} closed the {u} expansion at {pct} uplift on the existing seats.",
+    "{u} wants a {n_weeks}-week pilot before signing; the {tb} team is scoping what that would cover.",
+    "The {u} RFP runs to {n_big} questions and is due {d}; {p} is coordinating answers.",
+    "{p} presented the {quarter} forecast: {n_few} deals over {n_k}k, all in the {seg} segment.",
+    "{u} went with a competitor. {p} wrote up the loss in {tk}; price was not the reason given.",
+    "The {u} kickoff is in {city} on {d}; {p} and {p2} are attending from our side.",
+    "{u} is upgrading {n_people} sites in {mon}; the {tb} team has the rollout plan.",
+    "{p} reported that {u} mentioned us in a trade press interview; marketing wants a quote.",
+    "A prospect in {city} asked for {feat} as a condition of the deal; {p} said we do not build for one account."
+   ],
+   "release": [
+    "{ver} branched on {d}; the {te} team has {n_days} days of stabilisation before the cut.",
+    "{p} proposed holding {ver} for {a}; the room preferred shipping without it.",
+    "Release {ver} went out at {hour} on {d} with {n_small} known issues listed in {tk}.",
+    "{ver} was rolled back after {n_min} minutes over a fault in {a}; {p} has the fix and a rerun is booked for {d}.",
+    "The {ver} release notes are drafted; {p} needs {n_small} more screenshots from the {te} team.",
+    "{p} asked for a release freeze around {event}; the {te} team agreed to {n_days} days.",
+    "Code freeze for {ver} starts {d} at {hour}; anything after that needs {p}'s name on it.",
+    "Beta for {ver} runs with {n_people} customers including {u}; {p} is collecting feedback in {tk}.",
+    "{j} missed the {ver} cut and goes in the next train; the {te} team wants another soak cycle.",
+    "The {ver} smoke tests took {n_min} minutes on {d}, longer than anyone remembered; {p} is looking at the suite.",
+    "{p} walked through the {ver} changelog: {n_tickets} items, {n_few} of them customer visible.",
+    "Hotfix for {a} shipped as {ver} at {hour}; {u} confirmed the fix by end of day."
+   ],
+   "support": [
+    "The queue stood at {n_tickets} tickets at {hour} today; {p} wants it halved by {d}.",
+    "First response time averaged {n_min} minutes this week, off target; the {tb} team blames {a}.",
+    "{p} wrote a macro for questions about {a}; {n_pct_small} of the queue fits it.",
+    "{u} opened {n_small} tickets about {feat} in one day; {p} merged them into {tk}.",
+    "The {tb} team is trialling a {hour} handover call between {city} and the rest of the rota.",
+    "Knowledge base article on {a} is the most viewed this {mon}; {p} is refreshing the screenshots.",
+    "{p} escalated {tk} to the {te} team after {n_days} days without movement.",
+    "Chat support pilot in the {seg} segment: {n_big} conversations, {pct} resolved without a ticket.",
+    "{p} flagged {n_small} tickets where {u} was told different things by different agents; the {tb} team is tightening the notes.",
+    "Weekend cover for {mon} is {p} and {p2}, alternating.",
+    "The {tb} team closed {n_tickets} tickets on {d} in a backlog blitz; {p} brought pastries.",
+    "Ticket {tk} from {u} has been open {n_weeks} weeks; {p} owns getting it to a yes or a no."
+   ],
+   "facilities": [
+    "The {room} room's screen has not worked since {d}; facilities have a ticket in as {tk}.",
+    "Badge readers on the {ord_floor} floor go offline at {hour} on {d} for a firmware update.",
+    "{p} asked for {n_desks} more lockers in the {city} office; facilities will price it.",
+    "The {city} office is closed on {d} for electrical work; {p} sent the notice.",
+    "Desk booking for the {ord_floor} floor opens {n_days} days ahead from {mon}, down from a fortnight.",
+    "Kitchen on floor {n_floor} loses its dishwasher for {n_days} days from {d}.",
+    "{p} counted {n_people} people in the {room} room booked for six; facilities are adding chairs.",
+    "The {city} lease is up in {mon}; {p} and the {tb} team have the options paper.",
+    "Cycle storage at {city} is full; facilities are adding {n_desks} hooks by {d}.",
+    "The {room} room is renamed after {d}; {p} will update the door signs and the calendar.",
+    "Cleaning moves to {hour} on the {ord_floor} floor so the early team is not disturbed.",
+    "{p} reported {n_small} broken chairs on floor {n_floor}; replacements arrive {d}."
+   ],
+   "finance": [
+    "The {cost} line is {pct} over for {quarter}; {p} will explain the variance in the {mon} pack.",
+    "{p} presented {quarter} revenue: {n_k}k above plan, mostly from {seg} expansions.",
+    "Expense reports over {n_days} days old will be returned from {mon}; {p} sent the reminder.",
+    "The {tb} team asked for {n_k}k from the {cost} line for {j}; finance wants a one-pager first.",
+    "{p} corrected the {quarter} forecast for {u}: it had been counted twice.",
+    "Invoices to {u} are {n_days} days late on average; {p} is calling their accounts payable on {d}.",
+    "Travel for {event} comes out of the {cost} line, not team budgets; {p} confirmed.",
+    "{n_pct_small} of {quarter} spend is uncategorised; {p} is chasing the {tb} team for codes.",
+    "Currency movement cost about {n_k}k in {mon}; {p} said it is not worth hedging at our size.",
+    "{p} wants the {cost} line held flat until the {mon} reforecast. No one objected.",
+    "Payroll cut-off moves to the {n_few2}th of the month from {mon}; {p} notified the {tb} team.",
+    "{p} walked through the {seg} margin: {pct} after services, {n_pct_small} lower than the base."
+   ],
+   "research": [
+    "{p} ran {n_people} interviews with {seg} planners; {feat} came up in most of them.",
+    "{n_few} usability participants could not finish the task in {a}; {p} has the recordings.",
+    "{u} agreed to a site visit in {city} on {d}; {p} and {p2} will shadow a shift.",
+    "Survey on {a} closed with {n_big} responses; {p} presents the read-out on {d}.",
+    "{p} proposed a diary study with {n_few} customers for {n_weeks} weeks; the {t} team wants it scoped to {feat}.",
+    "The {seg} persona work is {pct} done; {p} needs {n_small} more interviews from the {tb} team.",
+    "{p} showed clips from the {u} visit; the room stopped on the one about {a}.",
+    "Card sort on the labels in {a} finished; {n_pct_small} of participants grouped them the way we do.",
+    "{p} keeps a list of {feat} requests: {n_tickets} accounts have asked, {n_few} of them in the last month.",
+    "The insights library has {n_big} tagged notes; {p} is pruning duplicates before {d}.",
+    "{u} declined the research call; {p} will try a different contact in {mon}.",
+    "{p} argued the {feat} request is really about {a}; the {t} team will prototype both."
+   ],
+   "events": [
+    "{event} is confirmed for {d} in {city}; {p} owns the agenda.",
+    "{n_tickets} sessions were pitched for {event}; {p} and {p2} will pick {n_few}.",
+    "The {mon} brown-bag is {p} on {a}, {hour} in the {room} room.",
+    "Speaker slots at the {city} meetup on {d}: {p} on {j}, {p2} on {a}.",
+    "{event} moved from {d} because of a venue clash; new date to follow from {p}.",
+    "Registrations for {event} hit {n_big}, {pct} above last year; {p} is looking at a larger room.",
+    "{p} will run the {t} team's demo at {event}; rehearsal is {d} at {hour}.",
+    "Sponsorship for the {seg} trade show in {city} costs {n_k}k; {p} thinks the leads justify it.",
+    "The {t} team's hack week is in {mon}; {p} asked for pitches by {d}.",
+    "{event} recording is up; {p} will cut a {n_min_small}-minute version for people who missed it.",
+    "Catering for {event} is confirmed for {n_big} people; {p} needs dietary requirements by {d}.",
+    "{p} proposed a {city} team day on {d}; {n_people} people have said yes so far."
+   ],
+   "docs": [
+    "{doc} was rewritten by {p}; the {tb} team reviewed it on {d}.",
+    "The {lang} strings for {a} are {pct} translated; {p} expects them done by {d}.",
+    "{p} found {n_small} places where {doc} still describes {a} as it was before {ver}; fixes are in {tk}.",
+    "Design review for {a} is {d} at {hour}; {p} asked for the {tb} team to attend.",
+    "{n_tickets} support tickets this {mon} pointed at {doc}; {p} is restructuring it.",
+    "{lang} customers report the date format in {a} is wrong; {p} has a fix with the {te} team.",
+    "The {t} team adopted the new icon set in {a}; {p} is doing the rest by {mon}.",
+    "{p} wants every section of {doc} to have a named owner; {n_pct_small} currently have none.",
+    "The {lang} glossary is {n_big} terms long; {p} and {p2} are cutting it to what {a} actually uses.",
+    "Copy for {a} tested badly with {lang} users; {p} is rewording the empty states.",
+    "Screenshots in {doc} are {n_weeks} weeks out of date; {p} is re-taking them after {ver} ships.",
+    "{p} proposed a style guide entry on capitalisation in {a}; the design team will decide on {d}."
    ]
   },
   "side": [
@@ -1138,7 +1421,20 @@
    "The meeting overran by {n_min_small} minutes.",
    "{p} lost connection twice; {p2} took over the notes.",
    "No apologies received this week.",
-   "{p} asked for the slides to be circulated before the meeting next time."
+   "{p} asked for the slides to be circulated before the meeting next time.",
+   "The {room} room was double booked at {hour}; the meeting moved down the corridor.",
+   "{p} dialled in from a train; the notes carry the first {n_min_small} minutes as heard.",
+   "Slides are in the shared folder under {mon}, per {p}.",
+   "{p} and {p2} stepped out at the half hour for a customer call and rejoined later.",
+   "Next session moves to {d} at {hour} because of {event}.",
+   "Building fire drill at {hour} on {d}; {p} reminded the room.",
+   "{n_people} people attended in person, the rest from the {city} office.",
+   "The recording was paused for {n_min_small} minutes while the projector restarted.",
+   "{p} is chairing while {p2} is away until {d}.",
+   "Notes for this session will be short; {p} was taking them one-handed.",
+   "{p} brought cake for the {t} team's anniversary. Recorded with gratitude.",
+   "The {city} office lost power for {n_min_small} minutes; the remote half carried on.",
+   "Timekeeper this week is {p}; two-minute warning at the {n_meeting}-minute mark."
   ],
   "actions": [
    "{p} to {v} {a} by {d}.",
@@ -1146,7 +1442,24 @@
    "{p} from the {t} team to {v} {a} and report back on {d}.",
    "{p} to {v} the work under {tk} and close it if {m} holds.",
    "{p} and {p2} to {v} the {u} follow-up by {d}.",
-   "{p} to {v} the {mon} figures for {m} and send them round."
+   "{p} to {v} the {mon} figures for {m} and send them round.",
+   "{p} to write up the {j} risks in {tk} before {d}.",
+   "{p} to book the {room} room for the {j} review on {d}.",
+   "{p} to {v} {doc} with the {tb} team by {d}.",
+   "{p} to send {u} the written timeline on {a} by {d}.",
+   "{p} to {v} the {role} job description with {p2} by {d}.",
+   "{p} to confirm the {city} venue for {event} by {d}.",
+   "{p} to bring the {quarter} numbers for {m} to the session on {d}.",
+   "{p} to {v} the {ver} release notes before the cut on {d}.",
+   "{p} to schedule {n_small} customer interviews in the {seg} segment before {d}.",
+   "{p} to chase the {cost} line variance with finance and report on {d}.",
+   "{p} to pair with {p2} on {a} until {d}, then hand over.",
+   "{p} to {v} the {lang} strings for {a} and flag anything that will not fit by {d}.",
+   "{p} to post the agenda for {event} in the channel by {d}.",
+   "{p} to close or reassign the {t} team's tickets older than {n_weeks} weeks by {d}.",
+   "{p} to rerun the {m} numbers for {u} and share them with {p2} by {d}.",
+   "{p} to {v} the on-call rota for {mon} with the {te} team by {d}.",
+   "{p} to walk the {tb} team through {a} at {hour} on {d}."
   ]
  }
 }

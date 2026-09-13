@@ -597,7 +597,17 @@
    "Social work: confirm the family meeting for bed 8, Thursday 15:00.",
    "Night staff: call the lab before sending gases after 22:00 while the analyser is out.",
    "Chaplaincy: confirm the quiet room booking for bed 2's family.",
-   "Locum: hand queries after 17:00 to the on-call bleep, not the day team."
+   "Locum: hand queries after 17:00 to the on-call bleep, not the day team.",
+   "Ward clerk: add the new visiting hours to the phone recording and the ward door poster by Monday.",
+   "Healthcare assistants: denture pots checked and labelled before trays leave the bay, every meal.",
+   "Estates: check the smoke detector in the staff room after the toaster alarm.",
+   "Practice educator: initial interview for the student nurse this week.",
+   "Ward manager: take the bake sale money to the charity office with the receipt.",
+   "Night staff: use the low lights for the early observation round in Bay 1.",
+   "Interpreting service: book for 10:30 on round days and confirm the afternoon before.",
+   "Equipment library: label the ward's wheelchairs so they are not taken by other wards.",
+   "Housekeeping: mattress from bed 7 to be checked and dried before it returns to use.",
+   "Ward clerk: compile the list of observations that did not save during the system outage."
   ],
   "blocks": [
    "Bed 3's daughter rang at 07:40 asking about visiting hours over the bank holiday.\nWard clerk confirmed two visitors at a time, 14:00 to 20:00, no change for the holiday.\nShe will bring in the hearing aid batteries he has been asking for.\nMessage left in the communication book for the day team.",
@@ -647,7 +657,25 @@
    "The pain team saw bed 8 and suggested a heat pack routine before physio rather than another referral.\nHeat packs are in the treatment room freezer drawer, second down.\nThe healthcare assistant will apply one twenty minutes before each session.\nReview by the pain team next Tuesday.",
    "Chaplaincy visited bed 2 at the family's request on Sunday afternoon.\nThe family would like a quiet room booked for a conversation with the consultant.\nThe quiet room is booked for Tuesday 14:00.\nThe family liaison officer will meet them at the ward entrance.",
    "Bed 6's granddaughter brought in a tablet so he can watch the football on Saturday.\nThe ward wifi code is on the noticeboard by the day room.\nHeadphones are on the way from the family liaison stock.\nHe has asked to be sat in the day room for the match if a chair is free.",
-   "The sluice macerator jammed at 05:30 and flooded the floor by about a centimetre.\nHousekeeping mopped it and put the wet-floor sign out; estates arrived at 07:50.\nDisposables were carried to Ward 7's sluice for two hours.\nThe macerator is back in service and the floor is dry."
+   "The sluice macerator jammed at 05:30 and flooded the floor by about a centimetre.\nHousekeeping mopped it and put the wet-floor sign out; estates arrived at 07:50.\nDisposables were carried to Ward 7's sluice for two hours.\nThe macerator is back in service and the floor is dry.",
+   "The electronic observation system went down at 14:20 and stayed down for just under two hours.\nPaper charts were pulled from the store cupboard and all readings were written by hand.\nWhen the system came back the readings were typed in with the original times, not the entry times.\nIT have asked for a list of anything that did not save; the ward clerk is compiling it.",
+   "Bed 5 speaks very little English and the family have been interpreting at visiting time.\nThe interpreting service was booked for the Tuesday round at 10:00; the interpreter arrived at 10:40 after the round had moved on.\nThe registrar went back with the interpreter and spent twenty minutes at the bedside.\nFuture bookings to be for 10:30 and confirmed the day before.",
+   "Bed 3 walked to the day room with the frame for the first time since admission.\nTwo rests on the way and a chair waiting at the far end, arranged by the healthcare assistant.\nShe stayed for the afternoon quiz and came back on her own initiative with one assist.\nThe physio has written it in the notes and the daughter was rung with the news.",
+   "The fire alarm went off at 11:05 and was not the scheduled test.\nStaff checked the zone panel: the trigger was the toaster in the staff room.\nBay doors were closed and the fire team stood down within eight minutes.\nThe toaster has been unplugged and a sign put up; estates will check the detector.",
+   "The wheelchair booked for bed 2's trip to the ground floor was taken by another ward at 08:50.\nThe porter arrived to find no chair and the appointment was missed.\nThe equipment library has agreed to hold chairs with a ward label from now on.\nBed 2 is rebooked for Friday and the ward's own chair will be kept by the nurses' station that morning.",
+   "Water came through the ceiling tile above bed 7 at about 03:00 during the storm.\nThe patient was moved to bed 9 with his belongings and the bed space taped off.\nEstates put a bucket down and will look at the roof gully when the weather clears.\nHousekeeping have the mattress; it is being checked before it goes back into use.",
+   "The student nurse started her placement on Monday and was orientated by the practice educator.\nShe has been given the fire exits, the cardiac arrest number and the location of the resuscitation trolley.\nHer first week is observation rounds and hygiene care with the healthcare assistants.\nHer mentor is on long days Tuesday to Thursday and will do her initial interview then.",
+   "A patient in Bay 1 complained that the floor was mopped at 05:30 and the light was left on.\nHousekeeping have moved the bay floors to after breakfast except the corridor.\nThe night team will use the low lights for the early round.\nThe complaint has been logged and the patient has had an apology from the nurse in charge.",
+   "The ward bake sale on Friday raised 312 pounds for the day room fund.\nThe lemon drizzle sold out in twenty minutes; the savoury table did less well.\nThe money has gone to the charity office with a receipt in the ward manager's tray.\nNext one is pencilled for the autumn.",
+   "Bed 4's dentures went missing after breakfast on Wednesday.\nThe tray had already gone back to the kitchen; catering searched the return trolley and found the pot.\nThe dentures were cleaned and returned by lunchtime.\nDenture pots to be checked before trays leave the bay, and labelled with a name.",
+   "Night to day: a quiet shift apart from Bay 2.\nBed 6 was up twice to the toilet with one assist each time and slept from 02:00.\nBed 5's buzzer is intermittent; a hand bell has been left with her and estates have been told.\nTwo patients are due down to X-ray this morning; porters are booked for 09:00 and 09:30.\nNothing outstanding on the charts.",
+   "The family of the patient who died in the side room on Sunday came to collect belongings this afternoon.\nThe property was packed and listed on Sunday night and countersigned by two staff.\nThe family liaison officer met them at the door and used the quiet room.\nA card from the ward staff was given to them; the bereavement office will contact them about the paperwork.",
+   "Visiting hours change from Monday: 13:00 to 20:00, two visitors at a time, children welcome with an adult.\nPosters are on the ward door and by the lifts; the ward clerk has updated the recorded message on the phone.\nProtected mealtimes stay as they are: no visitors in the bays 12:00 to 13:00 and 17:00 to 18:00.\nFamily liaison will handle any questions in the first week.",
+   "The therapy dog visited on Thursday afternoon and went round Bay 3 and the day room.\nBed 8, who has barely spoken since admission, talked to the handler for ten minutes.\nOne patient in Bay 3 does not like dogs and was given notice so he could go to the day room first.\nThe handler comes fortnightly; the next visit is on the whiteboard.",
+   "The pneumatic tube system to the laboratory was out of action from 07:00 to 13:00.\nMorning bloods were walked down by the healthcare assistant in two batches.\nOne sample was rejected as the label had smudged in the bag; it was repeated in the afternoon.\nThe lab has asked for samples to be bagged individually while the system is unreliable.",
+   "Bed 1 turned ninety on Wednesday.\nThe kitchen sent up a small cake and the healthcare assistants sang at the bedside with his granddaughter on a video call.\nHe asked for the card to go on the locker where he can see it from the bed.\nThe hospital radio played his request at 15:00.",
+   "The heating in Bay 4 has been stuck on high since Tuesday night.\nEstates cannot shut off the bay valve without turning off the whole corridor, so they will come at 06:00 Thursday.\nExtra water jugs are going round and the windows are open on the restrictors.\nPatients in Bay 4 have been offered a move to Bay 1 if they would prefer it.",
+   "The ward phone rang forty-one times between 08:00 and 09:00 on Monday, according to the ward clerk's tally.\nMost were relatives asking about visiting after the change in hours.\nA second recorded message with the new hours has been added to the line.\nThe ward clerk will take the phone off the nurses' station and answer from the office during the round."
   ],
   "you_prefix": "MedAssist"
  },
@@ -847,6 +875,165 @@
     "the bed-rail check",
     "the fridge temperature log",
     "the emergency trolley check"
+   ],
+   "dept": [
+    "the X-ray department",
+    "the ultrasound department",
+    "the CT department",
+    "the MRI unit",
+    "the cardiac investigations unit",
+    "the endoscopy suite",
+    "the nuclear medicine department",
+    "the vascular laboratory",
+    "the fluoroscopy suite",
+    "the neurophysiology department"
+   ],
+   "scan": [
+    "the chest X-ray",
+    "the abdominal ultrasound",
+    "the CT of the head",
+    "the echocardiogram",
+    "the leg doppler",
+    "the barium swallow",
+    "the bone density scan",
+    "the MRI of the spine",
+    "the 24-hour heart tape",
+    "the repeat ECG"
+   ],
+   "sample": [
+    "the morning blood sample",
+    "the urine sample",
+    "the stool sample",
+    "the sputum pot",
+    "the wound swab",
+    "the blood culture bottle",
+    "the MRSA screen swab",
+    "the venous gas",
+    "the repeat electrolyte sample",
+    "the 24-hour urine collection"
+   ],
+   "paperwork": [
+    "the fluid balance chart",
+    "the food chart",
+    "the repositioning chart",
+    "the falls-risk assessment",
+    "the bed-rail consent form",
+    "the property list",
+    "the discharge checklist",
+    "the nursing care plan",
+    "the nutrition screening sheet",
+    "the pressure-area risk score",
+    "the skin bundle"
+   ],
+   "room": [
+    "the treatment room",
+    "the staff room",
+    "the day room",
+    "the sluice",
+    "the linen cupboard",
+    "the equipment store",
+    "the quiet room",
+    "the nurses' station",
+    "the relatives' room",
+    "the corridor by the lifts"
+   ],
+   "estates_job": [
+    "the dripping tap in the sluice",
+    "the flickering light in the corridor",
+    "the sticking door to the day room",
+    "the broken blind in the side room",
+    "the loose handrail by the toilets",
+    "the radiator that will not turn off",
+    "the cracked floor tile by the lift",
+    "the call bell that keeps sticking",
+    "the fridge door seal",
+    "the window catch in the day room"
+   ],
+   "supply": [
+    "pillowcases",
+    "foam mouth-care swabs",
+    "incontinence pads",
+    "blue rolls",
+    "small gloves",
+    "slide sheets",
+    "disposable aprons",
+    "urine bottles",
+    "hand gel refills",
+    "sharps bins",
+    "denture pots",
+    "patient wristbands"
+   ],
+   "item": [
+    "hearing aid",
+    "pair of reading glasses",
+    "denture pot",
+    "pair of slippers",
+    "dressing gown",
+    "phone charger",
+    "wedding ring",
+    "walking stick",
+    "crossword book",
+    "photo album"
+   ],
+   "visitor": [
+    "the chaplain",
+    "the hospital volunteer with the library trolley",
+    "the hairdresser",
+    "the therapy dog and her handler",
+    "the patient experience team",
+    "the fire officer",
+    "the estates surveyor",
+    "the photographer from the communications office",
+    "the mobile shop volunteer",
+    "the hospital radio presenter"
+   ],
+   "learner": [
+    "the student nurse",
+    "the second-year nursing student",
+    "the return-to-practice nurse",
+    "the physician associate student",
+    "the paramedic student",
+    "the healthcare assistant apprentice",
+    "the work-experience sixth-former",
+    "the trainee nursing associate",
+    "the international nurse on induction",
+    "the medical student on placement"
+   ],
+   "training": [
+    "manual handling update",
+    "basic life support refresher",
+    "safeguarding adults session",
+    "fire safety walk-through",
+    "information governance module",
+    "infection prevention update",
+    "tissue viability study day",
+    "dementia awareness session",
+    "conflict resolution course",
+    "falls prevention module"
+   ],
+   "treat": [
+    "a tray of brownies",
+    "a lemon drizzle cake",
+    "a tin of shortbread",
+    "a box of doughnuts",
+    "a bag of satsumas",
+    "a plate of samosas",
+    "a Victoria sponge",
+    "a tub of chocolates",
+    "a batch of flapjacks",
+    "a fruit loaf"
+   ],
+   "staff_event": [
+    "the bake sale",
+    "the leaving do",
+    "the charity walk",
+    "the quiz night",
+    "the staff photo",
+    "the long-service awards",
+    "the secret santa draw",
+    "the sponsored cycle",
+    "the ward summer picnic",
+    "the retirement tea"
    ]
   },
   "families": {
@@ -861,7 +1048,13 @@
     "Two {obs} readings were missed in {bay} during the emergency; {p} completed them at {hour} and documented why.",
     "{p} reminded the healthcare assistants that every {obs} reading goes on the electronic chart within {n_min_small} minutes, not at the end of the round.",
     "The {obs} for {bed} is being taken every {n_small} hours until {d} at the request of {service}.",
-    "{p} asked {service} to review the {obs} trend for {bed} when they come up at {hour}."
+    "{p} asked {service} to review the {obs} trend for {bed} when they come up at {hour}.",
+    "Manual pulse counted for {bed} at {hour} because the probe would not settle; {p} charted it as a manual reading.",
+    "{p} handed the {hour} observation round to {p2} halfway through so the break rota held.",
+    "Early-warning scores across {bay} were reviewed by {p} at {hour}: none above baseline, {n_few} charts needing a signature.",
+    "Weight for {bed} could not be done on the chair scales; {p} has booked the hoist scales for {d}.",
+    "The {obs} probe in {bay} is giving readings {n_pct_small} apart on two machines; {p} asked biomed to check both.",
+    "{p} asked that {obs} for {bed} be taken before the {meal} rather than after, so the figures compare with last week."
    ],
    "bed_moves": [
     "Bed move: {p} arranged for the patient in {bed} to swap with one from {ward} at {hour}; {p2} told both families.",
@@ -873,7 +1066,12 @@
     "{n_few} discharges expected from {bay} before {d}, freeing beds for {ward}.",
     "{p} declined a transfer from {ward} at {hour} because the bay was already one nurse short.",
     "Porters were booked for {hour} to take the patient in {bed} to {ward}; they arrived {n_min} minutes late.",
-    "{p} listed {bay} as the first area to decant if {ward} overflows on {d}."
+    "{p} listed {bay} as the first area to decant if {ward} overflows on {d}.",
+    "The bed manager rang at {hour} asking for {n_few} beds by the evening; {p} could offer one in {bay}.",
+    "{p} kept {bed} empty until {hour} in case the transfer from {ward} came back.",
+    "Side room swap agreed between {p} and {p2}: the patient in {bed} moves after the {hour} round and the family have been told.",
+    "Board round moved {n_few} names off the expected-discharge column; {p} updated the whiteboard to match.",
+    "Escalation beds opened on {ward} overnight, so {p} will not be asked to decant {bay} before {d}."
    ],
    "staffing": [
     "Nights this week: {p} is covering {n_few} shifts from the bank because two regulars are off sick.",
@@ -886,7 +1084,13 @@
     "{p} took the phones during handover so the night staff could finish in {n_min} minutes.",
     "Agency cover for {d} was confirmed at {hour}; {p} will do the orientation.",
     "{p} asked for the break rota to be pinned in the staff room again after {n_few} missed breaks last week.",
-    "Study leave for {p} is booked for {mon}; {ward} has offered a swap to cover it."
+    "Study leave for {p} is booked for {mon}; {ward} has offered a swap to cover it.",
+    "{p} is acting up as nurse in charge on {d} while {p2} is on annual leave.",
+    "Two healthcare assistant vacancies were advertised on {d}; {p} will sit on the interview panel with matron.",
+    "{p} came in {n_min} minutes early to help with the trolley round before the day team arrived.",
+    "Long days on {d} are down to {p}, {p2} and one agency nurse; matron has been told.",
+    "The rota for {mon} goes up on {d}; {p} has asked for requests to be in the book by {hour} the day before.",
+    "{p} finished {n_min} minutes over shift end writing up {bay}; time owing recorded in the book."
    ],
    "equipment": [
     "The {kit} in {bay} failed its check at {hour}; {p} tagged it and raised ticket {tk}.",
@@ -898,7 +1102,12 @@
     "Biomed serviced the {kit} in {n_min} minutes on the ward instead of taking it away.",
     "{p} put a laminated card on the {kit} after {n_few} staff asked how to reset it.",
     "The equipment library on {ward} has the {kit} booked out to us until {d}, per {p}.",
-    "{p} counted {n_few2} pieces of loan equipment on the ward, {n_small} of them overdue for return to {ward}."
+    "{p} counted {n_few2} pieces of loan equipment on the ward, {n_small} of them overdue for return to {ward}.",
+    "{p} moved the {kit} from {bay} to the treatment room so it is charged for the night round.",
+    "Battery on the {kit} lasts {n_min} minutes at most now; {p} asked for a replacement pack under ticket {tk}.",
+    "New {kit} arrived from stores on {d} and {p} added it to the ward asset register.",
+    "{p} asked that the {kit} go back to the equipment store after every use rather than being left in {bay}.",
+    "Training on the loaned {kit} is at {hour} in the staff room; {p} will run it in {n_min_small} minutes for whoever is free."
    ],
    "family": [
     "The {kin} of the patient in {bed} rang at {hour} asking for an update; {p} gave a general one with the patient's permission.",
@@ -910,7 +1119,13 @@
     "{p} spent {n_min} minutes with {bed}'s {kin} explaining the discharge planning timeline.",
     "Family meeting for {bed} pencilled for {d} at {hour}; {p} has invited {service} and the {kin}.",
     "Noise complaint from {bed}'s {kin} about {bay} after {hour}; {p} logged it and reprinted the quiet-hours sign.",
-    "{p} reassured {bed}'s {kin} that belongings go in the bedside drawer, not the tray, at night."
+    "{p} reassured {bed}'s {kin} that belongings go in the bedside drawer, not the tray, at night.",
+    "{bed}'s {kin} brought in the patient's {item} and {p} listed it on the property sheet.",
+    "{p} showed {bed}'s {kin} where the relatives' room is and how the door code works.",
+    "The {kin} of the patient in {bed} asked to attend the {hour} round on {d}; {p} said yes if the round is on time.",
+    "Complaint from {bed}'s {kin} about the wait for a call back, {n_days} days; {p} apologised and logged it.",
+    "{p} arranged a parking permit for {bed}'s {kin}, who is visiting daily for the next {n_weeks} weeks.",
+    "{bed}'s {kin} sat in on {exercise} with the physio and will practise it at visiting time."
    ],
    "meals_physio": [
     "The {meal} for {bed} arrived {n_min} minutes late; {p} rang the catering team leader.",
@@ -923,7 +1138,12 @@
     "Session cut short {n_min_small} minutes into {exercise} for the patient in {bed} when saturations dipped; recovered sitting.",
     "Weights on {d}: {bed} down {n_small} hundred grams since last week; {p} told the dietitians.",
     "{p} is trying to fit {exercise} for {bed} in before the {meal} comes round at {hour}.",
-    "Kitchen has {n_few} requests for the {meal} from {bay} for {mon}; {p} passed them to the catering team leader."
+    "Kitchen has {n_few} requests for the {meal} from {bay} for {mon}; {p} passed them to the catering team leader.",
+    "Physio left a note for the night staff: the patient in {bed} sits out for the {meal}, {n_min} minutes at most.",
+    "The {meal} was sent to {bay} instead of {bed}; {p} rang the kitchen and a second tray came up in {n_min_small} minutes.",
+    "{p} counted {n_few} untouched trays in {bay} after the {meal}; the dietitians have been asked to look at portion sizes.",
+    "Progress for {bed} on {exercise}: {n_small} goes today with one rest, and the physio wants the same again on {d}.",
+    "Protected mealtime was interrupted in {bay} by {service} at {hour}; {p} asked them to come back after the trays are cleared."
    ],
    "infection_discharge": [
     "Infection control notice from {p}: {ward} is closed to transfers after {n_few} cases; recheck hand gel at every entrance.",
@@ -937,7 +1157,97 @@
     "Home visit for {bed} agreed by the occupational therapists; {p} pencilled a discharge date {n_days} days after {d}.",
     "Deep clean of {bay} requested by {p} after the discharge at {hour}: {n_min} minutes, then ready for {ward}.",
     "Hand-hygiene audit by {p}: {pct} of observed moments missed, mostly in {bay} on the night shift.",
-    "{p} completed {chore} for the whole of {bay} before {hour} and signed the sheet."
+    "{p} completed {chore} for the whole of {bay} before {hour} and signed the sheet.",
+    "Discharge lounge took {bed} at {hour} so the bed could be cleaned before {ward} sent their patient up; {p} walked the notes down.",
+    "{p} checked that the discharge letter for {bed} went to the right practice this time before it left the ward.",
+    "Bay doors in {bay} can be propped open again from {hour}, per {service}; {p} took the signs down.",
+    "Transport for {bed} on {d} needs two crew because of the stairs at home; {p} booked it for {hour}."
+   ],
+   "investigations_porters": [
+    "Porters took the patient in {bed} down for {scan} at {hour} and brought them back {n_min} minutes later.",
+    "{scan} for {bed} was cancelled by {dept} at short notice; {p} has asked for a new slot on {d}.",
+    "{p} walked {sample} for {bed} down to the lab because the pod system was down.",
+    "{sample} for {bed} was rejected by the lab as unlabelled; {p} repeated it at {hour}.",
+    "{dept} rang to say they can fit {bed} in at {hour} for {scan} if the porter is booked now; {p} booked it.",
+    "The patient in {bed} waited {n_min} minutes in {dept} for a porter back; {p} has raised it with the portering supervisor.",
+    "Results from {scan} for {bed} are in the system; {p} left a note for the medical team to look before the round.",
+    "{p} is chasing the report for {scan} on {bed}, which has been outstanding {n_days} days.",
+    "Pod system fault: {sample} for {bed} sat in the tube for {n_min} minutes; {p} rang the lab to check it is still usable.",
+    "Bloods for {bay} were taken by the phlebotomist at {hour}; {n_few} patients were missed and {p} will take them.",
+    "The patient in {bed} needs a chair, not a trolley, for {scan}; {p} wrote it on the porter request.",
+    "{dept} asked for {bed}'s notes to travel with the patient; {p} put them in the transfer wallet.",
+    "{sample} from {bed} needs to be at the lab within {n_min} minutes of collection; {p} timed it at {hour}."
+   ],
+   "paperwork_admin": [
+    "{paperwork} for {bed} had not been signed for {n_days} days; {p} completed it and told the day team.",
+    "{p} found {paperwork} for {bed} in the wrong folder and moved it back to the bedside.",
+    "Audit of {paperwork} across {bay} by {p}: {pct} of entries were missing a time.",
+    "The ward clerk logged ticket {tk} with IT after the ward office printer jammed {n_few} times this week.",
+    "{p} asked that {paperwork} stay at the bedside and not come to the nurses' station with the notes.",
+    "Notes for {bed} were sent to coding by mistake on {d}; {p} rang and they are coming back.",
+    "{p} showed {p2} how to complete {paperwork} on the ward tablet instead of on paper.",
+    "Filing backlog: {n_few2} loose sheets in the tray at the nurses' station; {p} will file them before handover.",
+    "Ticket {tk} covers the login problem on the computer on wheels in {bay}; IT say {n_days} days.",
+    "{p} counted {n_few} charts for {bay} with the wrong date at the top and corrected them with a single line and initials.",
+    "Name band for {bed} was reprinted by {p} after the barcode would not scan.",
+    "{paperwork} has a new version from {d}; old copies in {room} were pulled by {p}.",
+    "{p} left the property sheet for {bed} on the desk for {p2} to countersign at handover."
+   ],
+   "estates_housekeeping": [
+    "Estates came about {estates_job} at {hour} and were gone in {n_min} minutes.",
+    "{estates_job} has been on the estates log since {d}; ticket {tk}.",
+    "{p} reported {estates_job} again this morning; the helpdesk said the job was closed in error.",
+    "Housekeeping finished {room} by {hour}; {p} asked them to do {bay} next.",
+    "{supply} are down to the last box in the store cupboard; {p} put in an urgent order.",
+    "Stores sent up {n_few} boxes of {supply} instead of the {n_few2} ordered; {p} has queried it.",
+    "{p} moved the spare {supply} to the top shelf in the store cupboard so the trolley can get past.",
+    "Wet-floor sign was out in {room} for {n_min} minutes after the mop round; {p} moved the tea trolley round it.",
+    "Contractor is due on {d} for {estates_job}; {p} asked for the work to happen after the {hour} round.",
+    "Housekeeping are one short today, so {p} agreed that {room} would be done last.",
+    "Order for {supply} raised by {p} under ticket {tk}; delivery expected in {n_days} days.",
+    "{p} found {room} unlocked at {hour} with nobody inside and has asked everyone to check the door.",
+    "Bin round in {bay} was missed overnight; {p} rang housekeeping at {hour} and it was done within {n_min} minutes."
+   ],
+   "training_students": [
+    "{p} is booked on the {training} on {d} and will be off the floor from {hour}.",
+    "The {training} for the night team has been moved to {d}; {p} updated the noticeboard.",
+    "{learner} spent {n_min} minutes with {p} on {chore} and recorded it in the placement book.",
+    "{p} is mentor for {learner} for the next {n_weeks} weeks, with {p2} as the second assessor.",
+    "{learner} asked to observe the {hour} round; {p} said yes but asked for questions to wait until after.",
+    "Compliance for the {training} on this ward is at {pct}; matron wants it up by {d}.",
+    "{p} completed the {training} online during a quiet spell at {hour}, {n_min} minutes in total.",
+    "{learner} is on nights with {p} from {d} for {n_few} shifts.",
+    "The placement for {learner} ends on {d}; {p} needs the assessment paperwork done before then.",
+    "{p} ran a {n_min_small}-minute teaching session in the staff room on {chore} for {learner} and two healthcare assistants.",
+    "{learner} shadowed {p2} on the observation round while {p} gave the handover.",
+    "Study day for {p} clashes with {staff_event} on {d}; the ward manager will say which gives way."
+   ],
+   "belongings_visitors": [
+    "{bed}'s {item} was found in {room} by housekeeping and returned to the bedside drawer by {p}.",
+    "{p} labelled the {item} for {bed} with the ward stickers after a near miss with the laundry.",
+    "The patient in {bed} is asking for their {item}; {p} rang the {kin} to bring it in.",
+    "Property check in {bay} by {p}: {n_few} items not on the sheet, including a {item}.",
+    "{visitor} came up at {hour} and spent {n_min} minutes in {bay}.",
+    "{p} booked {visitor} for {d}; the day room is reserved from {hour}.",
+    "{visitor} could not get past the door at {hour} because the buzzer was not answered; {p} apologised.",
+    "The patient in {bed} asked whether {visitor} comes on {d}; {p} checked the diary and said yes.",
+    "{p} asked {visitor} to avoid {bay} during the {meal}.",
+    "A {item} left in the day room since {d} is in the lost property box at the nurses' station; {p} will ask around.",
+    "{visitor} left leaflets on the desk; {p} moved them to the rack by the door.",
+    "{bed}'s {kin} took the {item} home for safekeeping at {p}'s suggestion."
+   ],
+   "small_talk": [
+    "{p} brought in {treat} for the night staff; it was gone by {hour}.",
+    "{treat} appeared in the staff room with no name on it; {p2} says it was {p}.",
+    "{staff_event} is on {d}; {p} is collecting names on the sheet in the staff room.",
+    "The collection for {staff_event} stands at {n_big} pounds; {p} will close it on {d}.",
+    "{n_people} staff have signed up for {staff_event} so far, per {p}.",
+    "Car park barrier was stuck again at {hour}; {p} was {n_min} minutes late and the nurse in charge covered.",
+    "{p} and {p2} are running the tea fund from {d}; the tin lives in the top drawer at the nurses' station.",
+    "Birthday card for {p} is in the drawer in the ward office; {p2} is collecting signatures before {d}.",
+    "The canteen is closed for a refit until {d}; {p} is taking orders for the sandwich van at {hour}.",
+    "{p} found the staff room kettle in {room} of all places; it is back now.",
+    "Photos from {staff_event} are on the noticeboard by {room}; {p} asked for any objections before they go in the newsletter."
    ]
   },
   "side": [
@@ -954,7 +1264,19 @@
    "The whiteboard pen has gone again; spares are in the ward clerk's drawer.",
    "Fire alarm test at {hour} on {d}; no need to evacuate.",
    "Phones are diverted to the ward clerk during the {hour} round.",
-   "Still outstanding for {bed}: {chore}; {p} will pick it up after lunch."
+   "Still outstanding for {bed}: {chore}; {p} will pick it up after lunch.",
+   "Pod system is down until about {hour}; samples go by hand to the lab.",
+   "{room} is out of use while it is painted on {d}; ask {p} where things have gone.",
+   "The {kit} lives in the equipment store now, not the corridor.",
+   "{supply} have arrived; they are under the counter in {room}.",
+   "Whoever borrowed the ward's stapler, {p} would like it back.",
+   "{visitor} is on the ward from {hour}; please keep the day room clear.",
+   "Payslips are in the pigeonholes; queries to {p} before {d}.",
+   "Kitchen wants the {meal} orders in by {hour}.",
+   "{p} left a spare pair of scissors in the drawer under the phone.",
+   "The photocopier code changed on {d}; it is on the sticker by the screen.",
+   "Please sign for {supply} when they come up; stores are asking.",
+   "Estates are in {room} until {hour}; the noise is the drill, not an alarm."
   ],
   "actions": [
    "{p} to chase {service} about the referral by {d}.",
@@ -966,7 +1288,21 @@
    "{p} to update the electronic bed board to match the whiteboard by {d}.",
    "{p} to complete the incident form for the {bed} fall before {d}.",
    "{p} to do {chore} for {bay} and record it by {d}.",
-   "{p} to hand the {bed} discharge paperwork to {p2} before {d}."
+   "{p} to hand the {bed} discharge paperwork to {p2} before {d}.",
+   "{p} to send {sample} for {bed} with the {hour} run on {d}.",
+   "{p} to book the porter to take {bed} down for {scan} on {d}.",
+   "{p} to complete {paperwork} for {bed} and file it by {d}.",
+   "{p} to report {estates_job} to the helpdesk and note the ticket number by {d}.",
+   "{p} to order {supply} before the stores cut-off on {d}.",
+   "{p} to return the {item} for {bed} to the {kin} on {d}.",
+   "{p} to confirm {visitor} for {d} and put it on the whiteboard.",
+   "{p} to finish the {training} online before {d}.",
+   "{p} to complete the placement paperwork for {learner} by {d}.",
+   "{p} to collect the names for {staff_event} and pass them to {p2} on {d}.",
+   "{p} to chase {dept} for the report on {scan} for {bed} if it is not back by {d}.",
+   "{p} to check {room} is locked at the end of every shift until {d}.",
+   "{p} to ring {ward} about the outlier handover before {d}.",
+   "{p} to go over the {obs} trend for {bed} with {service} on {d}."
   ]
  }
 }

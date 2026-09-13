@@ -574,7 +574,19 @@
       "Search designer: pair with content on zero-results wording before next crit.",
       "Design ops: set up named version checkpoints on the checkout file.",
       "Accessibility: fix the skip link on the sign-up wall so it lands on the form.",
-      "Enterprise squad: bring the stacked plan-picker variant for 768 to Wednesday crit."
+      "Enterprise squad: bring the stacked plan-picker variant for 768 to Wednesday crit.",
+      "Localisation: send the Japanese strings sheet to the agency before the Friday cut-off.",
+      "Research ops: pay the outstanding incentives from the export-step sessions.",
+      "Design ops: order a spare projector cable for the crit room.",
+      "Content: replace the remaining lorem placeholders in the search explorations file.",
+      "Tokens: reconcile the drifted spacing values between staging and production.",
+      "Platform web: add the raw-hex lint rule to the pull request checks.",
+      "Metrics: split the plan-picker completion figures by new versus returning users.",
+      "Hiring: send second-round invites for the senior role by Monday.",
+      "Design ops: confirm the repaint dates for the third-floor crit room with facilities.",
+      "Brand: request a cropping guide for the illustration set from the agency.",
+      "Research: caption the two demo videos before the monthly share.",
+      "Mobile pod: rebuild the onboarding prototype hotspots before Thursday's sessions."
     ],
     "blocks": [
       "Checkout error states came to crit for the third time.\nThe room agreed the inline message reads as a success at a glance because of the colour.\nOwner will try the warning ramp and bring a side-by-side.\nBack on the board next Wednesday.",
@@ -622,7 +634,27 @@
       "Screen-reader run on the filter drawer.\nThe drawer announces as a dialog but focus never enters it.\nCount of active filters is not announced when it changes.\nBoth are noted for engineering with a suggested fix.",
       "Long-string check for the German build.\nGerman strings run thirty percent longer and break two headers.\nDesigner adds a long-string variant to each affected screen.\nTranslation agency gets the updated strings sheet Friday.",
       "Crit on the search results screen.\nZero-results state shows a blank area and a tiny message.\nRoom asked for suggested queries and a link to browse instead.\nOwner to pair with content on the wording.",
-      "Session replay review for the checkout.\nAbout a fifth of sessions rage-clicked the disabled pay button.\nThe button gives no hint why it is disabled.\nA helper line under the button goes to test."
+      "Session replay review for the checkout.\nAbout a fifth of sessions rage-clicked the disabled pay button.\nThe button gives no hint why it is disabled.\nA helper line under the button goes to test.",
+      "Projector in the crit room died ten minutes before start.\nFacilities had a spare on the fifth floor but no cable that fit.\nThe crit ran on a monitor turned toward the room with everyone squinting.\nNew cable ordered; the old projector goes back for repair.",
+      "A design team from a partner company sat in on Wednesday's crit.\nThey were surprised we let engineers speak before designers on each screen.\nTheir own crit runs designer-first and they want to try ours.\nContact details swapped; they host the return visit in spring.",
+      "The intern's first solo crit.\nPassword reset flow at 375, four screens, one open question about the timer copy.\nRoom had almost nothing to add beyond a spacing nit.\nApplause, which the intern found more alarming than the feedback.",
+      "Crit moves to Tuesdays from next month.\nThe Wednesday slot collided with the platform stand-up and attendance had halved.\nRecording stays on for anyone who cannot make the new time.\nThe shared booking is updated; personal invites are not.",
+      "Complaint logged about crit board hygiene.\nFrames are pasted in without titles, so nobody knows which screen is which.\nTwice this month feedback went on the wrong version.\nFrom next week, untitled frames get skipped.",
+      "Handover of the notifications area before a sabbatical.\nTwo hours walking through open files, the strings sheet and the research backlog.\nEverything unresolved is in one ticket with a short history.\nReturn date is the first week of October; the covering designer has the dates.",
+      "Version history saved the checkout file.\nSomeone bulk-deleted forty frames while cleaning up and only noticed after publish.\nRestore took ten minutes; relinking the instances took the afternoon.\nNamed checkpoints before every cleanup from now on.",
+      "Remote sessions with participants in three time zones.\nTwo no-shows, and one participant joined from a moving car and was rescheduled.\nThe rest gave the richest feedback of the quarter on the export step.\nIncentives are paid; clips are cut.",
+      "Localisation catch: the German build finally fits.\nLong-string variants on the two titles that broke are in and reviewed.\nThe translation agency turned the updated sheet around in a day.\nQA tests the build tomorrow morning.",
+      "Two people from the agency walked the floor for an hour.\nThey asked how the illustration set is being cropped on small screens.\nAnswer was: inconsistently, and here are the six worst examples.\nThey left with photos and a promise of a cropping guide.",
+      "Grumbling about the crit timer.\nTen minutes per screen is not enough when the flow has eight steps.\nThe other view: if it needs more, book a dedicated review instead of crit.\nCompromise: a screen can claim a double slot if it is on the agenda by Monday.",
+      "The library publish went out with a typo in the release notes.\nNothing broke, but three engineers asked what the misspelled word meant.\nRelease notes now get a second reader before publish.\nTwo-minute fix, twenty minutes of jokes.",
+      "Research repository migration finished a week early.\nFour hundred insights moved, labels normalised, duplicates merged.\nOld URLs redirect for six months.\nThe researcher is taking Friday off as agreed.",
+      "Quarter planning week means no crit.\nDesigners use the slot for file hygiene instead.\nThe board reopens the following Wednesday with whatever is ready.\nHandoffs already booked go ahead unchanged.",
+      "Support tickets about the invoice detail view fell by a third.\nThe change was one sentence explaining what the pending status means.\nContent designer gets the credit; the engineer who shipped it gets the cake.\nSame treatment planned for the receipt page.",
+      "Design offsite recap.\nMorning was a retro on the year; afternoon was a walk that turned into a debate about naming.\nNobody agreed on a naming scheme but everyone agreed the current one is bad.\nPhotos are in the shared album; the naming debate continues in a doc.",
+      "Fire alarm during the handoff review.\nEveryone stood in the car park for twenty minutes discussing hover states.\nReconvened in the kitchen because the room had been rebooked.\nRedlines were posted anyway; the video call was rescheduled.",
+      "New design engineer's first week.\nShadowed two crits, one handoff and the library sync.\nFirst contribution was a script that finds files with no owner.\nNinety-one files, apparently.",
+      "The prototyping plugin ate the afternoon.\nEvery hotspot in the onboarding prototype had to be rebuilt after the update.\nVendor says the fix is in the next release; nobody knows when that is.\nPrototypes for Thursday's sessions are being rebuilt by hand.",
+      "Portfolio review day.\nSix candidates for the senior role, forty minutes each, two interview loops running in parallel.\nDebrief ran long because the two loops loved different people.\nSecond-round invites go out Monday."
     ],
     "you_prefix": "ScreenAssist"
   },
@@ -702,7 +734,11 @@
         "Team management",
         "Mobile home",
         "Help centre",
-        "Account recovery"
+        "Account recovery",
+        "Integrations",
+        "Data export",
+        "Security settings",
+        "Developer portal"
       ],
       "screen": [
         "the plan picker",
@@ -716,7 +752,13 @@
         "the receipt page",
         "the saved-views screen",
         "the profile editor",
-        "the audit log view"
+        "the audit log view",
+        "the password reset screen",
+        "the notification preferences page",
+        "the team roster page",
+        "the API keys page",
+        "the billing history page",
+        "the two-factor setup flow"
       ],
       "method": [
         "moderated usability sessions",
@@ -728,7 +770,9 @@
         "contextual interviews",
         "a first-click test",
         "a preference test",
-        "session replay review"
+        "session replay review",
+        "an exit survey",
+        "a heuristic review"
       ],
       "asset": [
         "the wordmark",
@@ -740,7 +784,11 @@
         "the type scale",
         "the email template set",
         "the social template set",
-        "the pitch deck master"
+        "the pitch deck master",
+        "the favicon set",
+        "the app store screenshot set",
+        "the logo animation",
+        "the presentation template"
       ],
       "bp": [
         "320",
@@ -764,7 +812,11 @@
         "Admin console tables",
         "Untitled (copy)",
         "Icons sync",
-        "Crit board do not edit"
+        "Crit board do not edit",
+        "Search explorations v3",
+        "Notifications (old)",
+        "Help centre IA",
+        "Account recovery flows"
       ],
       "chore": [
         "the contrast sweep",
@@ -774,7 +826,11 @@
         "the spacing audit",
         "the colour-only-meaning check",
         "the screen-reader run",
-        "the keyboard walkthrough"
+        "the keyboard walkthrough",
+        "the reduced-motion check",
+        "the zoom-to-200 check",
+        "the error-message audit",
+        "the heading-structure pass"
       ],
       "squad": [
         "the growth squad",
@@ -784,7 +840,9 @@
         "the enterprise squad",
         "the trust and safety team",
         "the marketing web team",
-        "the internal tools crew"
+        "the internal tools crew",
+        "the search relevance team",
+        "the data platform crew"
       ],
       "review_kind": [
         "copy review",
@@ -794,7 +852,119 @@
         "research readout",
         "file-hygiene sweep",
         "token audit",
-        "motion review"
+        "motion review",
+        "localisation check",
+        "print review",
+        "prototype walkthrough",
+        "analytics readout"
+      ],
+      "locale": [
+        "German",
+        "Japanese",
+        "Brazilian Portuguese",
+        "French",
+        "Korean",
+        "Polish",
+        "Turkish",
+        "Dutch",
+        "Spanish",
+        "Hindi"
+      ],
+      "token": [
+        "the spacing tokens",
+        "the colour tokens",
+        "the type tokens",
+        "the radius tokens",
+        "the elevation tokens",
+        "the motion tokens",
+        "the opacity tokens",
+        "the border tokens",
+        "the breakpoint tokens",
+        "the icon-size tokens"
+      ],
+      "tool": [
+        "the whiteboard tool",
+        "the ticketing board",
+        "the prototyping plugin",
+        "the handoff inspector",
+        "the research repository",
+        "the survey tool",
+        "the analytics dashboard",
+        "the version-control plugin",
+        "the screen-recording tool",
+        "the contrast checker"
+      ],
+      "meeting": [
+        "the Monday stand-up",
+        "the Wednesday crit",
+        "the Friday library sync",
+        "the monthly research share",
+        "the quarterly planning session",
+        "the content guild",
+        "the a11y office hours",
+        "the brand and marketing catch-up",
+        "the design all-hands",
+        "the Sydney sync"
+      ],
+      "metric": [
+        "completion rate",
+        "time to first action",
+        "drop-off",
+        "task success",
+        "error rate",
+        "support ticket volume",
+        "conversion",
+        "return-visit rate",
+        "time on task",
+        "satisfaction score"
+      ],
+      "workshop": [
+        "a design sprint",
+        "a crazy-eights round",
+        "a journey-mapping session",
+        "an assumption-mapping workshop",
+        "a story-mapping session",
+        "a jobs-to-be-done workshop",
+        "a service-blueprint session",
+        "a retro",
+        "a how-might-we session",
+        "a dot-voting round"
+      ],
+      "hire": [
+        "a senior product designer",
+        "a content designer",
+        "a design engineer",
+        "a research ops specialist",
+        "a motion designer",
+        "a design intern",
+        "a brand designer",
+        "a UX writer",
+        "a design program manager",
+        "an accessibility specialist"
+      ],
+      "lunch": [
+        "the taco truck",
+        "the ramen place",
+        "the dumpling spot",
+        "the salad bar",
+        "the falafel stand",
+        "the bakery downstairs",
+        "the new coffee cart",
+        "the pizza place on the corner",
+        "the noodle bar",
+        "the sandwich place"
+      ],
+      "spot": [
+        "the third-floor crit room",
+        "the quiet pod",
+        "the print room",
+        "the kitchen on four",
+        "the lobby",
+        "the rooftop",
+        "the phone booth by the lifts",
+        "the library nook",
+        "the bike cage",
+        "the big whiteboard wall"
       ]
     },
     "families": {
@@ -809,7 +979,13 @@
         "Back again: {screen}, after {n_small} crits. {p} thinks it lands on {d}.",
         "Quick crit: {screen} at {bp} needs {n_small} fewer items above the fold, said {p}.",
         "The {area} designers want {screen} rebuilt on the new grid. Timeboxed to {n_days} days.",
-        "{p} asked the room whether {screen} needed the illustration at all. Split vote."
+        "{p} asked the room whether {screen} needed the illustration at all. Split vote.",
+        "{p} brought {screen} to crit half-finished on purpose, to test the layout at {bp} before polishing.",
+        "The loudest disagreement in the {area} crit was whether {screen} needs a heading at all; {p} takes it away.",
+        "Crit ran short for once: {screen} got {n_min_small} minutes and {n_few} comments, all cosmetic.",
+        "{p} and {p2} presented rival takes on {screen}; the room asked them to merge the best of each by {d}.",
+        "Dot vote on {screen}: {n_people} for the compact version, the rest for the roomy one. {p} takes the compact one forward.",
+        "{p} could not explain why {screen} differs between {bp} and the smallest layout; homework for {d}."
       ],
       "research": [
         "{p} presented {method} on {area}: {n_people} participants, {n_few} recurring themes.",
@@ -821,7 +997,14 @@
         "{p} flagged that {n_pct_small} of the recordings from {method} had audio issues.",
         "Slides from the {mon} readout are in the drive; {p} added a one-page summary.",
         "Insight repo tags for {area} are a mess; {p} will merge them by {d}.",
-        "Finding from {method}: {screen} takes {n_min_small} clicks to reach from home. Too many."
+        "Finding from {method}: {screen} takes {n_min_small} clicks to reach from home. Too many.",
+        "Recruiting for {method} in {area} stalled at {n_people} sign-ups; {p} widened the screener.",
+        "{p} clipped {n_small} highlight reels from {method} for the {mon} share, each under {n_min_small} minutes.",
+        "Participants in {method} kept calling {screen} by a name we do not use; {p} logged the vocabulary gap.",
+        "Incentives for {method} came in {pct} over budget; {p} is moving the remaining sessions to remote.",
+        "{p} and {p2} double-coded {n_few2} transcripts from {method}, agreed on {n_few} themes and argued about one.",
+        "The consent wording for {method} is being revised; {p} says the {locale} version needs a legal read first.",
+        "{p} takes {n_min_small} minutes at {meeting} to replay the best clip from {method}."
       ],
       "brand": [
         "Delivery of {asset} for the refresh is {d}; {p} is the point of contact with the agency.",
@@ -833,7 +1016,13 @@
         "Print quote for the refresh launch came in {pct} over; {p} is renegotiating.",
         "{n_k}k recipients see {asset} in its refreshed form on {d}, the rest the week after.",
         "The {mon} town hall reveals {asset}; slides due to {p} by {d}.",
-        "Files for {asset} from before the refresh get archived, not deleted, in case the launch slips."
+        "Files for {asset} from before the refresh get archived, not deleted, in case the launch slips.",
+        "{p} caught {asset} rendering in the old colours on {screen}; the fix is a single export.",
+        "Agency review of {asset} at {hour} on {d}; {p} collects questions beforehand.",
+        "Marketing wants {asset} in {n_few} more sizes for the {mon} campaign; {p} is pushing back on two of them.",
+        "The {locale} market asked for a variant of {asset}; {p} checks whether the agency contract covers it.",
+        "Usage of {asset} across {area} is inconsistent in {n_small} places; {p} notes them in {tk}.",
+        "{p} presented the refresh progress: {pct} of {area} surfaces already show {asset} as refreshed."
       ],
       "figma": [
         "{p} archived {n_few2} stale pages from {file} and left a changelog on page one.",
@@ -845,7 +1034,14 @@
         "Cover page for {file} is out of date; {p} to add status and owner.",
         "The {file} library publish failed twice on {d}; {p} is talking to support.",
         "{p} moved {file} into the {area} project and removed {n_few} orphaned frames.",
-        "Version history on {file} is unreadable; {p} asks for named checkpoints."
+        "Version history on {file} is unreadable; {p} asks for named checkpoints.",
+        "{p} restored a deleted page in {file} from version history; the loss was {n_min} minutes of work.",
+        "Auto-layout in {file} fights the {bp} frames; {p} and {p2} are rebuilding the worst {n_few}.",
+        "Comments in {file} hit {n_big}; {p} resolved the stale ones and pinned the rest.",
+        "{file} now has a status stamp on every page, thanks to {p}.",
+        "Someone published {file} without a description again; {p} added a template to the publish step.",
+        "Every page preview in {file} looks identical; {p} sets a cover per page by {d}.",
+        "{p} is trialling {tool} against the current setup for {n_weeks} weeks and reports back at {meeting}."
       ],
       "a11y": [
         "{p} ran {chore} on {screen}: {n_small} findings, most of them easy.",
@@ -857,7 +1053,13 @@
         "Screen-reader run on {screen} took {n_min} minutes; {p} clipped the worst moments.",
         "The findings sheet has {n_tickets} open items; {p} triages the {area} ones.",
         "{p} is pairing with {squad} on {chore} for {screen} on {d}.",
-        "Reduced-motion variants for {screen} land with the next publish, per {p}."
+        "Reduced-motion variants for {screen} land with the next publish, per {p}.",
+        "{p} tested {screen} at 200 percent zoom; {n_small} labels wrap badly at {bp}.",
+        "The {locale} screen-reader voice mispronounces the product name on {screen}; {p} is checking the lang attribute.",
+        "{p} booked {n_people} participants who use assistive tech for {method} on {area} in {mon}.",
+        "{chore} for {area} is {n_pct_small} done; {p} posts progress every Friday.",
+        "Colour-only status on {screen} fails the greyscale test; {p} adds a text cue by {d}.",
+        "{p} paired with {p2} to caption the {n_few} demo videos for {area} before {d}."
       ],
       "handoff": [
         "Handoff for {area} moves to {d}; {squad} asked for the redlines a day earlier.",
@@ -870,7 +1072,13 @@
         "The {review_kind} for {screen} slipped to {d}; {p} owns the reschedule.",
         "Rollout: {squad} shipped {screen} to {n_pct_small} of traffic on {d}.",
         "Translations for {screen} need {n_days} more days; {p} chasing the agency.",
-        "{p} handed the {area} open questions to {p2} before going on leave from {d}."
+        "{p} handed the {area} open questions to {p2} before going on leave from {d}.",
+        "{squad} asked for a dark-mode redline pack on {screen}; {p} exports it on {d}.",
+        "{p} recorded a {n_min_small}-minute walkthrough of {screen} so {squad} can skip the live handoff.",
+        "Engineering found {n_small} spacing values on {screen} that are not in {token}; {p} rounds them.",
+        "Handoff for {area} is paused for {n_days} days while {squad} clears an incident; {p} keeps the file untouched.",
+        "{p} and {p2} split the {area} handoff by screen; the open questions live in {tk}.",
+        "{squad} shipped {screen} behind a flag on {d}; {p} reviews the live build at {hour}."
       ],
       "ops": [
         "Crit room moved to floor {n_small} for {mon}; {p} updated the invite.",
@@ -883,7 +1091,96 @@
         "Whiteboard photos from the {area} workshop are in the drive, courtesy of {p}.",
         "{p} rebooked the crit for {hour} on {d} to dodge the all-hands.",
         "Laptop stickers with the refreshed mark arrive in {mon}, {n_big} of them.",
-        "{p} and {p2} are swapping note-taking duty for the {mon} crits."
+        "{p} and {p2} are swapping note-taking duty for the {mon} crits.",
+        "{p} ordered {n_big} sticky notes and {n_small} packs of pens for the {mon} workshops; the print room holds them.",
+        "Desk moves on {d}: {area} designers sit with {squad} for {n_weeks} weeks.",
+        "{p} moved {meeting} to {spot} for {mon} because the usual room is being repainted.",
+        "{p} counted {n_people} people with expired building passes on the design floor; renewals by {d}.",
+        "The quarterly plugin licence review is {d}; {p} needs usage numbers from everyone by {hour} the day before.",
+        "Team lunch at {lunch} on {d}; {p} is collecting dietary notes.",
+        "{tool} was down from {hour} for {n_min} minutes; {p} filed {tk} with the vendor.",
+        "{meeting} is cancelled on {d}; {p} posts the async version instead.",
+        "Seats on {tool} are capped at {n_people} until {mon}; {p} keeps the queue."
+      ],
+      "content": [
+        "{p} rewrote the strings on {screen} to start with the verb; {pct} shorter overall.",
+        "The terminology doc for {area} gained {n_few2} entries this week; {p} owns the merge.",
+        "The {locale} translation of {screen} ran {pct} longer than English; {p} flagged {n_small} tight spots.",
+        "{p} and {p2} disagree on sentence case versus title case for {area}; the content guild votes on {d}.",
+        "Error copy on {screen} now names the fix, not the fault, after a pass by {p}.",
+        "{p} ran a readability check across {area}: grade level dropped by {n_few} points.",
+        "Placeholder text still says lorem on {n_small} frames in {file}; {p} replaces it before {d}.",
+        "Voice and tone examples for {area} are drafted; {p} wants {n_few} more from the {locale} team.",
+        "{p} cut the onboarding email sequence from {n_few2} messages to {n_few}; open rates decide by {mon}.",
+        "Glossary review at {hour} on {d}; {p} brings the {n_tickets} terms that still have two spellings.",
+        "Microcopy on {screen} was tested with {n_people} people; {n_pct_small} misread the confirmation line, says {p}.",
+        "{p} is writing the {locale} style notes with a native speaker from {squad}; draft by {d}.",
+        "Agenda for {meeting} on {d}: {n_few} items, all from {area}, chaired by {p}."
+      ],
+      "tokens": [
+        "{p} renamed {token} to the new scheme; aliases keep the old names working for {n_weeks} weeks.",
+        "Diff on {token} between staging and production shows {n_small} drifted values; {p} reconciles by {d}.",
+        "{token} now export to code automatically; {p} watched the first run at {hour}.",
+        "{p} found {n_few} hard-coded values in {area} that bypass {token}; tickets under {tk}.",
+        "Dark-mode values for {token} ship in the {mon} publish, per {p}.",
+        "{p} and {p2} pair on documentation for {token} every Tuesday at {hour}.",
+        "Version {n_small}.{n_few2} of the library went out on {d}; changelog by {p}.",
+        "The library publish takes {n_min} minutes now; {p} is profiling which file slows it.",
+        "{p} locked the names in {token} for {n_weeks} weeks so {squad} can finish the code mirror.",
+        "Engineering asked for {token} as JSON rather than CSS; {p} adds a second export.",
+        "Rounding on {token} produced {n_small} half-pixel values at {bp}; {p} snaps them to whole pixels.",
+        "{p} wrote a lint rule that flags raw hex outside {token}; it fired {n_tickets} times on {area}."
+      ],
+      "metrics": [
+        "{metric} for {screen} moved {pct} after the {mon} release; {p} is checking it is not seasonal.",
+        "{p} pulled {metric} for {area} by breakpoint; {bp} is the outlier.",
+        "Weekly {metric} report for {area} goes out at {hour} on Mondays, owned by {p}.",
+        "The experiment on {screen} needs {n_days} more days before {metric} can be read, says {p}.",
+        "{p} and {p2} disagree about whether {metric} on {screen} is a design signal or a marketing one.",
+        "Dashboards for {metric} were double-counting {area} traffic since {mon}; {p} filed {tk}.",
+        "{p} annotated the {metric} graph for {screen} with release dates so the dips make sense.",
+        "{n_k}k sessions hit {screen} last week; {metric} held steady, per {p}.",
+        "{p} wants {metric} on {screen} split by new versus returning before the {mon} review.",
+        "Support tickets about {screen} dropped {pct} in {mon}; {p} credits the copy change."
+      ],
+      "workshop": [
+        "{p} ran {workshop} with {squad} on {area}; {n_few2} ideas made the shortlist.",
+        "{workshop} for {screen} is booked for {hour} on {d} in {spot}; {p} facilitates.",
+        "Output of {workshop} on {area} is photographed and in the drive; {p} typed up the top {n_small}.",
+        "{p} and {p2} co-facilitate {workshop} for the {locale} launch team next {mon}.",
+        "Half the room missed {workshop} on {screen}; {p} reruns a {n_min}-minute version on {d}.",
+        "{p} wants {n_people} people at most in {workshop} for {area}, or the voting gets noisy.",
+        "Themes from {workshop}: {n_few} about {screen}, the rest about pricing wording. {p} sorts them by {d}.",
+        "{workshop} for {area} overran by {n_min} minutes; {p} promises a tighter timer next time.",
+        "{p} is turning the board from {workshop} on {area} into a one-page brief by {d}.",
+        "Pre-read for {workshop} on {screen} is {n_small} pages; {p} asks everyone to skim it before {hour}."
+      ],
+      "smalltalk": [
+        "{p} and {p2} are walking to {lunch} at {hour}; orders in the thread.",
+        "{lunch} has a queue out the door again; {p} suggests going at {hour} instead.",
+        "{p} brought back {n_few2} pastries from {lunch} for the crit; gone in {n_min_small} minutes.",
+        "It rained sideways against the design floor glass all morning; {p} moved the crit to {spot}.",
+        "{p} finished the {n_k}k-word novel from the book swap and left it in {spot}.",
+        "Birthday cake for {p} at {hour} in {spot}; {p2} organised it.",
+        "{p} cycled in for the first time since {mon}; the bike cage is full by {hour}.",
+        "The plant on {p}'s desk survived {n_weeks} weeks unwatered, to {p2}'s amazement.",
+        "{p} is running the {mon} half-marathon; the sponsor page is pinned up in {spot}.",
+        "Quiz night at {lunch} on {d}; {p} is captain and wants {n_few} more players.",
+        "{p} got the new noise-cancelling headphones and now misses every question in crit.",
+        "The heating in {spot} is stuck at full; {p} logged it with facilities as {tk}."
+      ],
+      "people": [
+        "Interviews for {hire} run all week; {p} sits in on the portfolio rounds at {hour}.",
+        "{p} wrote the brief for {hire} on {area}; recruiting posts it on {d}.",
+        "We are bringing in {hire} for {squad} from {mon}; {p} plans the first two weeks.",
+        "{p} finished the onboarding checklist for {hire}: {n_few2} items, {n_few} of them about tooling.",
+        "Interview debrief for {hire} took {n_min} minutes; {p} and {p2} split on the whiteboard round.",
+        "{p} is mentoring the intern cohort on {area} for {n_weeks} weeks; office hours at {hour}.",
+        "Portfolio review for {hire} moves to {spot} on {d}; {p} books it.",
+        "{p} moves from {area} to {squad} in {mon}; handover notes due {d}.",
+        "Peer feedback for the {mon} cycle closes {d}; {p} has {n_small} write-ups left.",
+        "{p} is back from parental leave on {d} and picks up {area} crits from {p2}.",
+        "{p} runs a {n_min}-minute intro to {tool} for new joiners at {hour} on {d}."
       ]
     },
     "side": [
@@ -898,7 +1195,17 @@
       "Two screens were pulled from the agenda; owners were out sick.",
       "The recording missed the first three minutes.",
       "Sticky notes ran out mid-workshop; digital board from here.",
-      "Whiteboard was wiped before photos. Redraw from memory."
+      "Whiteboard was wiped before photos. Redraw from memory.",
+      "Screen share froze on the title slide for a full minute before anyone said anything.",
+      "The time on the room display is eleven minutes fast; trust the laptop.",
+      "Half the comments came in after the meeting via the Figma thread.",
+      "The crit room lights are on a motion sensor; it went dark twice.",
+      "Lunch arrived mid-crit; the second half was quieter and crumbier.",
+      "Dial-in number changed again; the invite has the new one.",
+      "The remote presenter's cursor was invisible on the projector.",
+      "Fire alarm test at eleven; we lost four minutes.",
+      "Two laptops, one dongle. Presenters swapped mid-sentence.",
+      "Notes were taken on paper today and typed up from memory afterwards."
     ],
     "actions": [
       "{p} to post the {area} redlines to {squad} by {d}.",
@@ -908,7 +1215,21 @@
       "{p} to confirm {asset} delivery with the agency on {d}.",
       "{p} to close ticket {tk} once {screen} passes review, target {d}.",
       "{p} to book the {area} copy review for {d}.",
-      "{p} and {p2} to split the {area} findings sheet between them by {d}."
+      "{p} and {p2} to split the {area} findings sheet between them by {d}.",
+      "{p} to migrate the {area} strings into {tool} by {d}.",
+      "{p} to send the {locale} strings sheet to the agency on {d}.",
+      "{p} to reconcile {token} between staging and production by {d}.",
+      "{p} to write up {workshop} for {area} as a one-page brief by {d}.",
+      "{p} to post the {metric} figures for {screen} before {meeting} on {d}.",
+      "{p} to book {spot} for the {area} workshop on {d}.",
+      "{p} to add long-string variants for {locale} to {screen} by {d}.",
+      "{p} to pull the {review_kind} notes into ticket {tk} by {d}.",
+      "{p} to caption the {area} demo videos before {d}.",
+      "{p} to schedule the interview debrief for {hire} on {d}.",
+      "{p} to check with {p2} that {file} is archived, not deleted, by {d}.",
+      "{p} to re-export {asset} at {bp} for {squad} by {d}.",
+      "{p} to restore the missing pages in {file} from version history by {d}.",
+      "{p} to bring the compact and roomy versions of {screen} side by side on {d}."
     ]
   }
 }

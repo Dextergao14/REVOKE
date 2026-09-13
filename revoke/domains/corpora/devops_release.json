@@ -584,7 +584,17 @@
    "Schedule the retro for the pdf renderer memory leak.",
    "Check whether the dev portal search index rebuilds after every deploy.",
    "Trim the nightly suite by removing the three duplicated smoke tests.",
-   "Book the offsite room for the second week of the month."
+   "Book the offsite room for the second week of the month.",
+   "Set up a second paging route as a fallback for the next vendor outage.",
+   "Move the load harness cron to weekdays only.",
+   "Make the restore script print its target environment and pause before running.",
+   "Fold the per-pod deploy notices into a single summary message with a thread.",
+   "Confirm service owners in the dev portal ownership file by the end of the month.",
+   "Lower the DNS TTLs for prod-eu a week before the cutover.",
+   "Book Larch for the hackday and order lunch for twenty.",
+   "Cut the observability seat count before the renewal goes to finance.",
+   "Turn alert grouping back on for the runner disk alerts.",
+   "Record the runner autoscaling talk dry run and post it in the wiki."
   ],
   "blocks": [
    "Flaky test thread: test_bulk_upload_resume failed twice on the 09:40 run and passed on retry.\nLooks like the fixture leaks a temp dir when the runner is slow to schedule.\nQuarantined for now, ticket open to fix the fixture properly.\nNobody was blocked; the train left on time.",
@@ -632,7 +642,28 @@
    "The localisation crew asked for a string cutoff two days before each release.\nTranslations arriving after the cutoff go into the next train instead of blocking this one.\nProduct agreed, with an exception process for legal text.\nThe cutoff is on the release calendar from next month.",
    "Team offsite planning.\nTwo days, second week of next month, agenda still open.\nSuggestions so far: runbook cleanup, a walkthrough of the pipeline for the newer people, and a session on the cost reports.\nPoll for the venue closes Friday.",
    "The release calendar lived on someone's personal calendar until this week.\nIt now lives on a shared team calendar with edit rights for the release desk.\nThe standup-bot reminders point at the new one.\nThe old one is deleted, which caused a brief panic for one person who had it bookmarked.",
-   "Runner autoscaling is back on.\nMinimum of four warm runners, scaling to twenty on queue depth.\nThe first day it over-scaled during the dependabot burst and cost more than the static pool would have.\nScale-up threshold raised; second day looked sensible."
+   "Runner autoscaling is back on.\nMinimum of four warm runners, scaling to twenty on queue depth.\nThe first day it over-scaled during the dependabot burst and cost more than the static pool would have.\nScale-up threshold raised; second day looked sensible.",
+   "A group from the infra group's sister team in the ap-south office visited for two days.\nThey sat in on standup and the 14:00 train and asked why the checklist has fourteen items.\nNobody had a good answer for item nine, which nobody could remember adding.\nItem nine is gone. The visitors left with a copy of the runbooks and a bag of stroopwafels.",
+   "Someone ran the preprod database snapshot restore against dev-shared by mistake.\nNothing important was lost, but four people lost their morning's test data and one lost a demo.\nThe restore script now prints the target environment in capitals and waits five seconds.\nA dry-run flag is coming; the five-second pause is what fit in the afternoon.",
+   "Standup moves to 09:45 from Monday for the rest of the quarter.\nThe ap-northeast office joins for the first time and 10:15 is their late evening.\nThe eu offices lose half an hour of quiet inbox time and have grumbled about it in the thread.\nStandup-bot has been updated, which is a first for a schedule change.",
+   "CI wall time for platform/release-tools is under ten minutes for the first time since spring.\nThree changes did it: a cached dependency layer, splitting the integration job, and deleting a test that tested nothing.\nThe team that owns the slowest remaining job has been sent the recipe.\nThe flaky-test leaderboard also shrank, which nobody predicted.",
+   "Complaint thread about the deploy notifier.\nIt posts one message per pod, so a twenty-pod rollout is twenty messages and the channel scrolls off the screen.\nTwo people want it silenced entirely, three want a single summary message.\nSummary message it is, with the per-pod detail folded into a thread. Landing next week.",
+   "Release desk handover from the outgoing captain.\nOpen items: the helm chart pin that needs revisiting, a vendor case with no reply in nine days, and the naming guide draft.\nThe train calendar is up to date through the end of next month.\nThe incoming captain asked for the pin to be first; the other two can wait a week.",
+   "The paging vendor had a partial outage from 02:10 to 03:40 UTC.\nPages during the window were delayed by up to twelve minutes, though none were lost.\nNothing fired for us in that window, which was luck rather than planning.\nA secondary route through a second provider is being set up as a fallback for the next time.",
+   "Second new joiner of the quarter started this week.\nThe onboarding guide worked up to the local dev stack step, which assumed a laptop model nobody has any more.\nThey fixed the guide themselves as their first PR, which is the tradition.\nShadowing the release desk from Thursday, running it with a watcher the week after.",
+   "The eu-north office is moving floors over the weekend.\nMonitors and docking stations go in boxes Friday afternoon; laptops go home with people.\nThe on-call laptop stays with whoever is primary, plus a spare charger.\nMonday morning is remote-first while the desks get rebuilt.",
+   "Hackday planning thread.\nDate is the second Friday of next month, theme is 'things that annoy you about the pipeline'.\nIdeas so far: a rota tool that knows about public holidays, a runbook linter, and a board that shows who is on-call in every timezone at once.\nSign-up sheet is pinned; teams of two or three.",
+   "Licence renewal for the observability vendor came in twenty-two percent higher than last year.\nThe usage report shows a third of the seats have not logged in since March.\nFinance want the seat count cut before they renew; the vendor wants a three-year term.\nCompromise being drafted: fewer seats, one-year term, review in six months.",
+   "DNS cutover for the perf environment happened at 07:00 UTC.\nTTLs had been lowered a week ahead, so the switch took under two minutes end to end.\nOne internal tool cached the old address in-process and needed a restart.\nThe tool now honours TTLs; the change is small and already merged.",
+   "Restore drill for prod-us ran on Wednesday afternoon.\nA copy of the environment came back from Tuesday's backup in forty-four minutes, against a target of sixty.\nThree steps were still manual: the secrets bootstrap, the DNS record, and re-pointing the log shipper.\nEach step has a ticket; the drill repeats quarterly.",
+   "Demo day highlights.\nThe drift checker got the biggest reaction, mostly because the live demo found real drift in sandbox.\nThe runbook linter demo crashed on a page with an emoji in the title; fixed during the break.\nRecording is in the wiki; the sandbox drift is already a PR.",
+   "Two people from the team are speaking at the regional infra meetup on the 24th.\nThe talk is about the runner autoscaling saga, including the day it cost more than the static pool.\nDry run in Larch on Thursday at 16:00, open to anyone who wants to heckle.\nSlides go in the shared drive after the event.",
+   "Last day for one of the longer-serving platform engineers on Friday.\nTheir handover doc is thirty pages and covers three things nobody else knew how to do.\nTwo of those are now automated; the third is a runbook with a video walkthrough.\nCake at 15:00 in the eu-central kitchen; remote people get a recording of the speech.",
+   "Storm warning for the eu-north region on Thursday.\nPublic transport is expected to stop mid-afternoon, so the office is remote-optional from noon.\nThe on-call primary is already remote; the secondary has been asked to stay near a power socket.\nThe 14:00 train is unaffected; it runs from wherever the release desk is sitting.",
+   "DiskAlmostFull fired on every runner at once at 04:12.\nThe cause was a log rotation change that wrote the archive to the same volume it was rotating.\nThe pages woke the primary and the secondary; alert grouping had been turned off in a previous cleanup.\nRotation fixed, grouping back on, and a note in the cleanup PR template about checking alert config.",
+   "The dev portal ownership page lists the wrong owner for eleven services.\nMost are from a reorg last year that never made it into the ownership file.\nThe affected teams have been asked to confirm or correct their entries by the end of the month.\nUntil then, the on-call contact field is the one to trust.",
+   "The address validator vendor finally sent their outage write-up, six weeks after the event.\nIt confirms what the team suspected: a cache node ran out of memory and their failover took eleven minutes.\nThey have added a memory alert and a faster failover; the write-up is linked from the incident page.\nCase closed on our side.",
+   "Finance joined the monthly cost review for the first time.\nThey asked why the staging bill has a Saturday peak; nobody knew, and it turned out to be the load harness cron.\nThe cron now runs on weekdays only, which also matches when anyone looks at the results.\nFinance are coming back next month with a spreadsheet."
   ],
   "you_prefix": "release-bot"
  },
@@ -718,7 +749,13 @@
     "the geo lookup",
     "the CDN config layer",
     "the dependency mirror",
-    "the currency converter"
+    "the currency converter",
+    "the dns controller",
+    "the telemetry collector",
+    "the cert issuer",
+    "the backup agent",
+    "the image builder",
+    "the build cache"
    ],
    "repo": [
     "platform/ci-runners",
@@ -779,7 +816,11 @@
     "ReplicaLagHigh",
     "BuildCacheMiss",
     "SchedulerStalled",
-    "OOMKilledSpike"
+    "OOMKilledSpike",
+    "CertRenewalFailed",
+    "NodeNotReady",
+    "BackupMissed",
+    "DeployStuck"
    ],
    "pr": [
     "#4412",
@@ -793,7 +834,11 @@
     "#4517",
     "#4533",
     "#4548",
-    "#4561"
+    "#4561",
+    "#4575",
+    "#4590",
+    "#4604",
+    "#4618"
    ],
    "team": [
     "the mobile team",
@@ -829,7 +874,86 @@
     "test_locale_fallback",
     "test_timezone_boundary",
     "test_queue_drain_idle",
-    "test_partial_index_rebuild"
+    "test_partial_index_rebuild",
+    "test_snapshot_restore_order",
+    "test_rate_limit_headers",
+    "test_cron_dst_skip"
+   ],
+   "tool": [
+    "the deploy CLI",
+    "the release notes generator",
+    "the pre-commit hook set",
+    "the local dev stack",
+    "the helm diff plugin",
+    "the drift checker",
+    "the changelog bot",
+    "the image scanner",
+    "the lint bundle",
+    "the terraform wrapper",
+    "the rota tool",
+    "the runbook linter"
+   ],
+   "doc": [
+    "the on-call handover checklist",
+    "the deploy runbook",
+    "the incident comms template",
+    "the environment naming guide",
+    "the upgrade checklist",
+    "the new-joiner guide",
+    "the rota page",
+    "the cost report template",
+    "the CI style guide",
+    "the rollback playbook",
+    "the release calendar page",
+    "the pager runbook"
+   ],
+   "vendor": [
+    "Kestrel Cloud",
+    "Bramblewood Hosting",
+    "Ostrava Systems",
+    "Fjordline DNS",
+    "Halcyon Paging",
+    "Meridian CDN",
+    "Tallgrass Observability",
+    "Quillon Licensing",
+    "Sablewood Backup",
+    "Norrland Colo"
+   ],
+   "room": [
+    "Larch",
+    "Rowan",
+    "Juniper",
+    "Hawthorn",
+    "Alder",
+    "Linden",
+    "Sycamore",
+    "Hornbeam",
+    "Yew",
+    "Maple"
+   ],
+   "meeting": [
+    "sprint planning",
+    "backlog triage",
+    "demo day",
+    "roadmap review",
+    "capacity planning",
+    "release readiness review",
+    "platform office hour",
+    "cost review",
+    "rota planning",
+    "brown-bag Friday"
+   ],
+   "treat": [
+    "pastries",
+    "bagels",
+    "stroopwafels",
+    "cinnamon buns",
+    "dumplings",
+    "samosas",
+    "oranges",
+    "leftover pizza",
+    "cupcakes",
+    "baklava"
    ]
   },
   "families": {
@@ -843,7 +967,12 @@
     "Slow one: {service} took {n_min} minutes to drain in {region}. {p} filed {tk}.",
     "{p} paused the rollout of {service} at {pct} of pods because {alert} fired in {env}. Resumed {n_min_small} minutes later.",
     "Hotfix for {service} went straight to {env} with {p} and {p2} on the call. Live by {hour}.",
-    "Nothing has shipped to {env} since {d}; {p} is holding {service} for the {mon} train."
+    "Nothing has shipped to {env} since {d}; {p} is holding {service} for the {mon} train.",
+    "Canary for {service} in {env} sat at {pct} of traffic for {n_min} minutes before {p} widened it.",
+    "{p} shipped {n_small} releases of {service} before lunch; {p2} counted all but the first as fixes for the first.",
+    "The {mon} train left at {hour} with {n_few2} changes aboard. {p} posted the manifest in the thread.",
+    "Rollback drill on {service} in {env}: {n_min_small} minutes from decision to the old version serving. {p} timed it.",
+    "{env} and {region} are one release apart on {service} until {p} finishes the soak on {d}."
    ],
    "pr_review": [
     "{p} asked for a second pair of eyes on {pr} in {repo}; it touches {service} and the diff is {n_big} lines.",
@@ -855,7 +984,13 @@
     "Draft PR from {p} for {service}: {n_k}k lines removed, {n_big} added. Not ready for review yet.",
     "{pr} merged at {hour}. {p} will watch {dashboard} for the next {n_min} minutes.",
     "Review backlog in {repo} is {n_tickets} open PRs. {p} is doing a triage pass this afternoon.",
-    "{p} bounced {pr} back: the change to {service} needs a migration note in {repo}."
+    "{p} bounced {pr} back: the change to {service} needs a migration note in {repo}.",
+    "{pr} sat unreviewed for {n_days} days until {p} put it at the top of the {repo} queue.",
+    "Review ping-pong on {pr}: {n_small} rounds between {p} and {p2}, settled with a call at {hour}.",
+    "{p} wrote a review guide for {repo} after {pr} took {n_weeks} weeks to land.",
+    "Small win: {pr} in {repo} went from open to merged in {n_min} minutes. {p} wants that to be normal.",
+    "{p} caught a hard-coded {env} URL in {pr} that {n_few} reviewers had scrolled past.",
+    "Codeowners for {repo} now route anything touching {service} to {p} and {p2}."
    ],
    "flaky": [
     "{test} failed on {runner} and passed on retry. {p} added it to the quarantine set with {tk}.",
@@ -867,7 +1002,12 @@
     "{runner} is running out of disk during {test}; {p} bumped the volume by {n_k}GB.",
     "Retry-on-fail for {test} is a band-aid. {p} wants it removed once {tk} lands.",
     "{p} reran the {env} suite {n_small} times overnight: {test} failed {n_few} of them.",
-    "CI wall time is down {n_pct_small} after {p} parallelised the {repo} integration job."
+    "CI wall time is down {n_pct_small} after {p} parallelised the {repo} integration job.",
+    "{p} found {test} depends on the order the {env} fixtures load; {n_small} tests share the same seed.",
+    "The quarantine set is down to {n_few} tests after {p} and {p2} spent {mon} on it.",
+    "{test} passes on {runner} and nowhere else. {p} is diffing the runner images.",
+    "Flake budget for {repo}: {n_small} retries a day before the job goes red. {p} set the number.",
+    "{p}: {test} is not flaky, it is a real race in {service} that only shows under load."
    ],
    "oncall": [
     "On-call handover from {p}: {n_small} pages overnight, {n_few} actionable. {alert} in {env} is the one to watch.",
@@ -879,7 +1019,13 @@
     "{p} swapped the {d} on-call slot with {p2} from {team}. Rota updated.",
     "Pager test at {hour} went to {n_people} people instead of one. {p} is fixing the escalation chain.",
     "Overnight: {alert} in {env}, {n_min_small} minutes to ack, {n_min} to resolve. Written up by {p}.",
-    "{p} wants a runbook page for {alert}; the current one is a link to a closed ticket."
+    "{p} wants a runbook page for {alert}; the current one is a link to a closed ticket.",
+    "{p} handed the pager to {p2} at {hour}; {n_few} open alerts, none louder than a warning.",
+    "The {region} on-call shift starts {n_min_small} minutes earlier from {d} so the handover overlaps.",
+    "Page at {hour} for {alert} in {env} turned out to be a load test {team} forgot to announce. {p} added a calendar check.",
+    "{p} muted {alert} for {n_min} minutes during the rollout of {service} and set a reminder to unmute.",
+    "Weekend summary from {p}: {n_small} pages, most of them {alert}, all in {region}.",
+    "Secondary on-call for {mon} is {p}; primary rotates weekly through {team}."
    ],
    "dashboards_cost": [
     "{mon} cost report: {env} is {n_pct_small} over plan, mostly storage for {service}. {p} owns the follow-up.",
@@ -891,7 +1037,12 @@
     "Read access to {dashboard} for {team}: {p} set it up, {p2} tested it.",
     "Egress out of {region} is {pct} of the bill this {mon}. {p} to look at compression on {service}.",
     "{p}: {dashboard} now loads in under {n_small} seconds after the query rewrite.",
-    "Log volume from {service} has doubled since {d}. {p} suspects debug logging left on in {env}."
+    "Log volume from {service} has doubled since {d}. {p} suspects debug logging left on in {env}.",
+    "{p} archived {n_few2} unused panels from {dashboard}; load time is down and nobody has asked for them back.",
+    "The storage line for {env} bends upward from {d}. {p} traced it to snapshot retention on {service}.",
+    "Reserved capacity in {region} covers {pct} of the fleet behind {service}; {p} is buying the rest on {d}.",
+    "{team} asked for a per-team view of {dashboard}; {p} has a draft with {n_small} panels.",
+    "Cost anomaly alert fired for {env} at {hour}: {n_k}k above the daily mean, traced by {p} to a runaway job on {runner}."
    ],
    "standup": [
     "Standup, {p}: yesterday {tk}, today {repo} cleanup, no blockers.",
@@ -903,7 +1054,12 @@
     "{p} picked up {tk} from the board; {team} had left it unassigned for {n_weeks} weeks.",
     "{p} needs a reviewer for {pr} today, otherwise it slips to the {mon} train.",
     "Blocker from {p}: {runner} has been offline since {hour}.",
-    "{p} is pairing with {p2} from {team} on {service} this week."
+    "{p} is pairing with {p2} from {team} on {service} this week.",
+    "Standup thread, {p}: yesterday reviews, today {tk}, blocked on {team} for a {repo} decision.",
+    "{p} is on rotation with {team} until {d} and joins their standup instead of ours.",
+    "{n_people} updates in the standup thread by {hour}; {p} chased the stragglers.",
+    "{p} is heads-down on {tk} until {d} and skipping standup; {p2} carries the update.",
+    "Standup moved to {room} this week because the usual room is being rewired. {p} booked it."
    ],
    "retro": [
     "Retro for the {d} incident with {service}: {n_min} minutes of degraded {env}, root cause a config typo. {n_small} action items.",
@@ -914,7 +1070,125 @@
     "Blameless retro note from {p}: the runbook for {service} was {n_weeks} weeks stale.",
     "{n_people} attended the retro on {service}. Main takeaway: {dashboard} needs a saturation panel.",
     "{p} closed the last retro action for {service} after {n_days} days. {tk} done.",
-    "Retro follow-up: {team} now page the rota {p} runs for {alert}, not the general channel. {p2} updated the routing."
+    "Retro follow-up: {team} now page the rota {p} runs for {alert}, not the general channel. {p2} updated the routing.",
+    "Retro on the {d} {alert} page: it fired {n_few} times for one {n_min_small}-minute blip. {p} wants the threshold raised.",
+    "{p} used the new thirty-minute retro format for the incident with {service}; {n_few} actions, all with owners.",
+    "Retro tally: {n_tickets} actions opened this {mon}, {n_few} closed. {p} is chasing the rest.",
+    "Positive retro from {p}: the {env} rollback worked first time and the runbook was right.",
+    "{p} and {p2} disagree on the root cause of the {d} incident with {service}; the retro is at {hour} in {room}."
+   ],
+   "release_train": [
+    "Change freeze for {env} runs from {d} for {n_days} days; {p} posted the exceptions process.",
+    "{p} cut the {mon} release candidate at {hour}: {n_few2} PRs from {repo}, notes in the thread.",
+    "The {hour} train was held {n_min_small} minutes for a rebase on {pr}; {p} made the call.",
+    "Release notes for the {d} train ran to {n_big} words. {p} wants a summary line per team next time.",
+    "{team} missed the {hour} train by {n_min_small} minutes. {p} offered the {d} slot instead.",
+    "Two trains on {d}: the usual {hour} one and a second for {service} at the request of {team}.",
+    "{p} is release captain this {mon}; {p2} shadows and takes the next one.",
+    "Train checklist grew by {n_few} items after {d}. {p} wants it back under ten.",
+    "The change window for {region} closes at {hour}; anything after that waits for {p} to open the next one.",
+    "{p} tagged the release of {service} twice by accident; the second tag is deleted and the changelog is fixed.",
+    "Dry run of the {env} train at {hour} found {n_few} stale flags in {repo}. {p} cleaned them up before the real one.",
+    "{p} moved the {d} train to {hour} for the {region} holiday; the calendar and the standup-bot agree for once.",
+    "Freeze lifted in {env} at {hour}; {n_tickets} queued changes, {p} is merging them in batches of {n_small}."
+   ],
+   "infra_changes": [
+    "Cluster upgrade in {env}: {n_small} node pools, {n_min} minutes each, {p} watching {dashboard} throughout.",
+    "{p} rotated the certificates behind {service} in {region}; one client pinned the old chain and broke for {n_min_small} minutes.",
+    "DNS TTL for {env} dropped from {n_big} seconds to {n_min} ahead of the cutover {p} is running on {d}.",
+    "Terraform plan for {repo} shows {n_tickets} changes; {p} says {n_few} are real and the rest are tag reorderings.",
+    "Base image refresh: {n_few2} images rebuilt overnight on {runner}, one failed on a libc change. {p} is on it.",
+    "{p} moved {service} in {env} onto the new node pool; memory headroom went from {n_pct_small} to about half.",
+    "Database snapshot for {env} took {n_min} minutes longer than usual on {d}; {p} suspects the tables behind {service}.",
+    "Restore drill by {p}: {env} rebuilt from the {d} backup in {n_min} minutes, {n_few} manual steps still to automate.",
+    "{p} and {p2} are splitting the {region} network migration into {n_small} maintenance windows starting {d}.",
+    "Storage class change for {service} volumes in {env}: {n_big}GB moved, no downtime, {p} kept notes in {tk}.",
+    "Kernel patch across the {env} fleet finished at {hour}; {n_small} nodes needed a second reboot. {p} filed {tk} for those.",
+    "The {region} ingress IPs change on {d}. {p} sent the new list to {team} and {vendor} {n_weeks} weeks ahead."
+   ],
+   "tooling_dx": [
+    "{p} released a new build of {tool}; the {env} config path bug from {tk} is fixed.",
+    "A check in {repo} now warns when a PR touches {service} without a changelog entry. {p} wrote it.",
+    "Local dev stack boots in {n_min_small} minutes on the new laptops, per {p}; the old ones took about twice that.",
+    "{p} wants {tool} in the onboarding guide; {n_few} new joiners found it by accident.",
+    "{tool} broke on {d} after a dependency bump in {repo}; {p} pinned it and opened {tk} upstream.",
+    "{p} demoed {tool} at {meeting}; {n_people} people installed it before the session ended.",
+    "The pre-commit hooks in {repo} add {n_min_small} seconds per commit. {p} moved the slow one to CI.",
+    "{p} added a {region} mirror for {tool} downloads; installs there went from {n_min} minutes to under one.",
+    "Template repo for new services updated by {p}: {tool} wired in, {dashboard} panel included by default.",
+    "Usage of {tool} this {mon}: {n_big} runs, {n_tickets} from {team} alone. {p} pulled the numbers.",
+    "{p} deleted {n_k}k lines of dead scripts from {repo}; {tool} covers everything they did.",
+    "Autocomplete for {tool} landed thanks to {p2}; {p} says it is the best thing to happen to {repo} this {mon}."
+   ],
+   "vendors": [
+    "{vendor} ticket from {p} about the {region} outage on {d} is still open after {n_days} days.",
+    "Licence renewal for {vendor} is due {d}; {p} is checking whether {team} still use the seats.",
+    "{vendor} status page showed green throughout the {n_min}-minute blip that {p} saw from {env}.",
+    "{p} has a call with {vendor} at {hour} about the {pct} price increase for {mon}.",
+    "Trial of {vendor} for backing up {service} ends {d}; {p} and {p2} write the comparison.",
+    "{vendor} rotated their API keys without notice and {service} in {env} lost {n_min_small} minutes. {p} asked for a heads-up channel.",
+    "Support at {vendor} want a packet capture for the {alert} case; {p} is collecting one from {runner}.",
+    "{n_small} vendors pitched at {meeting}; {p} liked {vendor} and nobody else did.",
+    "{vendor} maintenance in {region} on {d} from {hour}, expected {n_min} minutes. {p} posted it to the calendar.",
+    "{p} closed the {vendor} account {team} stopped using in {mon}; saving is about {n_k}k a year.",
+    "Invoice from {vendor} for {mon} is {n_pct_small} higher than the quote; {p} is asking why.",
+    "Onboarding {vendor} took {n_weeks} weeks of paperwork; {p} wrote up the steps so {p2} does not repeat them."
+   ],
+   "docs_onboarding": [
+    "{p} rewrote {doc} after the {d} incident; it is {n_big} words shorter and has a diagram.",
+    "New joiner {p} finished shadowing {p2} on the {env} step and runs it alone from {d}.",
+    "{doc} had {n_small} broken links; {p} fixed them and added a link check to {repo}.",
+    "{p} is giving a brown-bag on {service} at {hour} in {room}; recording goes in the wiki.",
+    "Onboarding feedback from {p}: {doc} names {env} three different ways.",
+    "{team} asked for a walkthrough of the {env} pipeline; {p} is doing it at {meeting} on {d}.",
+    "{doc} moved from the old wiki to {repo}; {p} kept the history, {p2} fixed the images.",
+    "{p} added a glossary to {doc} after {n_few} people asked what {alert} means.",
+    "Page views on {doc} spiked {pct} the week of the {region} incident. {p} takes that as a compliment.",
+    "{p} paired with {p2} on their first {repo} change; {n_min} minutes, mostly on the test setup.",
+    "Buddy rota for {mon}: {p} takes the new joiner from {team}, {p2} takes the next one.",
+    "{doc} is owned by nobody, according to the wiki. {p} put their name on it until {d}."
+   ],
+   "capacity_perf": [
+    "Load test against {env} at {hour}: {service} held {n_k}k requests a minute with p95 flat. {p} posted the graphs.",
+    "{p} raised the {env} quota for {team} by {pct} after their {mon} forecast.",
+    "Autoscaler for {service} in {region} flapped {n_few2} times in an hour; {p} widened the cooldown.",
+    "Storage growth on {service} is {n_pct_small} a month. {p} projects the {env} volume fills by {mon}.",
+    "{p} found {service} in {env} running at {pct} CPU for weeks; the request was {n_few}x too high.",
+    "Perf regression in {repo}: {test} takes {n_min_small} seconds instead of one. {p} bisected to {pr}.",
+    "Capacity review for {region}: {n_small} months of headroom at current growth. {p} presents at {meeting}.",
+    "{p} halved the replica count of {service} in {env} for the weekend; {p2} restores it {d}.",
+    "Connection pool for {service} in {env} maxed out at {hour}; {p} doubled it and is watching {dashboard}.",
+    "{team} want a {n_k}k-user load test on {d}; {p} is checking {env} can take it.",
+    "Cold start for {service} is down from {n_min} seconds to about one after {p} trimmed the image.",
+    "{p} moved the {env} nightly batch from {hour} to spread the load; {alert} has been quiet since."
+   ],
+   "office_social": [
+    "{treat} in the kitchen on the {region} floor, from {p}.",
+    "{p} is back from {n_weeks} weeks off and asking what happened to {service}.",
+    "Desk move for {team} on {d}; {p} is packing the {region} corner into {n_few2} boxes.",
+    "{p} and {p2} are running the {mon} board game night in {room}; sign-up closes {d}.",
+    "Farewell drinks for {p} on {d}; {n_weeks} weeks' notice and the handover doc is already written.",
+    "{p} brought {treat} back from the {region} trip; gone by {hour}.",
+    "Team lunch on {d}: {n_people} coming so far, {p} is booking.",
+    "{p}'s first day back after parental leave; {p2} is walking them through {n_weeks} weeks of channel history.",
+    "Fire drill at {hour} emptied the {region} floor for {n_min_small} minutes. {p} kept the standup going from the car park.",
+    "{p} won the {mon} step challenge; {team} are demanding a recount.",
+    "Coffee machine on the {region} floor is fixed; {p} says the repair took {n_min} minutes and {n_small} people watching.",
+    "{p} is talking about {tool} at a meetup on {d}; {p2} is the practice audience at {hour}.",
+    "Plant on the {region} floor watered by {n_small} people on the same day. {p} started a rota."
+   ],
+   "meetings_planning": [
+    "{meeting} is at {hour} in {room} this week; {p} sends the agenda by {d}.",
+    "{p} cancelled {meeting} on {d}; {n_few} items, all of them fit in the thread.",
+    "Agenda for {meeting}: {n_small} items, half of them from {team}. {p} is chairing.",
+    "{meeting} overran by {n_min} minutes on the question about {service}; {p} took it to a thread with {p2}.",
+    "Planning for {mon}: {n_tickets} tickets in the backlog, {n_few} pulled into the sprint by {p}.",
+    "{p} presented the {repo} roadmap at {meeting}; {team} asked for {n_small} things, {p2} wrote them down.",
+    "{meeting} is remote-only on {d} because {room} is double-booked. {p} posted the link.",
+    "Sprint goal from {p}: {tk} done, {test} un-quarantined, {dashboard} reviewed.",
+    "{p} wants {meeting} every {n_weeks} weeks instead of weekly; a poll is open until {d}.",
+    "Demo slot at {meeting} for {p}: {tool} in {n_min_small} minutes, questions after.",
+    "Notes from {meeting} are in the wiki; {p} tagged {p2} for the {region} follow-up."
    ]
   },
   "side": [
@@ -929,7 +1203,20 @@
    "{p} is out from {d}; {p2} runs standup.",
    "The channel topic got edited by accident and restored by {p}.",
    "Wifi in the {region} office dropped at {hour}; {p} rejoined from a phone.",
-   "Snacks from {team} in the kitchen, courtesy of {p}."
+   "Snacks from {team} in the kitchen, courtesy of {p}.",
+   "{p} is at the dentist until {hour}; pager is with {p2}.",
+   "Standup link changed; {p} pinned the new one.",
+   "{p} typed a reply in the wrong channel and deleted it. Nothing to see.",
+   "Air conditioning on the {region} floor is stuck on cold; {p} is in a coat.",
+   "{p} muted the channel for {n_days} days of leave and asked for a summary on return.",
+   "Video call had {n_min_small} minutes of echo until {p} found the second microphone.",
+   "{p} is presenting from {room}, which has no camera; audio only.",
+   "Thread got {n_tickets} replies overnight; {p} summarised it in three lines.",
+   "{p} is on {region} time this week; expect replies around {hour}.",
+   "Lunch in the kitchen: {treat} from {p}'s trip.",
+   "{p} reminded the channel that the {d} retro is in {room}, not the usual room.",
+   "Bot posts were doubled for {n_min_small} minutes; {p} restarted the integration.",
+   "{p} joined from the {region} airport lounge; camera off, please."
   ],
   "actions": [
    "{p} to post the {mon} cost breakdown for {env} by {d}.",
@@ -939,7 +1226,22 @@
    "{p} to rotate the {runner} tokens on {d}.",
    "{p} and {p2} to agree who owns {service} by {d}.",
    "{p} to add a saturation panel to {dashboard} by {d}.",
-   "{p} to close out {tk} or hand it to {team} by {d}."
+   "{p} to close out {tk} or hand it to {team} by {d}.",
+   "{p} to send the {vendor} renewal paperwork to finance by {d}.",
+   "{p} to book {room} for the retro on {d}.",
+   "{p} to move {doc} into {repo} by {d}.",
+   "{p} to raise the {env} quota for {team} on {d}.",
+   "{p} to schedule the {env} restore drill for {d}.",
+   "{p} to review {tool} before it goes in the onboarding guide, by {d}.",
+   "{p} to post the {meeting} agenda by {d}.",
+   "{p} to un-quarantine {test} once {tk} lands, target {d}.",
+   "{p} to lower the DNS TTL for {region} ahead of the {d} cutover.",
+   "{p} to chase {vendor} about the open {tk} case before {d}.",
+   "{p} to trim the release checklist to ten items by {d}.",
+   "{p} to pair with {p2} on their first {repo} change before {d}.",
+   "{p} to re-run the {env} load test with the fixed harness on {d}.",
+   "{p} to archive the unused panels on {dashboard} by {d}.",
+   "{p} to update the standup-bot reminder for the {d} train time change."
   ]
  }
 }
