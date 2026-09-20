@@ -80,7 +80,7 @@ report what you see:
 ```bash
 python3 eval/adapters/openrouter_runner.py --blind data/long100/long100_blind.jsonl.gz \
     --models openai/gpt-5.5,anthropic/claude-opus-5,meta/muse-spark-1.3-contributor \
-    --items $(head -2 data/long100/subsample30.txt | paste -sd,) \
+    --items $(head -2 data/long100/subsample30.txt | tr '\n' ',' | sed 's/,$//') \
     --workers 3 --out runs/long100/smoke
 python3 scripts/long_report.py --full data/long100/long100_full.jsonl.gz --runs runs/long100/smoke --detail
 ```

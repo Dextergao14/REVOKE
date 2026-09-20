@@ -33,8 +33,8 @@ RUNS=runs/long100
 : "${WORKERS:=4}"
 [ -f "$BLIND" ] || { echo "missing $BLIND -- gh release download v0.5-long100 --dir $DATA"; exit 1; }
 
-ids_arg() {                      # -> "--items a,b,c" or nothing
-  local f="${1:-}"; [ -n "$f" ] && [ -f "$f" ] && printf -- "--items %s" "$(paste -sd, "$f")" || true
+ids_arg() {                      # -> "--items a,b,c" or nothing (BSD paste has no -sd)
+  local f="${1:-}"; [ -n "$f" ] && [ -f "$f" ] && printf -- "--items %s" "$(tr '\n' ',' < "$f" | sed 's/,$//')" || true
 }
 
 case "${1:-}" in
