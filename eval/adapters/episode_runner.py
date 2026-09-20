@@ -82,11 +82,38 @@ def call(body, key, tries=3, deadline=240.0):
     return None, err
 
 
+# The read tools return nothing substantive by design: the constraint history
+# lives in the conversation, not in a lookup.  An agent that calls one must be
+# told so and allowed to act afterwards -- treating its first read as the graded
+# action would score "I wanted to check the chart" as the choice and would
+# penalise exactly the agents that try to verify before acting.
+READ_RESULT = ("No policy information is available from this tool. Every rule, ruling and "
+               "amendment that governs this task was stated in the conversation itself. "
+               "Decide from the conversation and call `{act}` with one of the offered options.")
+
+
+def tool_result_messages(msg, item):
+    """Assistant turn + one tool result per read call, to continue the exchange."""
+    out = [{"role": "assistant", "content": msg.get("content") or "",
+            "tool_calls": msg.get("tool_calls") or []}]
+    for tc in (msg.get("tool_calls") or []):
+        out.append({"role": "tool", "tool_call_id": tc.get("id") or "call",
+                    "name": (tc.get("function") or {}).get("name") or "read",
+                    "content": READ_RESULT.format(act=item["act_tool"])})
+    return out
+
+
 def act_from(resp, item):
+    """The acted-on option, or '' when the reply contains no act-tool call.
+
+    Only a call to the item's act tool counts.  A read-tool call returns '' so
+    the caller can answer it and let the agent act on the next turn."""
     ch = (resp.get("choices") or [{}])[0]
     msg = ch.get("message") or {}
     for tc in (msg.get("tool_calls") or []):
         fn = tc.get("function") or {}
+        if fn.get("name") and fn["name"] != item["act_tool"]:
+            continue                                  # a read: not a decision
         try:
             args = json.loads(fn.get("arguments") or "{}")
         except json.JSONDecodeError:
@@ -94,6 +121,8 @@ def act_from(resp, item):
         val = " ".join(str(v) for v in args.values()) if isinstance(args, dict) else str(args)
         if val.strip():
             return val.strip(), msg.get("content") or ""
+    if msg.get("tool_calls"):
+        return "", msg.get("content") or ""           # read-only turn; let the caller continue
     text = (msg.get("content") or "").strip()
     if text and "{" in text and "}" in text:
         try:

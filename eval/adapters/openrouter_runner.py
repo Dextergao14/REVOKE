@@ -75,19 +75,45 @@ def post(body, key, timeout=300):
         return json.loads(r.read())
 
 
+# The read tools return nothing substantive by design: the constraint history is
+# in the conversation, not in a lookup.  An agent that reads first must be told
+# so and allowed to act afterwards; scoring its first read as the decision would
+# penalise exactly the agents that try to verify before acting.
+READ_RESULT = ("No policy information is available from this tool. Every rule, ruling and "
+               "amendment that governs this task was stated in the conversation itself. "
+               "Decide from the conversation and call `{act}` with one of the offered options.")
+MAX_TOOL_TURNS = 4
+
+
+def read_calls(resp, item):
+    """The read-tool calls in this reply, if it made no act-tool call."""
+    msg = ((resp.get("choices") or [{}])[0].get("message") or {})
+    tcs = msg.get("tool_calls") or []
+    if any((tc.get("function") or {}).get("name") == item["act_tool"] for tc in tcs):
+        return msg, []
+    return msg, tcs
+
+
 def extract(resp, item, salvage=False):
-    """Pull the acted-on option out of a tool call, or out of JSON/plain text."""
+    """Pull the acted-on option out of an ACT-tool call, or out of JSON/plain text.
+
+    A read-tool call is not a decision: it returns no value so the caller can
+    answer it and let the agent act on the next turn."""
     ch = (resp.get("choices") or [{}])[0]
     msg = ch.get("message") or {}
     for tc in (msg.get("tool_calls") or []):
         fn = tc.get("function") or {}
+        if fn.get("name") and fn["name"] != item["act_tool"]:
+            continue
         try:
             args = json.loads(fn.get("arguments") or "{}")
         except json.JSONDecodeError:
             args = {}
         val = " ".join(str(v) for v in args.values()) if isinstance(args, dict) else str(args)
         if val.strip():
-            return fn.get("name") or item["act_tool"], val.strip(), msg.get("content") or ""
+            return item["act_tool"], val.strip(), msg.get("content") or ""
+    if msg.get("tool_calls"):
+        return None, "", msg.get("content") or ""     # read-only turn
     text = (msg.get("content") or "").strip()
     if not text:
         # An unfinished reasoning trace is not a decision.  Salvaging a name
@@ -128,6 +154,7 @@ def run_probe(item, probe, model, key, tries=5, max_tokens=16000):
     base = {"model": model, "temperature": 0, "max_tokens": max_tokens,
             "reasoning": {"effort": "low"}}
     last_err = ""
+    n_reads = 0
     for attempt in range(tries):
         use_tools = attempt < 2
         if attempt >= 2:
@@ -164,15 +191,39 @@ def run_probe(item, probe, model, key, tries=5, max_tokens=16000):
             time.sleep(2 ** attempt + random.random())
             continue
         name, val, text = extract(resp, item, salvage=(attempt == tries - 1))
+        # answer any read calls and let the agent act, up to MAX_TOOL_TURNS
+        convo_msgs = None
+        for _ in range(MAX_TOOL_TURNS):
+            if val:
+                break
+            msg, reads = read_calls(resp, item)
+            if not reads:
+                break
+            n_reads += len(reads)
+            convo_msgs = (convo_msgs or [{"role": "system", "content": sys_msg},
+                                         {"role": "user", "content": convo + tail}])
+            convo_msgs = convo_msgs + [{"role": "assistant", "content": msg.get("content") or "",
+                                        "tool_calls": msg.get("tool_calls") or []}]
+            for tc in reads:
+                convo_msgs.append({"role": "tool", "tool_call_id": tc.get("id") or "call",
+                                   "name": (tc.get("function") or {}).get("name") or "read",
+                                   "content": READ_RESULT.format(act=item["act_tool"])})
+            try:
+                resp = post(dict(base, messages=convo_msgs, tools=tools, tool_choice="auto"), key)
+            except Exception as e:                             # noqa: BLE001
+                last_err = f"{type(e).__name__}: {str(e)[:150]}"
+                break
+            name, val, text = extract(resp, item)
         if val:
             u = resp.get("usage") or {}
             return {"probe_id": probe["probe_id"],
                     "tool_calls": [{"name": name, "arguments": {item["act_param"]: val}}],
-                    "text": text[:400],
+                    "text": text[:400], "n_reads": n_reads,
                     "usage": {"in": u.get("prompt_tokens", 0), "out": u.get("completion_tokens", 0),
                               "cost": (resp.get("usage") or {}).get("cost", 0)}}
         last_err = "no action in response"
-    return {"probe_id": probe["probe_id"], "tool_calls": [], "text": "", "error": last_err}
+    return {"probe_id": probe["probe_id"], "tool_calls": [], "text": "", "n_reads": n_reads,
+            "error": last_err}
 
 
 def main():
