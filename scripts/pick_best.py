@@ -28,6 +28,7 @@ def main():
     ap.add_argument("--full", required=True)
     ap.add_argument("--runs", nargs="+", required=True)
     ap.add_argument("--min-tasks", type=int, default=1)
+    ap.add_argument("--mode", default="full", help="only rank runs of this memory condition (default full); 'any' to pool")
     a = ap.parse_args()
     opener = gzip.open if a.full.endswith(".gz") else open
     items = {json.loads(l)["id"]: json.loads(l) for l in opener(a.full, "rt")}
@@ -37,6 +38,8 @@ def main():
             for line in open(path):
                 r = json.loads(line)
                 if r.get("id") not in items or "steps" not in r:
+                    continue
+                if a.mode != "any" and r.get("mode", "full") != a.mode:
                     continue
                 acted = [s for s in r["steps"] if s.get("tool_calls")]
                 g = grade_item(items[r["id"]], {"id": r["id"], "steps": acted})
