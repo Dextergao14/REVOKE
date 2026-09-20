@@ -101,11 +101,14 @@ class LLM:
         """Local embeddings: sentence-transformers when installed, otherwise a
         deterministic hashed bag-of-words (no network, no cost)."""
         if self._embedder is None:
-            try:
-                from sentence_transformers import SentenceTransformer            # type: ignore
-                self._embedder = SentenceTransformer(os.environ.get("REVOKE_EMBEDDER", "all-MiniLM-L6-v2"))
-            except Exception:                                                # noqa: BLE001
+            if os.environ.get("REVOKE_EMBED_HASH"):
                 self._embedder = "hash"
+            if self._embedder is None:
+                try:
+                    from sentence_transformers import SentenceTransformer        # type: ignore
+                    self._embedder = SentenceTransformer(os.environ.get("REVOKE_EMBEDDER", "all-MiniLM-L6-v2"))
+                except Exception:                                            # noqa: BLE001
+                    self._embedder = "hash"
         if self._embedder == "hash":
             return [_hash_embed(t) for t in texts]
         return [list(map(float, v)) for v in self._embedder.encode(list(texts), normalize_embeddings=True)]
@@ -139,6 +142,8 @@ class MemoryBackend:
 
     name = "base"
     persist_across_episodes = True      # can keep memory between episodes of a world
+    uses_llm = True                     # makes its own calls through self.llm
+    recalls = True                      # returns text at a task
 
     def __init__(self, llm: LLM, cfg: Optional[Dict] = None):
         self.llm = llm
@@ -176,6 +181,9 @@ class MemoryBackend:
 class NoMemory(MemoryBackend):
     """Sessions that leave the window are gone (the `truncate` ablation)."""
     name = "none"
+    uses_llm = False
+    recalls = False
+    persist_across_episodes = False
 
 
 class CompactNotes(MemoryBackend):

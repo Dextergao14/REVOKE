@@ -39,7 +39,7 @@ from eval.memory.base import LLM, TOK, approx_tokens, load_backend  # noqa: E402
 
 
 def run_episode(item, llm: LLM, backend, window: int, recall_budget: int, max_tokens: int,
-                sink_path: str, persist: bool, seq_index: int):
+                sink_path: str, persist: bool, seq_index: int, limit: int = 0):
     tools = [{"type": "function", "function": {
         "name": t["name"], "description": t["doc"],
         "parameters": {"type": "object", "properties": {k: {"type": "string"} for k in t["params"]},
@@ -65,13 +65,19 @@ def run_episode(item, llm: LLM, backend, window: int, recall_budget: int, max_to
             sidx = oldest.split("]")[0].strip("[Session ") if oldest.startswith("[Session") else "?"
             backend.observe(int(sidx) if sidx.isdigit() else -1, oldest)
 
+    n_probes = 0
     for s in item["sessions"]:
+        if limit and n_probes >= limit:
+            break
         lines = [f"[Session {s['index']}]"]
         for t in s["turns"]:
             pid = t.get("probe_id")
             if not pid:
                 lines.append(t["text"])
                 continue
+            if limit and n_probes >= limit:
+                continue
+            n_probes += 1
             # everything before the task in this session enters the window first
             blocks.append("\n".join(lines))
             lines = [f"[Session {s['index']} continued]"]
@@ -127,6 +133,7 @@ def main():
     ap.add_argument("--cfg", default="{}", help="JSON passed to the backend")
     ap.add_argument("--items", default="")
     ap.add_argument("--persist", action="store_true", help="one backend instance per world, episodes in manifest order")
+    ap.add_argument("--limit", type=int, default=0, help="only the first N tasks of each episode")
     ap.add_argument("--manifest", default="", help="for --persist ordering (default: <blind dir>/manifest.jsonl)")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", required=True)
@@ -158,7 +165,7 @@ def main():
         rows = []
         for k, it in enumerate(group):
             sink = os.path.join(a.out, f"{tag}__{it['id']}.jsonl.part")
-            rows.append(run_episode(it, llm, backend, window, a.recall_budget, a.max_tokens, sink, a.persist, k))
+            rows.append(run_episode(it, llm, backend, window, a.recall_budget, a.max_tokens, sink, a.persist, k, a.limit))
         return rows
 
     if a.persist:
