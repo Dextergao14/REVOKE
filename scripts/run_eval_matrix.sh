@@ -13,7 +13,7 @@
 # Environment (override on the command line):
 #   OPEN_MODELS    comma-separated OpenRouter ids for stage 1
 #   CLOSED_MODELS  comma-separated ids for stage 2
-#   MEMORIES       comma-separated backends for stage 3 (built-ins: full compact none)
+#   MEMORIES       comma-separated backends for stage 3 (built-ins: full compact compact2k none)
 #   WINDOW         raw window in tokens for stage 3 (default 8000)
 #   PERSIST        1 = one memory instance per world across its episodes (default 1)
 #   WORKERS        parallel episodes/tasks (default 4)
@@ -27,7 +27,7 @@ FULL=$DATA/long100_full.jsonl.gz
 RUNS=runs/long100
 : "${OPEN_MODELS:=z-ai/glm-5.3-flash,deepseek/deepseek-v4-flash,qwen/qwen3.7-flash,qwen/qwen3.8-flash,meta-llama/llama-4-maverick}"
 : "${CLOSED_MODELS:=openai/gpt-5.5,anthropic/claude-opus-5}"
-: "${MEMORIES:=full,compact,none,mem0,memos,dilu,generative_agents,memp,dynamic_cheatsheet}"
+: "${MEMORIES:=full,compact,compact2k,none,mem0,memos,dilu,generative_agents,memp,dynamic_cheatsheet}"
 : "${WINDOW:=8000}"
 : "${PERSIST:=1}"
 : "${WORKERS:=4}"
@@ -54,8 +54,10 @@ case "${1:-}" in
     IFS=, read -ra MEMS <<< "$MEMORIES"
     for m in "${MEMS[@]}"; do
       echo "=== $MODEL x $m ==="
-      python3 eval/adapters/memory_runner.py --blind "$BLIND" --model "$MODEL" --memory "$m" --window "$WINDOW" \
-        --workers "$WORKERS" --out "$RUNS/mem" $P $(ids_arg "${3:-}")
+      W="$WINDOW"; MEM="$m"; CFG='{}'
+      if [ "$m" = compact2k ]; then MEM=compact; W=2000; CFG='{"notes_cap": 1200}'; fi     # the pilot's 2k control
+      python3 eval/adapters/memory_runner.py --blind "$BLIND" --model "$MODEL" --memory "$MEM" --window "$W" \
+        --cfg "$CFG" --workers "$WORKERS" --out "$RUNS/mem" $P $(ids_arg "${3:-}")
     done ;;
   report)
     python3 scripts/long_report.py --full "$FULL" --runs "$RUNS"/full_open "$RUNS"/full_closed "$RUNS"/mem 2>/dev/null | grep -E "^model|ALL" ;;
