@@ -49,6 +49,33 @@ end_episode()
 stats()
     Cumulative counters only (stable across ``begin_episode(persist=True)``).
 
+When a distillation call comes back empty
+-----------------------------------------
+``LLM.text`` returns '' on any API failure, and a reasoning-enabled backbone can
+spend the whole ``max_tokens`` budget on reasoning before emitting any content.
+Upstream then stores, and later serves to the agent as a procedure to follow:
+
+* as the ``procedural_script`` -- ``_call_llm``'s literal placeholder
+  "(LLM returned empty response)" (or "(LLM call error: ...)"), which
+  ``_extract_tag`` passes through unchanged for want of a ``<script>`` block and
+  ``_generate_script_for_trace`` accepts as a non-empty script;
+* as the ``concrete_steps_summary`` -- the full reconstructed trajectory, which
+  here is the rolling session buffer: thousands of characters of raw transcript,
+  of which ``recall`` (clipping from the tail) would serve a tail-slice labelled
+  "[Concrete Steps (Example)]".
+
+REVOKE stores neither.  ``_generate_script_for_trace`` and
+``_summarize_trajectory_with_llm`` are wrapped: a reply that is empty or one of
+upstream's placeholder strings is replaced by a short deterministic stub built
+only from the task text (already the embedded retrieval key) and the action
+taken -- no session text, no placeholder -- and counted in ``stats()``
+(``script_stubs`` / ``summary_stubs``), so a run can be audited for how many
+records are stubs.  A script the backbone cut off before ``</script>`` keeps its
+partial text, with the dangling tag stripped.  The record is still written: what
+the agent did on that task is real, only its distillation is missing.  Upstream's
+adjust path needs no guard -- a placeholder fails ``json.loads`` there, the record
+is left as it was and the attempt is counted in ``adjust_failed``.
+
 Unknown outcome
 ---------------
 Upstream ``take_in_memory`` branches on ``metadata["is_correct"]``: "false" ->
@@ -81,8 +108,10 @@ Fairness / isolation
 --------------------
 * All LLM calls go through the upstream seam ``config["model"]``: a callable
   that flattens the provider's message parts and calls ``self.llm.text`` on
-  the backbone under test (counted as memory calls).  ``_call_llm``,
-  ``_generate_script_for_trace`` and ``_adjust_memory`` are untouched.
+  the backbone under test (counted as memory calls).  ``_call_llm`` and
+  ``_adjust_memory`` are untouched; ``_generate_script_for_trace`` runs upstream's
+  own prompt and extraction through ``super()`` and only substitutes a stub for a
+  reply upstream would have stored as a placeholder (above).
 * ``_embed_texts`` is overridden to ``self.llm.embed`` (local).  ``initialize``
   is overridden so upstream's ``load_embedding_model`` (a Hugging Face
   download) never runs; the vendored module's ``sentence_transformers`` import
@@ -102,6 +131,8 @@ buffer_tokens    int   3000    rolling buffer of scrolled-out sessions that
                                forms the observation steps of each trajectory
 max_tokens       int   1000    completion cap for each of MEMP's own LLM calls
 adjust_on_repeat bool  False   the adaptation described above
+stub_chars       int   300     max chars per field of the stub stored when a
+                               distillation call comes back empty
 store_json       bool  False   mirror the record store to disk as upstream does
 store_path       str   None    directory for that mirror; default a temp dir
 """
@@ -109,6 +140,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import logging
 import os
 import re
 import sys
@@ -119,6 +151,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 from eval.memory.base import LLM, MemoryBackend, approx_tokens
+
+log = logging.getLogger("revoke.memory.memp")
 
 
 # --------------------------------------------------------------------------- #
@@ -188,6 +222,31 @@ def _task_key(text: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+# Every string upstream substitutes for a reply it could not use: `_call_llm`
+# returns "(LLM returned empty response)" for an empty completion and
+# "(LLM call error: ...)" / "(LLM call failed: ...)" for a failed one, and
+# `_generate_script_for_trace` wraps those in "(Script generation failed)" /
+# "(Script generation error)".  Upstream stores whichever it got as the record's
+# procedural_script; see "When a distillation call comes back empty" above.
+_PLACEHOLDER = re.compile(
+    r"^\(\s*(?:LLM (?:returned empty response|call error|call failed)"
+    r"|Script generation (?:failed|error)"
+    r"|No (?:trace available to generate script|script available))", re.I)
+
+
+def _clean_script(text: str) -> str:
+    """The stored script, with a stray `<script>`/`</script>` removed: on a reply
+    the backbone cut off before the closing tag, upstream's `_extract_tag` finds no
+    complete block and returns the raw reply, opening tag included."""
+    return re.sub(r"</?script>", "", text or "").strip()
+
+
+def _unusable(text: str) -> bool:
+    """True for a distillation that carries no content: empty, or one of upstream's
+    placeholder strings, which must never reach the store or the agent."""
+    return not text or bool(_PLACEHOLDER.match(text))
+
+
 class _Provider(MempMemoryProvider):
     """The upstream provider with four seams redirected: LLM (via the upstream
     `model` config hook), embeddings, initialisation and JSON persistence; plus
@@ -225,14 +284,49 @@ class _Provider(MempMemoryProvider):
         # upstream provide_memory() hard-codes top_k = 1; honour cfg["top_k"] when larger
         return super()._search(qvec, max(int(top_k), self._b.top_k))
 
+    # -- nothing usable came back ---------------------------------------------
+    def _one_line(self, x) -> str:
+        return " ".join(str(x or "").split())[:self._b.stub_chars] or "(unrecorded)"
+
+    def _stub_script(self, trajectory_data) -> str:
+        """What is stored as the script when the distillation call produced nothing.
+        Deterministic, bounded, built only from the task text (already the embedded
+        retrieval key) and the action taken -- never upstream's placeholder string,
+        which the agent would later be served as a procedure to follow."""
+        return ("(no script was distilled for this task: the distillation call returned no text)\n"
+                f"- Task: {self._one_line(trajectory_data.query)}\n"
+                f"- Action taken: {self._one_line(trajectory_data.result)}")
+
+    def _stub_summary(self, trajectory_data) -> str:
+        """What is stored as the concrete-steps summary when the summarisation call
+        produced nothing.  Upstream falls back to the full reconstructed trajectory,
+        which here is the rolling session buffer -- thousands of characters of raw
+        transcript; with recall() clipping from the tail, one such record would be
+        served to the agent as a tail-slice of transcript labelled as an example."""
+        return (f"Step 0: Task: {self._one_line(trajectory_data.query)}\n"
+                f"Step 1: Acted: {self._one_line(trajectory_data.result)}\n"
+                "Conclusion: no summary was produced for this trajectory; the grounds for the "
+                "action were not recorded.")
+
+    def _generate_script_for_trace(self, trajectory_data) -> str:
+        """Upstream's prompt and extraction, with its placeholder returns caught:
+        anything `_unusable` is replaced by `_stub_script` and counted."""
+        script = _clean_script(super()._generate_script_for_trace(trajectory_data))
+        if _unusable(script):
+            log.warning("MEMP script distillation returned no usable text; storing a stub script")
+            self._b.n_script_stubs += 1
+            return self._stub_script(trajectory_data)
+        return script
+
     # -- unknown outcome -------------------------------------------------------
     def _summarize_trajectory_with_llm(self, trajectory_data) -> str:
         """Upstream prompt verbatim except the Correctness line (upstream would
         print 'Wrong' whenever is_correct is absent) and the closing-sentence
-        instruction, which no longer asks for a success/failure reason."""
+        instruction, which no longer asks for a success/failure reason.  The
+        no-text fallback is `_stub_summary`, not upstream's raw trajectory."""
         current_trajectory = self._reconstruct_trajectory_string(trajectory_data)
         if self.model is None:
-            return current_trajectory
+            return self._stub_summary(trajectory_data)
         system_prompt = (
 f"""Generate an ultra-concise summary of the agent's actions.
 
@@ -260,9 +354,13 @@ Rules:
         try:
             resp = self.model(messages)
             summary = getattr(resp, "content", str(resp)).strip()
-            return summary or current_trajectory
-        except Exception:                                                 # noqa: BLE001
-            return current_trajectory
+        except Exception as e:                                            # noqa: BLE001
+            log.warning("MEMP summarisation failed: %s", e)
+            summary = ""
+        if _unusable(summary):        # API failure, or a reasoning backbone that spent
+            self._b.n_summary_stubs += 1              # max_tokens before emitting text
+            return self._stub_summary(trajectory_data)
+        return summary
 
 
 class Backend(MemoryBackend):
@@ -277,12 +375,14 @@ class Backend(MemoryBackend):
         self.buffer_tokens = int(self.cfg.get("buffer_tokens", 3000))
         self.max_tokens = int(self.cfg.get("max_tokens", 1000))
         self.adjust_on_repeat = bool(self.cfg.get("adjust_on_repeat", False))
+        self.stub_chars = int(self.cfg.get("stub_chars", 300))
         self.store_json = bool(self.cfg.get("store_json", False))
         self.store_path = self.cfg.get("store_path") or tempfile.mkdtemp(prefix="revoke_memp_")
         self.buffer: List[Tuple[int, str]] = []          # scrolled-out sessions, oldest first
         self._seen: Dict[str, str] = {}                  # task stem -> last action (adjust_on_repeat)
         self.n_added = self.n_adjusted = self.n_adjust_failed = 0
         self.n_llm_calls = self.n_llm_empty = 0
+        self.n_script_stubs = self.n_summary_stubs = 0
         self.n_recalls = self.n_recall_hits = 0
         self.mem = _Provider(self)
         self.mem.initialize()
@@ -361,4 +461,6 @@ class Backend(MemoryBackend):
     def stats(self):
         return {"memories": len(self.mem.memories), "added": self.n_added, "adjusted": self.n_adjusted,
                 "adjust_failed": self.n_adjust_failed, "llm_calls": self.n_llm_calls, "llm_empty": self.n_llm_empty,
+                "script_stubs": self.n_script_stubs,       # records whose script is a stub, not a distillation
+                "summary_stubs": self.n_summary_stubs,     # ... and whose concrete-steps summary is
                 "recalls": self.n_recalls, "recall_hits": self.n_recall_hits}

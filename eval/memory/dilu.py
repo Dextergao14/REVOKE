@@ -48,8 +48,22 @@ record_action(pid, task, a, r) provider.take_in_memory(TrajectoryData(query=task
                                system's only LLM use: one call per task.
 end_episode()                  Nothing: DILU has no between-episode consolidation
                                (upstream saves after every take_in_memory).
-stats()                        experiences, summaries by LLM / by fallback, failed
-                               ingests, recalls and recall hits.
+stats()                        experiences, summaries by LLM / by fallback (split into
+                               empty replies and raised calls), failed ingests, recalls
+                               and recall hits.
+
+When the summary comes back empty
+---------------------------------
+`LLM.text` returns '' on any API failure, and a reasoning-enabled backbone can spend the
+whole max_tokens budget on reasoning before emitting any content.  Upstream then stores
+the full reconstructed trajectory as the experience -- here that is the rolling session
+buffer, thousands of characters of raw transcript.  Since recall() clips from the tail,
+a single such entry would crowd every later experience out of the prompt.  REVOKE instead
+stores a short deterministic stub built only from the task text (already the embedded
+retrieval key) and the action taken -- no session text -- and counts the occurrence in
+stats() (`summaries_empty` / `summaries_error`, both included in `summaries_fallback`),
+so a run can be audited for how many experiences are stubs.  `summary_max_tokens` also
+defaults high enough (2000) to leave a reasoning backbone room for a ~150-word summary.
 
 Unknown outcome
 ---------------
@@ -87,7 +101,10 @@ Configuration keys read from self.cfg
 buffer_sessions     int   default 4      sessions kept in the rolling context buffer
 buffer_chars        int   default 6000   max chars of the buffer used as trajectory context
 rationale_chars     int   default 1500   max chars of the agent's rationale kept in a trajectory
-summary_max_tokens  int   default 600    max_tokens of the summarisation call
+summary_max_tokens  int   default 2000   max_tokens of the summarisation call (a reasoning
+                                         backbone needs room before it emits any content)
+stub_chars          int   default 300    max chars per field of the stub stored when the
+                                         summarisation call comes back empty
 db_path             str   default None   if set, dump the store as JSON there after each task
 """
 from __future__ import annotations
@@ -190,11 +207,14 @@ class _RevokeDiluProvider(_upstream.DiluMemoryProvider):
     """Upstream provider with the four seams overridden; write/read logic untouched."""
 
     def __init__(self, llm, cfg: Dict):
-        super().__init__(config={"model": _BackboneModel(llm, int(cfg.get("summary_max_tokens", 600))),
+        super().__init__(config={"model": _BackboneModel(llm, int(cfg.get("summary_max_tokens", 2000))),
                                  "db_path": cfg.get("db_path")})
         self.llm = llm
+        self.stub_chars = int(cfg.get("stub_chars", 300))
         self.n_llm_summaries = 0
         self.n_fallback_summaries = 0
+        self.n_empty_summaries = 0
+        self.n_summary_errors = 0
 
     # -- seams --------------------------------------------------------------
     def initialize(self) -> bool:
@@ -211,9 +231,24 @@ class _RevokeDiluProvider(_upstream.DiluMemoryProvider):
         if self.db_path:                         # write-only, opt-in, for inspection
             super()._save_memories_to_json()
 
+    def _stub_summary(self, trajectory_data: TrajectoryData) -> str:
+        """What is stored when no summary came back.  Upstream falls back to the full
+        reconstructed trajectory, which here is the raw session slab (thousands of
+        characters of transcript): with recall() clipping from the tail, one such entry
+        crowds every later experience out of the prompt.  This stub is deterministic and
+        bounded, and carries no session text -- only the task (already the embedded
+        retrieval key) and the action taken."""
+        def one_line(x) -> str:
+            return " ".join(str(x or "").split())[:self.stub_chars] or "(unrecorded)"
+        return (f"Step 0: Task: {one_line(trajectory_data.query)}\n"
+                f"Step 1: Acted: {one_line(trajectory_data.result)}\n"
+                "Conclusion: summary unavailable (the summarisation call returned no text); "
+                "no grounds were recorded for this action.")
+
     def _summarize_trajectory_with_llm(self, trajectory_data: TrajectoryData) -> str:
         """Upstream prompt verbatim except the two lines marked REVOKE (no correctness
-        signal exists here; upstream would otherwise stamp every trajectory 'Wrong')."""
+        signal exists here; upstream would otherwise stamp every trajectory 'Wrong').
+        REVOKE also replaces upstream's raw-trajectory fallback with `_stub_summary`."""
         current_trajectory = self._reconstruct_trajectory_string(trajectory_data)
         system_prompt = (
 f"""Generate an ultra-concise summary of the agent's actions.
@@ -242,15 +277,19 @@ Rules:
         try:
             resp = self.model(messages)
             summary = getattr(resp, "content", str(resp)).strip()
-            if not summary:                      # upstream: fall back to the full trajectory text
+            if not summary:                      # empty content: API failure, or a reasoning
+                                                 # backbone that spent max_tokens before any text
+                log.warning("DILU summarisation returned no text; storing a stub experience")
+                self.n_empty_summaries += 1
                 self.n_fallback_summaries += 1
-                return current_trajectory
+                return self._stub_summary(trajectory_data)
             self.n_llm_summaries += 1
             return summary
         except Exception as e:                                       # noqa: BLE001
             log.warning("DILU summarisation failed: %s", e)
+            self.n_summary_errors += 1
             self.n_fallback_summaries += 1
-            return current_trajectory
+            return self._stub_summary(trajectory_data)
 
 
 class Backend(MemoryBackend):
@@ -321,6 +360,8 @@ class Backend(MemoryBackend):
     def stats(self):
         return {"experiences": len(self.provider.memories),
                 "summaries_llm": self.provider.n_llm_summaries,
-                "summaries_fallback": self.provider.n_fallback_summaries,
+                "summaries_fallback": self.provider.n_fallback_summaries,   # stubs stored, total
+                "summaries_empty": self.provider.n_empty_summaries,         # ... because no text came back
+                "summaries_error": self.provider.n_summary_errors,          # ... because the call raised
                 "ingest_failed": self.n_ingest_failed,
                 "recalls": self.n_recalls, "recall_hits": self.n_hits}

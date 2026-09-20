@@ -16,7 +16,9 @@ Sources read and followed
     generative_agents/reverie/backend_server/persona/cognitive_modules/perceive.py
         (each perceived event: embed, score poignancy, add_event, decrement the reflection trigger)
     generative_agents/reverie/backend_server/persona/prompt_template/v3_ChatGPT/{poignancy_event_v1,
-        generate_focal_pt_v1, insight_and_evidence_v1}.txt and run_gpt_prompt.py / gpt_structure.py
+        generate_focal_pt_v1}.txt (ChatGPT JSON wrapper) and prompt_template/v2/insight_and_evidence_v1.txt
+        (GPT-3 completion path, no wrapper -- run_gpt_prompt_insight_and_guidance has no ChatGPT branch),
+        with run_gpt_prompt.py / gpt_structure.py
         (the prompts, fail-safes and the ChatGPT JSON wrapper; reproduced verbatim below)
     MemEvolve/Flash-Searcher-main/EvolveLab/providers/generative_memory_provider.py
         EvolveLab's "generative" provider only ingests whole task trajectories (one embedding per task,
@@ -31,9 +33,13 @@ Mapping onto the REVOKE contract
                                   the time axis after the previous one).  The blind item supplies the
                                   persona's "identity stable set" for the poignancy prompt: domain,
                                   act tool and setting -- never labels.
-    observe(session, text)        perceive: every turn of the session becomes one event node
-                                  ("Speaker: what they said"), embedded with self.llm.embed and scored
-                                  1-10 with the original poignancy prompt.  Adaptation: the poignancy
+    observe(session, text)        perceive: every non-empty line of the session becomes exactly one event
+                                  node ("Speaker: what they said", a heading, a narrative line -- no line
+                                  is ever merged into its predecessor; REVOKE turns are one line each and
+                                  only ~20% of them are "Speaker: text", so the earlier speaker-continuation
+                                  heuristic only glued ~4 unrelated turns per node and dropped ~12% of the
+                                  transcript at the max_obs_chars cap), embedded with self.llm.embed and
+                                  scored 1-10 with the original poignancy prompt.  Adaptation: the poignancy
                                   of all events of one session (plus any not yet scored action) is
                                   asked in ONE call that returns a list, instead of one call per event.
                                   Each score is subtracted from the reflection trigger (perceive.py);
@@ -48,7 +54,8 @@ Mapping onto the REVOKE contract
                                   scored with the next observe() batch.
     end_episode()                 scores whatever is still unscored.  No other consolidation: the
                                   paper's cross-episode mechanism is the reflection tree itself.
-    stats()                       node counts, reflections, LLM calls, max reflection depth.
+    stats()                       node counts, reflections, LLM calls, max reflection depth, and the
+                                  fail-safe counters (empty_replies, score_failsafe).
 
 Recency follows the paper: decay ** (sessions since the node was last accessed), decay 0.99 (the
 code's default; the paper text says 0.995 per game hour).  The shipped code ranks nodes by last access
@@ -67,11 +74,27 @@ falls back to ["I am hungry"] * n; here an unparseable reply produces no thought
 with the EVENT poignancy prompt, exactly as reflect.generate_poig_score does in the shipped code (the
 poignancy_thought_v1 template exists but is never reached on that path).  The example JSON in the focal
 point prompt is emitted as a proper list (the original string-concatenates it into malformed JSON).
+The batched poignancy example is the fixed list [5, 2, 7] and the required length is stated in the
+instruction instead; the original's example_output is the single string "5", and padding the example
+out to k with the fail-safe value 4 anchored a long session onto a constant score.  Every completion is
+given at least `poignancy_max_tokens` (600): base.LLM defaults to reasoning="low", so a 30-60 token cap
+is consumed by reasoning tokens before any content is emitted and every score silently becomes the
+fail-safe.  stats() therefore also reports `empty_replies` and `score_failsafe`, so a truncated or
+failing run is visible instead of merely flat.
 
 Cost.  One poignancy call per observe(); a reflection costs 1 focal-point call + per focal point one
 insight call and one (batched) poignancy call: 7 calls at the defaults, roughly every 30-40 events.
-Embeddings are local (self.llm.embed).  numpy is used for the similarity scan when installed; pure
-Python otherwise.
+Prompt volume matters far more than the call count.  Measured over one full episode with a fake backbone
+(window 8000, recall_budget 4000): clinical_ward 2,096 memory calls / 7.6M prompt chars (~1.9M tokens);
+game_narrative 3,378 calls / 15.7M prompt chars (~3.9M tokens) -- roughly 30x the agent's own calls for
+the same episode.  Both reflection prompts therefore truncate each statement to `reflect_stmt_chars`
+(300); note that one node per turn also raises the reflection COUNT (game_narrative 421 reflections, up
+from 198 when turns were glued together), so the per-statement cap holds the per-call prompt down but the
+total is still dominated by reflection -- budget the long tier from the numbers above.  Embeddings are
+local (self.llm.embed).  numpy is REQUIRED, not optional: the pure-Python similarity fallback is ~1000x
+slower (0.10 ms vs 112 ms per scan over 4,000 nodes) and is only viable for the smoke test.  One node per
+turn also makes the store large (game_narrative ~47k nodes, ~360 MB peak RSS for one episode), so
+`--persist` -- one backend instance per world -- should be run with `--workers 1`.
 
 Configuration (self.cfg)              default   meaning
     recency_decay                     0.99      per-session exponential decay of recency
@@ -83,6 +106,9 @@ Configuration (self.cfg)              default   meaning
     reflect_retrieve_k                30        nodes retrieved per focal point during reflection
     recall_k                          30        nodes retrieved at a task (then clipped to budget)
     max_obs_chars                     1000      truncation of one observation's text
+    reflect_stmt_chars                300       per-statement truncation inside the two reflection prompts
+    poignancy_max_tokens              600       floor on the completion budget of the memory system's own
+                                                calls (reasoning tokens count against max_tokens)
     agent_name                        "the assistant"   the persona name used in the prompts
 """
 from __future__ import annotations
@@ -168,7 +194,6 @@ def _minmax(vals: Sequence[float]) -> List[float]:
     return [(v - lo) / (hi - lo) for v in vals]
 
 
-_SPEAKER = re.compile(r"^[A-Za-z][\w .'\-]{0,40}: ")
 _SESSION_HDR = re.compile(r"^\[Session (\d+)")
 _NUMBERED = re.compile(r"^\s*\d+\s*[.)]\s*(.+)$")
 
@@ -192,25 +217,31 @@ class Node:
 
 
 class _Vectors:
-    """Row store for node embeddings; numpy matrix with doubling capacity when available."""
+    """Row store for node embeddings; a float32 numpy matrix with doubling capacity when numpy is
+    available (it is a stated requirement of this backend), a Python list of rows otherwise.  Only one
+    of the two is ever populated: keeping both cost ~30 KB per node, which OOMs a persisted world."""
 
     def __init__(self):
-        self.rows: List[List[float]] = []
+        self.rows: List[List[float]] = []          # only populated on the pure-Python fallback path
         self.mat = None
         self.norms = None
-        self.n = 0
+        self.n = 0                                 # rows in `mat`
+        self.count = 0                             # rows added in total
 
     def add(self, vec: List[float]) -> None:
-        self.rows.append(vec)
+        self.count += 1
         if _np is None:
+            self.rows.append(vec)
             return
-        v = _np.asarray(vec, dtype=float)
+        v = _np.asarray(vec, dtype=_np.float32)
         if self.mat is None or v.shape[0] != self.mat.shape[1]:
             if self.mat is not None:                  # dimension changed: fall back to pure Python
+                self.rows = [row.tolist() for row in self.mat[:self.n]]
+                self.rows.append(vec)
                 self.mat = None
                 return
-            self.mat = _np.zeros((256, v.shape[0]))
-            self.norms = _np.zeros(256)
+            self.mat = _np.zeros((256, v.shape[0]), dtype=_np.float32)
+            self.norms = _np.zeros(256, dtype=_np.float32)
             self.n = 0
         if self.n >= self.mat.shape[0]:
             self.mat = _np.vstack([self.mat, _np.zeros_like(self.mat)])
@@ -221,8 +252,8 @@ class _Vectors:
 
     def sims(self, q: List[float]) -> List[float]:
         """retrieve.cos_sim against every stored row, in insertion order."""
-        if _np is not None and self.mat is not None and self.n == len(self.rows):
-            qv = _np.asarray(q, dtype=float)
+        if _np is not None and self.mat is not None and self.n == self.count:
+            qv = _np.asarray(q, dtype=_np.float32)
             qn = float(_np.linalg.norm(qv)) or 1.0
             return ((self.mat[:self.n] @ qv) / (self.norms[:self.n] * qn)).tolist()
         out = []
@@ -252,6 +283,10 @@ class Backend(MemoryBackend):
         self.reflect_retrieve_k = int(g("reflect_retrieve_k", 30))    # new_retrieve n_count
         self.recall_k = int(g("recall_k", 30))
         self.max_obs_chars = int(g("max_obs_chars", 1000))
+        self.reflect_stmt_chars = int(g("reflect_stmt_chars", 300))   # per-statement cap in the reflection prompts
+        # floor on the poignancy completion: with reasoning="low" (base.LLM's default) a 30-54 token cap is
+        # spent on reasoning tokens before any content is emitted, and every score silently becomes the fail-safe
+        self.poignancy_max_tokens = int(g("poignancy_max_tokens", 600))
         self.agent_name = str(g("agent_name", "the assistant"))
         self._reset()
 
@@ -268,7 +303,7 @@ class Backend(MemoryBackend):
         self.ele_n = 0                          # importance_ele_n
         self.you = "you"
         self.n = {"events": 0, "actions": 0, "thoughts": 0, "reflections": 0, "score_calls": 0,
-                  "reflect_calls": 0}
+                  "reflect_calls": 0, "score_failsafe": 0, "empty_replies": 0}
 
     def begin_episode(self, item: Dict, persist: bool = False) -> None:
         super().begin_episode(item, persist)
@@ -325,10 +360,7 @@ class Backend(MemoryBackend):
             if line.startswith(self.you + ":") and self.action_fifo:
                 self.action_fifo.pop(0).session = sidx          # the agent's own act, already a node
                 continue
-            if obs and not _SPEAKER.match(line):
-                obs[-1] = obs[-1] + " " + line                  # continuation of the previous turn
-            else:
-                obs.append(line)
+            obs.append(line)
         # perceive.py skips an event already among the `retention` (5) latest ones
         recent = {n.description for n in self.nodes[-5:]}
         obs = [o[:self.max_obs_chars] for o in obs if o[:self.max_obs_chars] not in recent]
@@ -357,15 +389,20 @@ class Backend(MemoryBackend):
             instr = "The output should ONLY contain ONE integer value on the scale of 1 to 10."
         else:
             events = "\n".join(f"Event {i + 1}: {d}" for i, d in enumerate(descs))
-            word, each, example = "events", " for each event, in order", [5, 2, 7][:k] + [4] * max(0, k - 3)
-            instr = ("The output should ONLY contain ONE integer value on the scale of 1 to 10 per event, "
-                     "as a list in event order.")
+            # a short, varied, length-INDEPENDENT example: padding it out to k with the fail-safe value
+            # anchored the model onto a constant score on long sessions
+            word, each, example = "events", " for each event, in order", [5, 2, 7]
+            instr = (f"The output should ONLY contain ONE integer value on the scale of 1 to 10 per event, "
+                     f"as a list of exactly {k} integers in event order (the example shows the format, "
+                     f"not the length).")
         prompt = POIGNANCY_PROMPT.format(name=self.agent_name, iss=self._iss(), events_word=word, events=events,
                                          each=each)
         resp = self.llm.text([{"role": "user", "content": _chatgpt_wrap(prompt, example, instr)}],
-                             max_tokens=24 + 6 * k)
+                             max_tokens=max(self.poignancy_max_tokens, 24 + 6 * k))
         self.n["score_calls"] += 1
         vals = _parse_scores(resp, k)
+        self.n["empty_replies"] += int(not resp)
+        self.n["score_failsafe"] += max(0, k - len(vals))
         return vals + [POIGNANCY_FAIL_SAFE] * (k - len(vals))
 
     # ---- retrieve ---------------------------------------------------------------------------------
@@ -427,13 +464,13 @@ class Backend(MemoryBackend):
         session = max((n.session for n in self.nodes if n.session is not None and n.episode == self.episode),
                       default=None)
         ordered = sorted(self.nodes, key=lambda n: (n.last_accessed, n.id))
-        statements = "\n".join(n.description for n in ordered[-max(1, self.ele_n):])
+        statements = "\n".join(n.description[:self.reflect_stmt_chars] for n in ordered[-max(1, self.ele_n):])
         focal_points = self._focal_points(statements, self.reflect_focal_n)
         retrieved = [(f, self._retrieve(f, self.reflect_retrieve_k)) for f in focal_points]
         for _focal, nodes in retrieved:
             if not nodes:
                 continue
-            numbered = "\n".join(f"{i}. {n.description}" for i, n in enumerate(nodes))
+            numbered = "\n".join(f"{i}. {n.description[:self.reflect_stmt_chars]}" for i, n in enumerate(nodes))
             insights = self._insights(numbered, self.reflect_insight_n)
             if not insights:
                 continue
@@ -451,8 +488,9 @@ class Backend(MemoryBackend):
         prompt = FOCAL_PROMPT.format(statements=statements, n=n)
         example = ["What should Jane do for lunch", "Does Jane like strawberry", "Who is Jane"][:max(1, n)]
         resp = self.llm.text([{"role": "user", "content": _chatgpt_wrap(prompt, example, "Output must be a list of str.")}],
-                             max_tokens=60 * max(1, n) + 40)
+                             max_tokens=max(self.poignancy_max_tokens, 60 * max(1, n) + 40))
         self.n["reflect_calls"] += 1
+        self.n["empty_replies"] += int(not resp)
         out = _json_output(resp)
         pts = [str(x).strip() for x in out if str(x).strip()] if isinstance(out, list) else []
         if not pts and resp:                                  # completion-style "1) ... 2) ..." reply
@@ -464,8 +502,10 @@ class Backend(MemoryBackend):
     def _insights(self, numbered: str, n: int) -> List[Tuple[str, List[int]]]:
         """run_gpt_prompt_insight_and_guidance: 'insight (because of 1, 5, 3)' lines -> (thought, evidence)."""
         prompt = INSIGHT_PROMPT.format(statements=numbered, n=n)
-        resp = self.llm.text([{"role": "user", "content": prompt}], max_tokens=120 * max(1, n) + 60)
+        resp = self.llm.text([{"role": "user", "content": prompt}],
+                             max_tokens=max(self.poignancy_max_tokens, 120 * max(1, n) + 60))
         self.n["reflect_calls"] += 1
+        self.n["empty_replies"] += int(not resp)
         if not resp:
             return []
         out = _json_output(resp)

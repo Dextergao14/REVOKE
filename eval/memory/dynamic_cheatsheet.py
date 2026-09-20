@@ -8,7 +8,8 @@ Source read for this adapter (github suzgunmirac/dynamic-cheatsheet, commit
 5cfe3c3 "dynamic cheatsheet v2.0"):
     dynamic_cheatsheet/language_model.py
         LanguageModel.advanced_generate, branch "DynamicCheatsheet_Cumulative"
-    dynamic_cheatsheet/utils/extractor.py      extract_cheatsheet (vendored verbatim below)
+    dynamic_cheatsheet/utils/extractor.py      extract_cheatsheet (vendored below, with the
+                                               closing-tag guard noted under "Truncated curator replies")
     prompts/curator_prompt_for_dc_cumulative.txt   (CURATOR_PROMPT below, adapted; see "Prompt")
     prompts/generator_prompt.txt               (how the cheatsheet is framed for the solver)
     run_benchmark.py                           (the cheatsheet starts as the literal "(empty)")
@@ -37,8 +38,8 @@ Mapping onto the six contract calls
         the original's step 2:  [[QUESTION]] <- the batched session texts (the
         CURRENT INPUT), [[MODEL_ANSWER]] <- the actions recorded since the last
         update, [[PREVIOUS_CHEATSHEET]] <- the cheatsheet; the extracted
-        <cheatsheet> replaces it (unchanged when the block is missing or the
-        call fails).  This is where the method learns in the rule-evolution setting.
+        <cheatsheet> replaces it (unchanged when the block is missing or
+        malformed, or the call fails).  This is where the method learns in the rule-evolution setting.
     recall(task, budget)
         The current cheatsheet, framed the way generator_prompt.txt frames it
         ("CHEATSHEET: ... ''' ... '''"), clipped to the budget with self.clip.
@@ -56,7 +57,21 @@ Mapping onto the six contract calls
     stats()
         curator_calls, curator_no_tag (outputs lacking a <cheatsheet> block, which
         leave the cheatsheet unchanged), curator_failures (empty LLM response),
-        over_cap (cheatsheets hard-clipped to max_chars), cheatsheet_chars, episodes.
+        curator_malformed (a block opened but never closed, or closed empty -- see
+        "Truncated curator replies"), over_cap (cheatsheets hard-clipped to
+        max_chars), cheatsheet_chars, episodes.
+
+Truncated curator replies (the one behavioural fix to the vendored extractor)
+    The original extract_cheatsheet takes everything after `<cheatsheet>` and
+    before `</cheatsheet>`, by splitting on each in turn.  When the curator's
+    max_tokens cuts the reply off after the opening tag, there is no closing tag
+    to split on, so the split returns the partial text and the whole accumulated
+    cheatsheet is replaced by that fragment: one truncated call can wipe the
+    sheet.  Here a well-formed closing tag is required before anything is
+    replaced -- an opened-but-unclosed block, and a block that closes empty, both
+    keep the previous cheatsheet (the extractor's own fallback for a reply with
+    no block at all) and are counted as curator_malformed.  Nothing else about
+    the extractor changes; a well-formed reply is handled exactly as upstream.
 
 Unknown outcome
     DC never receives labels; the curator judges the model's answer on its own.
@@ -69,9 +84,10 @@ Unknown outcome
 Length bound
     cfg max_chars (default 12000 chars ~ 2000-2400 words, the original's "circa
     2000-2500 words") is written into the prompt and the curator call's
-    max_tokens is max_chars/4 + 1000 (~ the original's 4096).  A cheatsheet that
-    still comes back longer is clipped to max_chars (the original's effective
-    behaviour when max_tokens truncates the output) and counted in over_cap.
+    max_tokens is max_chars/4 + 1000 (~ the original's 4096).  A well-formed
+    cheatsheet that still comes back longer is clipped to max_chars and counted
+    in over_cap.  A reply that max_tokens cut off mid-block is not a short
+    cheatsheet but a broken one, and is discarded instead (curator_malformed).
 
 Prompt
     CURATOR_PROMPT is prompts/curator_prompt_for_dc_cumulative.txt with these and
@@ -102,7 +118,8 @@ What was re-implemented rather than imported
     (UnifiedLLMClient over OpenAI/Anthropic/Gemini SDKs, keys from config.env)
     and needs tiktoken/sklearn/numpy; that violates the fairness rule, so the
     ~30-line DC-Cu branch of advanced_generate is re-implemented here on
-    self.llm.text, line for line.  extract_cheatsheet is copied verbatim.
+    self.llm.text, line for line.  extract_cheatsheet is copied from the source
+    with one change, the closing-tag requirement described above.
     Dropped: the generator prompt and its code-execution loop (the REVOKE runner
     owns the acting prompt and the agent has only the act tool), the
     max_num_rounds refinement loop (always 1 in the paper's runs), and the
@@ -286,20 +303,39 @@ RECALL_HEAD = ("CHEATSHEET: your own continuously curated reference, built from 
 RECALL_TAIL = "\n'''"
 
 
-def extract_cheatsheet(response: str, old_cheatsheet: str) -> str:
-    """Verbatim from dynamic_cheatsheet/utils/extractor.py: the text inside the first
-    <cheatsheet> block, or the old cheatsheet when there is none."""
-    response = response.strip()
+def extract_cheatsheet_status(response: str, old_cheatsheet: str):
+    """dynamic_cheatsheet/utils/extractor.py's extract_cheatsheet, with the
+    closing tag required (see "Truncated curator replies" in the module docstring).
+
+    The original is
+        txt = response.split("<cheatsheet>")[1].strip()
+        txt = txt.split("</cheatsheet>")[0].strip()
+    which on a reply the curator's max_tokens cut off after `<cheatsheet>` has no
+    `</cheatsheet>` to split on, so it returns the partial text and the whole
+    accumulated cheatsheet is replaced by a fragment.  Here an opening tag with
+    no closing tag after it, and a well-formed but empty block, both leave the
+    cheatsheet as it was -- the extractor's own fallback for a reply with no
+    block at all.
+
+    Returns (cheatsheet, status), status in {"ok", "no_tag", "malformed"}.
+    """
+    response = (response or "").strip()
     # <cheatsheet> (content) </cheatsheet>
-    if "<cheatsheet>" in response:
-        try:
-            txt = response.split("<cheatsheet>")[1].strip()
-            txt = txt.split("</cheatsheet>")[0].strip()
-            return txt
-        except Exception:                                                # noqa: BLE001
-            return old_cheatsheet
-    else:
-        return old_cheatsheet
+    if "<cheatsheet>" not in response:
+        return old_cheatsheet, "no_tag"
+    tail = response.split("<cheatsheet>", 1)[1]
+    if "</cheatsheet>" not in tail:
+        return old_cheatsheet, "malformed"                  # truncated before the closing tag
+    txt = tail.split("</cheatsheet>", 1)[0].strip()
+    if not txt:
+        return old_cheatsheet, "malformed"                  # empty block
+    return txt, "ok"
+
+
+def extract_cheatsheet(response: str, old_cheatsheet: str) -> str:
+    """The text inside the first well-formed <cheatsheet> block, or the old
+    cheatsheet when the reply has none (see extract_cheatsheet_status)."""
+    return extract_cheatsheet_status(response, old_cheatsheet)[0]
 
 
 class Backend(MemoryBackend):
@@ -325,7 +361,7 @@ class Backend(MemoryBackend):
         self.probe_session: Dict[str, int] = {}
         self.you = "you"
         self.persist = False
-        self.n_calls = self.n_no_tag = self.n_fail = self.over_cap = self.n_episodes = 0
+        self.n_calls = self.n_no_tag = self.n_fail = self.n_malformed = self.over_cap = self.n_episodes = 0
 
     # -- lifecycle ------------------------------------------------------------
     def begin_episode(self, item, persist=False):
@@ -333,7 +369,7 @@ class Backend(MemoryBackend):
         self.persist = persist
         if not persist:
             self.cheatsheet = self.initial
-            self.n_calls = self.n_no_tag = self.n_fail = self.over_cap = self.n_episodes = 0
+            self.n_calls = self.n_no_tag = self.n_fail = self.n_malformed = self.over_cap = self.n_episodes = 0
         self.pending_sessions, self.pending_ids, self.pending_actions = [], set(), []
         # blind fields only: which session each task sits in, so an action can be labelled
         self.probe_session = {p["probe_id"]: p["session"] for p in item.get("probes", [])
@@ -370,7 +406,8 @@ class Backend(MemoryBackend):
 
     def stats(self):
         return {"curator_calls": self.n_calls, "curator_no_tag": self.n_no_tag, "curator_failures": self.n_fail,
-                "over_cap": self.over_cap, "cheatsheet_chars": len(self.cheatsheet), "episodes": self.n_episodes}
+                "curator_malformed": self.n_malformed, "over_cap": self.over_cap,
+                "cheatsheet_chars": len(self.cheatsheet), "episodes": self.n_episodes}
 
     # -- the curator step (advanced_generate, DynamicCheatsheet_Cumulative, STEP 2) ---------
     def _curate(self):
@@ -387,11 +424,13 @@ class Backend(MemoryBackend):
         if not out:
             self.n_fail += 1                      # LLM error: cheatsheet unchanged, as in the original
         else:
-            if "<cheatsheet>" not in out:
-                self.n_no_tag += 1                # no block: extract_cheatsheet keeps the old one
-            new = extract_cheatsheet(out, self.cheatsheet)
-            if len(new) > self.max_chars:
+            new, status = extract_cheatsheet_status(out, self.cheatsheet)
+            if status == "no_tag":
+                self.n_no_tag += 1                # no block: the extractor keeps the old cheatsheet
+            elif status == "malformed":
+                self.n_malformed += 1             # truncated or empty block: ditto, rather than replacing
+            elif len(new) > self.max_chars:
                 new = new[: self.max_chars]
                 self.over_cap += 1
-            self.cheatsheet = new or self.cheatsheet
+            self.cheatsheet = new
         self.pending_sessions, self.pending_ids, self.pending_actions = [], set(), []
