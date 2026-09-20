@@ -40,7 +40,7 @@ filenames containing `full` and datasets whose probes carry labels.
 |---|---|---|
 | `eval/adapters/openrouter_runner.py` | full context, one fresh call per task | upper bound; needs a model with a window ≥ the episode |
 | `eval/adapters/episode_runner.py` | one agent runs the episode continuously; `compact` (bounded notes) / `truncate` | the pilot's memory conditions |
-| `eval/adapters/memory_runner.py` | same continuous pass, with a pluggable memory system (`--memory mem0`, `memos`, `dilu`, `generative_agents`, `memp`, `dynamic_cheatsheet`, or built-in `compact` / `none` / `full`) | the paper's main table |
+| `eval/adapters/memory_runner.py` | same continuous pass, with a pluggable memory system (`--memory mem0`, `memos`, `memp`, `dynamic_cheatsheet`, or built-in `compact` / `none` / `full`) | the paper's main table |
 
 Examples:
 
@@ -51,7 +51,7 @@ python3 eval/adapters/openrouter_runner.py --blind data/long100/long100_blind.js
 
 # a memory system on one backbone, 8k raw window, cross-episode consolidation within each world
 python3 eval/adapters/memory_runner.py --blind data/long100/long100_blind.jsonl.gz \
-    --model z-ai/glm-5.3-flash --memory dilu --window 8000 --persist --workers 4 --out runs/long100/mem
+    --model z-ai/glm-5.3-flash --memory memp --window 8000 --persist --workers 4 --out runs/long100/mem
 
 # grade anything
 python3 scripts/long_report.py --full data/long100/long100_full.jsonl.gz --runs runs/long100/full runs/long100/mem --detail

@@ -2,7 +2,7 @@
 """Estimate what an evaluation cell costs, by running it against a fake backbone.
 
     python3 scripts/cost_estimate.py --blind data/long100/long100_blind.jsonl.gz \
-        --manifest data/long100/manifest.jsonl --memories compact,mem0,memos,dilu,memp,dynamic_cheatsheet,generative_agents \
+        --manifest data/long100/manifest.jsonl --memories compact,mem0,memos,memp,dynamic_cheatsheet \
         --price 0.09:0.30 --price 5:30
 
 Replays ONE episode per named backend with a canned LLM (no network, no cost),
@@ -40,7 +40,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--blind", required=True)
     ap.add_argument("--manifest", default="")
-    ap.add_argument("--memories", default="compact,mem0,memos,dilu,memp,dynamic_cheatsheet,generative_agents")
+    ap.add_argument("--memories", default="compact,mem0,memos,memp,dynamic_cheatsheet")
     ap.add_argument("--window", type=int, default=8000)
     ap.add_argument("--price", action="append", default=[], help="in:out dollars per million, repeatable")
     ap.add_argument("--episode", default="", help="which episode to probe (default: the shortest)")

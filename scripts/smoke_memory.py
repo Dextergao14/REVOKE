@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Offline acceptance test for a memory backend: no network, no cost.
 
-    python3 scripts/smoke_memory.py --memory dilu [--blind data/hard/pilot_blind.jsonl] [--limit 6]
+    python3 scripts/smoke_memory.py --memory memp [--blind data/hard/pilot_blind.jsonl] [--limit 6]
 
 Runs one episode through eval/adapters/memory_runner.py with a FAKE backbone:
 every act call picks the first offered option; every other call (the memory
