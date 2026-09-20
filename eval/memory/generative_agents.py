@@ -59,6 +59,15 @@ Unknown outcome.  Nothing in Generative Agents branches on task success: reflect
 never a reward, so REVOKE's missing correctness signal changes nothing.  (EvolveLab's provider did
 use "Correctness" in its summary prompt and stored only successful cases; that is not adopted.)
 
+Fail-safes and parsing.  Poignancy: the original's fail-safe 4 whenever a score cannot be parsed; the
+parser also accepts a bare list or one score per line, since a chat backbone may ignore the JSON
+instruction.  Focal points: the original falls back to ["Who am I"] * n, which is meaningless outside
+Smallville, so the latest statements themselves are used as focal points instead.  Insights: the original
+falls back to ["I am hungry"] * n; here an unparseable reply produces no thought.  Thoughts are scored
+with the EVENT poignancy prompt, exactly as reflect.generate_poig_score does in the shipped code (the
+poignancy_thought_v1 template exists but is never reached on that path).  The example JSON in the focal
+point prompt is emitted as a proper list (the original string-concatenates it into malformed JSON).
+
 Cost.  One poignancy call per observe(); a reflection costs 1 focal-point call + per focal point one
 insight call and one (batched) poignancy call: 7 calls at the defaults, roughly every 30-40 events.
 Embeddings are local (self.llm.embed).  numpy is used for the similarity scan when installed; pure
@@ -412,23 +421,26 @@ class Backend(MemoryBackend):
 
     # ---- reflect ----------------------------------------------------------------------------------
     def _reflect(self) -> None:
-        """reflect.run_reflect: focal points -> retrieve -> insights with evidence -> thought nodes."""
+        """reflect.run_reflect: focal points -> new_retrieve for ALL focal points -> per focal point,
+        insights with evidence -> thought nodes.  Retrieval finishes before the first insight is written,
+        as in the original, so a thought made for one focal point is not retrieved for the next."""
         session = max((n.session for n in self.nodes if n.session is not None and n.episode == self.episode),
                       default=None)
         ordered = sorted(self.nodes, key=lambda n: (n.last_accessed, n.id))
         statements = "\n".join(n.description for n in ordered[-max(1, self.ele_n):])
-        for focal in self._focal_points(statements, self.reflect_focal_n):
-            retrieved = self._retrieve(focal, self.reflect_retrieve_k)
-            if not retrieved:
+        focal_points = self._focal_points(statements, self.reflect_focal_n)
+        retrieved = [(f, self._retrieve(f, self.reflect_retrieve_k)) for f in focal_points]
+        for _focal, nodes in retrieved:
+            if not nodes:
                 continue
-            numbered = "\n".join(f"{i}. {n.description}" for i, n in enumerate(retrieved))
+            numbered = "\n".join(f"{i}. {n.description}" for i, n in enumerate(nodes))
             insights = self._insights(numbered, self.reflect_insight_n)
             if not insights:
                 continue
             texts = [t for t, _ in insights]
             scores = self._poignancy(texts)                  # generate_poig_score(persona, "thought", ...)
             for (thought, evi), sc, vec in zip(insights, scores, self.llm.embed(texts)):
-                evidence = [retrieved[i] for i in evi if 0 <= i < len(retrieved)]
+                evidence = [nodes[i] for i in evi if 0 <= i < len(nodes)]
                 depth = 1 + max((e.depth for e in evidence), default=0)     # add_thought
                 self._add("thought", thought[:self.max_obs_chars], session, self.now, vec, poignancy=sc,
                           depth=depth, filling=[e.id for e in evidence])

@@ -12,3 +12,6 @@ docs/sample_20_probes.txt
 # 100-episode release: 125 MB of gzipped transcripts, regenerable byte for byte from the manifest seeds
 data/long100/episodes/
 data/long100/*.jsonl.gz
+
+# MemOS writes a log dir at import
+.memos/
