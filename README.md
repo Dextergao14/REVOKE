@@ -10,6 +10,38 @@ else in the trace is unconstrained.**
 
 ---
 
+## Where the data is
+
+| What | Where | Size |
+|---|---|---|
+| **Long tier — 100 episodes, 300k–900k tokens each, 1,202 tasks** | **[Releases → `v0.5-long100`](https://github.com/Dextergao14/REVOKE/releases/tag/v0.5-long100)** | 125 MB gzipped |
+| Long tier manifest, summary, 30-episode subsample | `data/long100/` (in git) | small |
+| Long tier pilot, 5 episodes with their graded runs | `data/long/` (in git) | 64 MB |
+| Easy tier, 1,000 short episodes | `data/revoke_{blind,core,full}.jsonl` (in git) | 20 MB |
+| Hard tier pilot | `data/hard/`, `data/hard_long/` (in git) | small |
+
+The 100 episodes are **not in the git tree** — they are a release asset, because
+125 MB of transcript would make every clone pay for data most users fetch once:
+
+```bash
+gh release download v0.5-long100 --dir data/long100
+python3 scripts/long100_summary.py data/long100/manifest.jsonl    # 100 episodes
+```
+
+They also regenerate byte for byte from the manifest's seeds:
+
+```bash
+python3 eval/build_long.py --n 100 --jobs 8 --out data/long100 --seed 20260912 \
+    --bands 300000:6:10,440000:7:11,580000:8:12,720000:9:13,830000:10:15
+```
+
+`*_blind.jsonl.gz` is the only file a system under test may see; `*_full.jsonl.gz`
+carries the ground truth and belongs to the grader alone.
+
+To run an evaluation, start from [`docs/COLLABORATORS.md`](docs/COLLABORATORS.md).
+
+---
+
 ## The claim under test
 
 Experience carries an implicit timestamp. Every insight a memory system distils,
