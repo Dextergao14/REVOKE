@@ -175,6 +175,25 @@ def main():
             rows.append(run_episode(it, llm, backend, window, a.recall_budget, a.max_tokens, sink, a.persist, k, a.limit))
         return rows
 
+    # resume: skip episodes already complete in the final file.  A long run is
+    # hours of API calls, so an interruption must not mean starting over.
+    done_ids = set()
+    if os.path.exists(final):
+        for line in open(final):
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if r.get("steps"):
+                done_ids.add(r["id"])
+    if done_ids:
+        before = len(items)
+        items = [i for i in items if i["id"] not in done_ids]
+        print(f"resume: {before - len(items)} episodes already in {final}, {len(items)} to go", flush=True)
+    if not items:
+        print("nothing to do")
+        return
+
     if a.persist:
         order = {}
         man = a.manifest or os.path.join(os.path.dirname(a.blind), "manifest.jsonl")
