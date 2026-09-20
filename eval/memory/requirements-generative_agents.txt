@@ -1,0 +1,2 @@
+# generative_agents backend: nothing installed. Pure Python on top of eval/memory/base.py;
+# numpy is used for the similarity scan when it happens to be present (optional, not required).

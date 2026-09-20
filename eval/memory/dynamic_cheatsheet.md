@@ -1,0 +1,13 @@
+# Dynamic Cheatsheet (cumulative, DC-Cu)
+
+Suzgun et al. 2025, *Dynamic Cheatsheet: Test-Time Learning with Adaptive Memory* (arXiv:2504.07952); `DynamicCheatsheet_Cumulative` in the authors' `language_model.py`, curator prompt `prompts/curator_prompt_for_dc_cumulative.txt`.
+
+**What it stores.** One evolving free-text cheatsheet (initially the literal `(empty)`), written as `<memory_item>` entries with a description, an example and a usage count, grouped under "rules, rulings and decision patterns", optional "edge cases", and "meta-reasoning strategies". There is no store of raw episodes and no retrieval: the whole cheatsheet is rewritten at every update and anything the curator does not copy forward is lost -- the original prompt warns the curator of exactly this.
+
+**When it writes.** In the original, after every answer: the curator sees (previous cheatsheet, question, model answer) and returns a new cheatsheet inside a `<cheatsheet>` block; output without the block leaves the cheatsheet unchanged. In REVOKE the "question" is the span of transcript that has just left the raw window and the "answer" is the agent's own act-tool calls (task, call, stated reasoning) since the last update. The curator runs once per `sessions_per_update` (default 2) distinct sessions, again before a task if sessions are pending, and once at episode end when the cheatsheet persists. All curator calls go through the backbone under test.
+
+**How it reads.** At a task the current cheatsheet is placed in the prompt, framed as the authors' generator prompt frames it (`CHEATSHEET: ... ''' ... '''`, "search it for applicable rules, patterns, strategies, or examples"), clipped to the recall budget. With `--persist` the cheatsheet carries across the episodes of a world, which is the method's intended cumulative regime.
+
+**Bound.** `max_chars` = 12000 (about 2000-2400 words, the original's "circa 2000-2500 words") is written into the prompt and sets the curator's completion cap (~4k tokens, as the original's 2*2048); an over-long cheatsheet is clipped, mirroring what the original's token cap does.
+
+**Adaptation.** The curator prompt is the original text with "solutions / code snippets / Python" reworded to "rules, rulings, decision patterns / strategies", question tags `Q14` to session tags `S14`, and one sentence each describing the CURRENT INPUT and MODEL ACTIONS slots; the generator prompt and its code-execution loop are not used (the REVOKE runner owns the acting prompt). No correctness signal exists in the original or here: the curator self-assesses the actions, so a wrong action can enter the cheatsheet as a worked example, and the usage counter counts uses rather than successes.
