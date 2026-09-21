@@ -30,6 +30,7 @@ import argparse
 import json
 import os
 import random
+import re
 import sys
 import time
 import urllib.error
@@ -101,6 +102,30 @@ def tool_result_messages(msg, item):
                     "name": (tc.get("function") or {}).get("name") or "read",
                     "content": READ_RESULT.format(act=item["act_tool"])})
     return out
+
+
+_ARTICLE = re.compile(r"^(the|a|an)\s+", re.I)
+
+
+def resolves(item, val: str) -> bool:
+    """Would the grader read this argument as one of the item's entities?
+
+    Mirrors eval/grade.py's resolve_entity, using only `entity_names`, which the
+    blind view carries.  A runner needs this to tell "the agent chose X" from
+    "the agent wrote an essay into the argument slot": the second is not a
+    decision, and the model deserves the same JSON retry any other model gets
+    when its tool call is unusable."""
+    blob = " ".join(val.split()).strip()
+    low = _ARTICLE.sub("", blob.lower())
+    names = item["entity_names"]
+    for eid, name in names.items():
+        if low == eid.lower() or low == _ARTICLE.sub("", name.lower()):
+            return True
+    if len(blob) > 80 or "\n" in val:
+        return False
+    hits = {eid for eid, name in names.items()
+            if _ARTICLE.sub("", name.lower()) in low or eid.lower() in low}
+    return len(hits) == 1
 
 
 def act_from(resp, item):

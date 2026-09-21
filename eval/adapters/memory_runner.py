@@ -34,10 +34,12 @@ HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "eval", "adapters"))
 
-from episode_runner import SYSTEM, act_from, tool_result_messages   # noqa: E402
+from episode_runner import SYSTEM, act_from, resolves, tool_result_messages   # noqa: E402
 from eval.memory.base import LLM, TOK, approx_tokens, load_backend  # noqa: E402
 
 MAX_TOOL_TURNS = 4          # read calls the agent may make before it must act
+JSON_TAIL = ("\n\n---\nAct on the last message. Reply with ONLY a JSON object, no prose:\n"
+             '{{"{param}": "<the option name exactly as offered>"}}')
 
 
 def run_episode(item, llm: LLM, backend, window: int, recall_budget: int, max_tokens: int,
@@ -90,21 +92,40 @@ def run_episode(item, llm: LLM, backend, window: int, recall_budget: int, max_to
                 msgs.append({"role": "system", "content": mem})
             msgs.append({"role": "user", "content": "\n".join(blocks) + "\n" + t["text"] +
                          f"\n\n---\nAct on the last message: call `{item['act_tool']}` exactly once with one of the offered options."})
-            val, text, n_reads = "", "", 0
+            val, text, n_reads, via = "", "", 0, "tool"
+            base_msgs = list(msgs)
             for turn in range(MAX_TOOL_TURNS):
                 resp = llm.chat(msgs, max_tokens=max_tokens * (3 if turn and not n_reads else 1),
                                 tools=tools, memory_call=False)
                 if "error" in resp:
                     break
                 val, text = act_from(resp, item)
-                if val:
+                if val and resolves(item, val):
                     break
+                if val:                              # unusable argument: try JSON below
+                    val = ""
                 msg = ((resp.get("choices") or [{}])[0].get("message") or {})
                 if msg.get("tool_calls"):            # read tools: answer them and continue
                     msgs = msgs + tool_result_messages(msg, item)
                     n_reads += len(msg["tool_calls"])
+            if not val:
+                # Same fallback the per-probe runner gives every model: some
+                # backbones do not produce a usable tool call at all (one writes
+                # its whole chain of thought into the argument slot), so ask for
+                # the choice as JSON without tools.  Without this the two
+                # conditions would offer the same model different chances.
+                # rebuild from the ORIGINAL prompt: after a read turn, msgs ends
+                # with a tool message, not the task
+                jmsgs = base_msgs[:-1] + [{"role": "user", "content":
+                                           base_msgs[-1]["content"].rsplit("\n\n---\n", 1)[0]
+                                           + JSON_TAIL.format(param=item["act_param"])}]
+                resp = llm.chat(jmsgs, max_tokens=max_tokens, memory_call=False)
+                if "error" not in resp:
+                    v2, t2 = act_from(resp, item)
+                    if v2:
+                        val, text, via = v2, t2, "json"
             step = {"probe_id": pid, "ctx_tokens": ctx_tokens(), "mem_chars": len(mem),
-                    "seq_index": seq_index, "n_reads": n_reads}
+                    "seq_index": seq_index, "n_reads": n_reads, "via": via}
             if val:
                 step["tool_calls"] = [{"name": item["act_tool"], "arguments": {item["act_param"]: val}}]
                 step["text"] = text[:300]

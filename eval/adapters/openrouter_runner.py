@@ -26,6 +26,9 @@ import threading
 import time
 import urllib.error
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from episode_runner import resolves        # noqa: E402
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 API = "https://openrouter.ai/api/v1/chat/completions"
@@ -156,7 +159,7 @@ def run_probe(item, probe, model, key, tries=5, max_tokens=16000):
     last_err = ""
     n_reads = 0
     for attempt in range(tries):
-        use_tools = attempt < 2
+        use_tools = attempt < 2        # attempts 3+ ask for JSON instead of a tool call
         if attempt >= 2:
             # a reasoning model that produced nothing was starved of output
             # budget, not confused; give it more room rather than guessing from
@@ -191,6 +194,10 @@ def run_probe(item, probe, model, key, tries=5, max_tokens=16000):
             time.sleep(2 ** attempt + random.random())
             continue
         name, val, text = extract(resp, item, salvage=(attempt == tries - 1))
+        if val and use_tools and not resolves(item, val):
+            # a tool call whose argument is an essay is not a decision; fall
+            # through to the JSON attempt rather than banking it
+            val = ""
         # answer any read calls and let the agent act, up to MAX_TOOL_TURNS
         convo_msgs = None
         for _ in range(MAX_TOOL_TURNS):
@@ -214,6 +221,8 @@ def run_probe(item, probe, model, key, tries=5, max_tokens=16000):
                 last_err = f"{type(e).__name__}: {str(e)[:150]}"
                 break
             name, val, text = extract(resp, item)
+            if val and not resolves(item, val):
+                val = ""
         if val:
             u = resp.get("usage") or {}
             return {"probe_id": probe["probe_id"],
