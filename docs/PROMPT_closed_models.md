@@ -32,7 +32,7 @@ python3 scripts/long100_summary.py data/long100/manifest.jsonl   # sanity check:
 ```
 
 Python 3.10+. Read `docs/COLLABORATORS.md` first — it explains the runners and the file
-layout. Install the per-system extras before stage 3:
+layout. Install the per-system extras before stage B:
 
 ```bash
 pip install -r eval/memory/requirements-mem0.txt -r eval/memory/requirements-memos.txt \
@@ -61,10 +61,12 @@ Each episode exists as two files. `*_blind.jsonl.gz` is what a model under test 
 filenames containing `full` and datasets whose probes carry labels; do not work around that.
 Grading reads the full file — that is the only place it belongs.
 
-## Stage 2 — three closed models, full context
+## Stage A — three closed models at full context (the ceiling)
 
-Every task is answered with the whole transcript so far in the prompt. This is the upper
-bound: nothing to remember, everything is visible.
+Every task is answered with the whole transcript so far in the prompt. This is a **ceiling,
+not a baseline**: it says what a backbone does when memory is not the problem. No deployment
+resends 900k tokens per task, so this row exists to interpret the memory results, not to
+compete with them.
 
 ```bash
 mkdir -p runs/long100/full_closed
@@ -86,7 +88,7 @@ python3 scripts/long_report.py --full data/long100/long100_full.jsonl.gz --runs 
 ```
 
 The runner checkpoints every task to `*.jsonl.part`, so an interrupted run resumes by
-re-issuing the same command. Expected cost for the full stage 2: about **$2,050 for gpt-5.5,
+re-issuing the same command. Expected cost for the full stage A: about **$2,050 for gpt-5.5,
 $2,050 for claude-opus-5, $40 for muse** — the two frontier models dominate the bill because
 every task resends up to 900k tokens. Watch for HTTP 402 (OpenRouter reserves credit for
 in-flight requests): if a single task fails that way, re-run that one episode alone rather
@@ -99,19 +101,24 @@ python3 scripts/pick_best.py --full data/long100/long100_full.jsonl.gz --runs ru
 ```
 
 The last line is the winning model id. **Stop here and report the table before starting
-stage 3.**
+stage B.**
 
-## Stage 3 — memory systems on the winning model
+## Stage B — memory systems on the winning model
+
+This is the main table.
 
 One agent runs each episode continuously with a raw window of the last 8,000 tokens; every
 session that scrolls out goes to a memory system, which decides what to put back in the prompt
-at each task. Eight conditions: `full`, `compact`, `compact2k`, `none` (controls) and `mem0`,
-`memos`, `memp`, `dynamic_cheatsheet` (the systems under test).
+at each task.
 
 ```bash
-scripts/run_eval_matrix.sh stage3 <WINNER_MODEL_ID>                              # all 100 episodes
-scripts/run_eval_matrix.sh stage3 <WINNER_MODEL_ID> data/long100/subsample30.txt # 30-episode subsample
+scripts/run_eval_matrix.sh stage2 <WINNER_MODEL_ID>                              # all 100 episodes
+scripts/run_eval_matrix.sh stage2 <WINNER_MODEL_ID> data/long100/subsample30.txt # 30-episode subsample
 ```
+
+Eight conditions run: `full`, `compact`, `compact2k`, `none` as controls and `mem0`, `memos`,
+`memp`, `dynamic_cheatsheet` as the systems under test. Memory persists across the episodes of
+one world (`--persist`), which is what the "more experience, more violations" claim needs.
 
 **Which of the two depends on the budget you are given — ask before starting.** All 100
 episodes on gpt-5.5 or claude-opus-5 costs about **$9,200**; the stratified 30-episode
@@ -149,5 +156,5 @@ Report, in Chinese:
 Do not fix anything in the benchmark itself without asking. If a number looks wrong, say so
 with the evidence and stop — a silently "fixed" grader invalidates the whole run.
 
-Report progress in Chinese after: the smoke test, each model finishing stage 2, the ranking,
-and each condition finishing stage 3.
+Report progress in Chinese after: the smoke test, each model finishing stage A, the ranking,
+and each condition finishing stage B.
